@@ -44,6 +44,8 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 builder.Services.AddCascadingAuthenticationState();
 
+builder.Services.AddSingleton(TimeProvider.System);
+
 // UI
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -65,6 +67,9 @@ if (!app.Environment.IsDevelopment())
 // No HTTPS redirection or HSTS: on the LAN the app is plain HTTP, and HTTPS
 // is terminated in front of it by Tailscale (see phase 6).
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
+// English texts with Swiss formats: dates as 31.12.2026, Monday as first day of the week.
+app.UseRequestLocalization("en-CH");
 
 app.UseAuthentication();
 app.UseAuthorization();

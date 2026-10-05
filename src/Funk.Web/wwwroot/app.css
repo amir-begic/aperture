@@ -15,6 +15,31 @@ h1:focus {
     max-width: 48rem;
 }
 
+.form-card {
+    max-width: 56rem;
+}
+
+.search-box {
+    width: 100%;
+    max-width: 22rem;
+}
+
+.status-filter {
+    min-width: 16rem;
+}
+
+.clickable-rows .rz-data-row {
+    cursor: pointer;
+}
+
+/* Native time inputs inside Radzen form fields */
+.time-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
 /* Login */
 
 .auth-layout {

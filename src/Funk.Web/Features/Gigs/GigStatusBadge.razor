@@ -1,0 +1,14 @@
+<RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Status.ToString()" />
+
+@code {
+    [Parameter, EditorRequired]
+    public GigStatus Status { get; set; }
+
+    private BadgeStyle Style => Status switch
+    {
+        GigStatus.Inquiry => BadgeStyle.Warning,
+        GigStatus.Confirmed => BadgeStyle.Info,
+        GigStatus.Done => BadgeStyle.Success,
+        _ => BadgeStyle.Base,
+    };
+}

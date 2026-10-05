@@ -1,9 +1,15 @@
 @page "/"
+@using Funk.Web.Features.Gigs
 @inject IDbContextFactory<FunkDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject TimeProvider Time
 
 <PageTitle>Dashboard · Funk</PageTitle>
 
-<RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">Dashboard</RadzenText>
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Dashboard</RadzenText>
+    <RadzenButton Text="New gig" Icon="add" Click="@(() => Navigation.NavigateTo("gigs/new"))" />
+</RadzenStack>
 
 @if (_settingsComplete == false)
 {
@@ -13,15 +19,25 @@
     </RadzenAlert>
 }
 
-<RadzenText>Upcoming gigs, open payments and this year's numbers will show up here.</RadzenText>
+<RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Next gigs</RadzenText>
+<GigGrid Gigs="_upcoming" IsLoading="_upcoming is null" PageSize="null" EmptyText="No upcoming gigs." />
 
 @code {
+    private const int UpcomingCount = 5;
+
     private bool? _settingsComplete;
+    private List<GigRow>? _upcoming;
 
     protected override async Task OnInitializedAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
         var settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
         _settingsComplete = settings.IsComplete;
+
+        _upcoming = await db.Gigs
+            .Filter(GigPeriod.Upcoming, [GigStatus.Inquiry, GigStatus.Confirmed], search: null, Time.GetLocalNow().DateTime)
+            .Take(UpcomingCount)
+            .ToRows()
+            .ToListAsync();
     }
 }

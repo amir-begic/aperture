@@ -30,10 +30,10 @@ public class BusinessSettings
     [Required, RegularExpression("^[A-Z]{2}$", ErrorMessage = "Use a two-letter country code, e.g. CH.")]
     public string CountryCode { get; set; } = "CH";
 
-    [EmailAddress, MaxLength(200)]
+    [OptionalEmail, MaxLength(200)]
     public string? Email { get; set; }
 
-    [Phone, MaxLength(50)]
+    [OptionalPhone, MaxLength(50)]
     public string? Phone { get; set; }
 
     [MaxLength(200)]

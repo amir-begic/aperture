@@ -1,0 +1,104 @@
+@page "/venues/new"
+@page "/venues/{Id:int}"
+@using Funk.Web.Features.Gigs
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject DialogService Dialogs
+
+<PageTitle>@(IsNew ? "New venue" : _title) · Funk</PageTitle>
+
+<RadzenBreadCrumb class="rz-mb-2">
+    <RadzenBreadCrumbItem Path="venues" Text="Venues" />
+    <RadzenBreadCrumbItem Text="@(IsNew ? "New venue" : _title)" />
+</RadzenBreadCrumb>
+
+@if (_notFound)
+{
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">Venue not found</RadzenText>
+}
+else if (_venue is null)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@(IsNew ? "New venue" : _title)</RadzenText>
+
+    <RadzenCard class="form-card rz-mb-6">
+        <VenueForm Venue="_venue" Saved="OnSaved">
+            <Buttons>
+                @if (!IsNew)
+                {
+                    <RadzenButton Text="New gig" Icon="event" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
+                                  Click="@(() => Navigation.NavigateTo($"gigs/new?venueId={Id}"))" />
+                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                                  Disabled="@(_gigs.Count > 0)" Click="DeleteAsync"
+                                  title="@(_gigs.Count > 0 ? "Venues with gigs can't be deleted." : null)" />
+                }
+            </Buttons>
+        </VenueForm>
+    </RadzenCard>
+
+    @if (!IsNew)
+    {
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Gigs</RadzenText>
+        <GigGrid Gigs="_gigs" ShowVenue="false" PageSize="null" EmptyText="No gigs at this venue yet." />
+    }
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private bool IsNew => Id is null;
+
+    private Venue? _venue;
+    private string _title = "";
+    private List<GigRow> _gigs = [];
+    private bool _notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsNew)
+        {
+            _venue = new Venue();
+            _gigs = [];
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _venue = await db.Venues.AsNoTracking().SingleOrDefaultAsync(v => v.Id == Id);
+        _notFound = _venue is null;
+        _title = _venue?.Name ?? "";
+        _gigs = await db.Gigs.Where(g => g.VenueId == Id).OrderByDescending(g => g.Start).ToRows().ToListAsync();
+    }
+
+    private void OnSaved(Venue venue)
+    {
+        Notifications.Notify(NotificationSeverity.Success, "Venue saved");
+        if (IsNew)
+        {
+            Navigation.NavigateTo($"venues/{venue.Id}", replace: true);
+        }
+        else
+        {
+            _title = venue.Name;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        var confirmed = await Dialogs.Confirm($"Delete {_title}?", "Delete venue",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        await db.Venues.Where(v => v.Id == Id).ExecuteDeleteAsync();
+        Notifications.Notify(NotificationSeverity.Info, $"{_title} deleted");
+        Navigation.NavigateTo("venues");
+    }
+}

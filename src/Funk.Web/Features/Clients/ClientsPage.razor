@@ -1,0 +1,51 @@
+@page "/clients"
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Clients · Funk</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Clients</RadzenText>
+    <RadzenButton Text="New client" Icon="person_add" Click="@(() => Navigation.NavigateTo("clients/new"))" />
+</RadzenStack>
+
+<RadzenTextBox @bind-Value="_search" Immediate="true" Placeholder="Search name, company, city…" class="search-box rz-mb-4" />
+
+<RadzenDataGrid TItem="ClientRow" Data="FilteredClients" IsLoading="_clients is null" AllowSorting="true"
+                AllowPaging="true" PageSize="25" EmptyText="No clients yet." class="clickable-rows"
+                RowClick="@(args => Navigation.NavigateTo($"clients/{args.Data!.Id}"))">
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Name)" Title="Name" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Company)" Title="Company" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Phone)" Title="Phone" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Email)" Title="Email" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.City)" Title="City" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.GigCount)" Title="Gigs" Width="6rem" TextAlign="TextAlign.Right" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    private List<ClientRow>? _clients;
+    private string? _search;
+
+    private IEnumerable<ClientRow>? FilteredClients =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _clients
+            : _clients?.Where(c => c.Matches(_search.Trim()));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _clients = await db.Clients
+            .OrderBy(c => c.Name)
+            .Select(c => new ClientRow(c.Id, c.Name, c.Company, c.Phone, c.Email, c.City, c.Gigs.Count))
+            .ToListAsync();
+    }
+
+    private sealed record ClientRow(int Id, string Name, string? Company, string? Phone, string? Email, string? City, int GigCount)
+    {
+        public bool Matches(string search) =>
+            new[] { Name, Company, Phone, Email, City }
+                .Any(value => value?.Contains(search, StringComparison.CurrentCultureIgnoreCase) == true);
+    }
+}
