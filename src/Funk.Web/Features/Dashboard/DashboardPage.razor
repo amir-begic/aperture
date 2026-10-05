@@ -1,0 +1,27 @@
+@page "/"
+@inject IDbContextFactory<FunkDbContext> DbFactory
+
+<PageTitle>Dashboard · Funk</PageTitle>
+
+<RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">Dashboard</RadzenText>
+
+@if (_settingsComplete == false)
+{
+    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">
+        Your business details are incomplete. They're needed for invoices.
+        <RadzenLink Path="settings" Text="Complete settings" />
+    </RadzenAlert>
+}
+
+<RadzenText>Upcoming gigs, open payments and this year's numbers will show up here.</RadzenText>
+
+@code {
+    private bool? _settingsComplete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
+        _settingsComplete = settings.IsComplete;
+    }
+}

@@ -1,0 +1,91 @@
+@page "/login"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout AuthLayout
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Funk.Web.Auth
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject CredentialValidator Credentials
+@inject NavigationManager Navigation
+
+<PageTitle>Sign in · Funk</PageTitle>
+
+<RadzenCard class="login-card">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">Funk</RadzenText>
+
+    @if (_failed)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">
+            Wrong username or password.
+        </RadzenAlert>
+    }
+
+    @* Statically rendered form (no circuit), so the sign-in can set the auth cookie. *@
+    <EditForm Model="Input" method="post" FormName="login" OnValidSubmit="SignInAsync">
+        <DataAnnotationsValidator />
+        <RadzenStack Gap="1rem">
+            <label class="login-field">
+                Username
+                <InputText @bind-Value="Input.Username" class="rz-textbox" autocomplete="username" autofocus />
+            </label>
+            <label class="login-field">
+                Password
+                <InputText @bind-Value="Input.Password" type="password" class="rz-textbox" autocomplete="current-password" />
+            </label>
+            <label class="login-remember">
+                <InputCheckbox @bind-Value="Input.RememberMe" />
+                Keep me signed in on this device
+            </label>
+            <RadzenButton ButtonType="ButtonType.Submit" Text="Sign in" />
+        </RadzenStack>
+    </EditForm>
+</RadzenCard>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private LoginInput Input { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private bool _failed;
+
+    protected override void OnInitialized() => Input ??= new();
+
+    private async Task SignInAsync()
+    {
+        if (!Credentials.IsValid(Input.Username, Input.Password))
+        {
+            _failed = true;
+            Input.Password = ""; // don't echo it back into the HTML
+            await Task.Delay(TimeSpan.FromSeconds(1)); // slows down password guessing
+            return;
+        }
+
+        var identity = new ClaimsIdentity(
+            [new Claim(ClaimTypes.Name, Input.Username)],
+            CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties { IsPersistent = Input.RememberMe });
+
+        Navigation.NavigateTo(Funk.Web.Auth.ReturnUrl.Sanitize(ReturnUrl), forceLoad: true);
+    }
+
+    private sealed class LoginInput
+    {
+        [Required]
+        public string Username { get; set; } = "";
+
+        [Required]
+        public string Password { get; set; } = "";
+
+        public bool RememberMe { get; set; } = true;
+    }
+}
