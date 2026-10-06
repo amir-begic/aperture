@@ -34,6 +34,24 @@ else
     </div>
 
     <RadzenCard Variant="Variant.Outlined" class="rz-mb-6">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="1rem">
+            <RadzenStack Gap="0.25rem" Style="flex: 1; min-width: 16rem">
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Tax export @s.Year</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                    Income statement, all entries as a spreadsheet, and every receipt, payslip and invoice of the year,
+                    numbered to match. For your tax return or fiduciary.
+                </RadzenText>
+            </RadzenStack>
+            @* "download" keeps Blazor from treating these as page navigation. *@
+            <a href="@($"tax/{s.Year}/export.zip")" download class="rz-button rz-button-md rz-variant-filled rz-primary export-button">
+                <RadzenIcon Icon="folder_zip" /> Everything (ZIP)
+            </a>
+            <a href="@($"tax/{s.Year}/statement.pdf")" download class="rz-link export-link"><RadzenIcon Icon="picture_as_pdf" /> Statement (PDF)</a>
+            <a href="@($"tax/{s.Year}/accounts.xlsx")" download class="rz-link export-link"><RadzenIcon Icon="table_view" /> Accounts (Excel)</a>
+        </RadzenStack>
+    </RadzenCard>
+
+    <RadzenCard Variant="Variant.Outlined" class="rz-mb-6">
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
             <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Income and costs per month</RadzenText>
             <RadzenSelectBar TValue="bool" @bind-Value="_showTable" Size="ButtonSize.Small">

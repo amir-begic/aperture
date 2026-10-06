@@ -3,6 +3,7 @@ using Funk.Web.Components;
 using Funk.Web.Configuration;
 using Funk.Web.Data;
 using Funk.Web.Features.Attachments;
+using Funk.Web.Features.Finance;
 using Funk.Web.Features.Invoices;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -26,6 +27,7 @@ builder.Services.AddSingleton(paths);
 builder.Services.AddDbContextFactory<FunkDbContext>(options => options.UseSqlite(paths.ConnectionString));
 builder.Services.AddSingleton<AttachmentStore>();
 builder.Services.AddSingleton<InvoiceService>();
+builder.Services.AddSingleton<TaxExport>();
 
 // Free for individuals and businesses under USD 1M annual revenue (questpdf.com/license).
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -88,6 +90,7 @@ app.MapRazorComponents<App>()
 
 app.MapAttachmentEndpoints();
 app.MapInvoiceEndpoints();
+app.MapTaxExportEndpoints();
 
 app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {
