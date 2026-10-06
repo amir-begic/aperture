@@ -69,4 +69,13 @@ public sealed class TestDatabase : IAsyncLifetime
         await db.SaveChangesAsync();
         return gig;
     }
+
+    public async Task<Payment> AddPaymentAsync(Gig gig, decimal chf)
+    {
+        await using var db = CreateContext();
+        var payment = new Payment { GigId = gig.Id, Amount = Funk.Web.Domain.Money.FromChf(chf), Date = new DateOnly(2026, 12, 14) };
+        db.Payments.Add(payment);
+        await db.SaveChangesAsync();
+        return payment;
+    }
 }

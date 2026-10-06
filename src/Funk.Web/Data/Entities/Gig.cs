@@ -34,4 +34,10 @@ public class Gig
     public string? Notes { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public List<Expense> Expenses { get; set; } = [];
+    public List<Payment> Payments { get; set; } = [];
+    public List<PlaylistLink> PlaylistLinks { get; set; } = [];
+    public List<ChecklistItem> ChecklistItems { get; set; } = [];
+    public List<Attachment> Attachments { get; set; } = [];
 }

@@ -63,4 +63,12 @@ public class MoneyTests
         Assert.True(Money.FromChf(2) >= Money.FromChf(2));
         Assert.Equal(-1, Money.FromChf(1).CompareTo(Money.FromChf(2)));
     }
+
+    [Fact]
+    public void Sum_adds_exactly()
+    {
+        Assert.Equal(Money.FromChf(0.30m), new[] { Money.FromChf(0.10m), Money.FromChf(0.20m) }.Sum());
+        Assert.Equal(Money.Zero, Array.Empty<Money>().Sum());
+        Assert.Equal(Money.FromChf(3), new[] { (Name: "a", Amount: Money.FromChf(1)), (Name: "b", Amount: Money.FromChf(2)) }.Sum(x => x.Amount));
+    }
 }

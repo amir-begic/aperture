@@ -37,7 +37,6 @@
         _upcoming = await db.Gigs
             .Filter(GigPeriod.Upcoming, [GigStatus.Inquiry, GigStatus.Confirmed], search: null, Time.GetLocalNow().DateTime)
             .Take(UpcomingCount)
-            .ToRows()
-            .ToListAsync();
+            .ToRowsAsync(db);
     }
 }

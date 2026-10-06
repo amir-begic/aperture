@@ -11,6 +11,11 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Venue> Venues => Set<Venue>();
     public DbSet<Gig> Gigs => Set<Gig>();
+    public DbSet<Expense> Expenses => Set<Expense>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<PlaylistLink> PlaylistLinks => Set<PlaylistLink>();
+    public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
+    public DbSet<Attachment> Attachments => Set<Attachment>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -50,6 +55,8 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
         // Enums as text: readable in the database and safe to reorder.
         configurationBuilder.Properties<GigStatus>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<EventType>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<ExpenseCategory>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<PaymentMethod>().HaveConversion<string>().HaveMaxLength(20);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -67,6 +74,26 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
             // Never lose a gig's history by deleting its client or venue.
             gig.HasOne(g => g.Client).WithMany(c => c.Gigs).OnDelete(DeleteBehavior.Restrict);
             gig.HasOne(g => g.Venue).WithMany(v => v.Gigs).OnDelete(DeleteBehavior.Restrict);
+
+            // Financial records block deleting a gig; prep data goes with it.
+            // Attachment rows cascade too, but their files are removed in code (see GigDeletion).
+            gig.HasMany(g => g.Expenses).WithOne(e => e.Gig).OnDelete(DeleteBehavior.Restrict);
+            gig.HasMany(g => g.Payments).WithOne(p => p.Gig).OnDelete(DeleteBehavior.Restrict);
+            gig.HasMany(g => g.PlaylistLinks).WithOne(l => l.Gig).OnDelete(DeleteBehavior.Cascade);
+            gig.HasMany(g => g.ChecklistItems).WithOne(i => i.Gig).OnDelete(DeleteBehavior.Cascade);
+            gig.HasMany(g => g.Attachments).WithOne(a => a.Gig).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Expense>(expense =>
+        {
+            expense.HasIndex(e => e.Date);
+            expense.HasOne(e => e.Receipt).WithMany().OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Payment>(payment =>
+        {
+            payment.HasIndex(p => p.Date);
+            payment.HasOne(p => p.Proof).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

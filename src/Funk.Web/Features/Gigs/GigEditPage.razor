@@ -2,11 +2,15 @@
 @page "/gigs/{Id:int}"
 @using Funk.Web.Features.Clients
 @using Funk.Web.Features.Venues
+@using Funk.Web.Features.Attachments
+@using Funk.Web.Features.Gigs.Finances
+@using Funk.Web.Features.Gigs.Prep
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
 @inject DialogService Dialogs
 @inject TimeProvider Time
+@inject AttachmentStore Store
 
 <PageTitle>@(IsNew ? "New gig" : _title) · Funk</PageTitle>
 
@@ -27,130 +31,177 @@ else
 {
     <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@(IsNew ? "New gig" : _title)</RadzenText>
 
-    <RadzenCard class="form-card">
-        <RadzenTemplateForm @ref="_editForm" TItem="GigForm" Data="_form" Submit="SaveAsync">
-            <RadzenStack Gap="1rem">
-                <RadzenRow>
-                    <RadzenColumn Size="12" SizeMD="8">
-                        <RadzenFormField Text="Title" class="w-full">
-                            <ChildContent><RadzenTextBox Name="Title" @bind-Value="_form.Title" Placeholder="Wedding Anna & Marco" /></ChildContent>
-                            <Helper><RadzenDataAnnotationValidator Component="Title" /></Helper>
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenFormField Text="Event type" class="w-full">
-                            <RadzenDropDown TValue="EventType" Name="EventType" @bind-Value="_form.EventType" Data="Enum.GetValues<EventType>()" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-
-                    <RadzenColumn Size="12" SizeMD="8">
-                        <RadzenFormField Text="Client" class="w-full">
-                            <ChildContent>
-                                <RadzenDropDown TValue="int?" Name="ClientId" @bind-Value="_form.ClientId" Data="_clients"
-                                                TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
-                                                AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                                FilterOperator="StringFilterOperator.Contains" />
-                            </ChildContent>
-                            <End>
-                                <RadzenButton Icon="person_add" Variant="Variant.Text" Size="ButtonSize.Small"
-                                              Click="NewClientAsync" title="New client" />
-                            </End>
-                            <Helper><RadzenDataAnnotationValidator Component="ClientId" /></Helper>
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenFormField Text="Status" class="w-full">
-                            <RadzenDropDown TValue="GigStatus" Name="Status" @bind-Value="_form.Status" @bind-Value:after="CheckOverlapsAsync"
-                                            Data="Enum.GetValues<GigStatus>()" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenFormField Text="Date" class="w-full">
-                            <ChildContent>
-                                <RadzenDatePicker TValue="DateOnly?" Name="Date" @bind-Value="_form.Date" @bind-Value:after="CheckOverlapsAsync"
-                                                  DateFormat="ddd dd.MM.yyyy" />
-                            </ChildContent>
-                            <Helper><RadzenDataAnnotationValidator Component="Date" /></Helper>
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="6" SizeMD="2">
-                        <RadzenFormField Text="Start" class="w-full">
-                            <InputDate Type="InputDateType.Time" @bind-Value="_form.StartTime" @bind-Value:after="CheckOverlapsAsync"
-                                       class="rz-textbox time-input" />
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="6" SizeMD="2">
-                        <RadzenFormField Text="End" class="w-full">
-                            <ChildContent>
-                                <InputDate Type="InputDateType.Time" @bind-Value="_form.EndTime" @bind-Value:after="CheckOverlapsAsync"
-                                           class="rz-textbox time-input" />
-                            </ChildContent>
-                            <Helper>
-                                @if (_form.EndsNextDay)
-                                {
-                                    <RadzenText TextStyle="TextStyle.Caption">ends next day</RadzenText>
-                                }
-                            </Helper>
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenFormField Text="Quote (CHF)" class="w-full">
-                            <ChildContent>
-                                <RadzenNumeric TValue="decimal?" Name="QuotedPriceChf" @bind-Value="_form.QuotedPriceChf"
-                                               Format="#,##0.00" Min="0" ShowUpDown="false" />
-                            </ChildContent>
-                            <Helper><RadzenDataAnnotationValidator Component="QuotedPriceChf" /></Helper>
-                        </RadzenFormField>
-                    </RadzenColumn>
-                </RadzenRow>
-
-                @if (_overlaps.Count > 0)
+    @if (IsNew)
+    {
+        @DetailsCard
+    }
+    else
+    {
+        @if (_summary is not null)
+        {
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+                <GigStatusBadge Status="_summary.Status" />
+                @if (_summary.PaymentState is { } paymentState)
                 {
-                    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-my-0">
-                        Overlaps with
-                        @foreach (var (gig, index) in _overlaps.Select((gig, index) => (gig, index)))
-                        {
-                            @(index > 0 ? ", " : " ")
-                            <RadzenLink Path="@($"gigs/{gig.Id}")" Text="@gig.Title" />
-                            <span> (@gig.Start.ToString("ddd dd.MM."), @GigSchedule.FormatTimes(gig.Start, gig.End))</span>
-                        }
-                    </RadzenAlert>
+                    <PaymentStateBadge State="paymentState" IsOverdue="@(_summary.Status == GigStatus.Done)" />
                 }
-
-                <RadzenFormField Text="Venue (optional)" class="w-full">
-                    <ChildContent>
-                        <RadzenDropDown TValue="int?" Name="VenueId" @bind-Value="_form.VenueId" Data="_venues"
-                                        TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
-                                        AllowFiltering="true" AllowClear="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                                        FilterOperator="StringFilterOperator.Contains" />
-                    </ChildContent>
-                    <End>
-                        <RadzenButton Icon="add_location_alt" Variant="Variant.Text" Size="ButtonSize.Small"
-                                      Click="NewVenueAsync" title="New venue" />
-                    </End>
-                </RadzenFormField>
-
-                <RadzenFormField Text="Notes" class="w-full">
-                    <ChildContent><RadzenTextArea Name="Notes" @bind-Value="_form.Notes" Rows="5" /></ChildContent>
-                    <Helper><RadzenDataAnnotationValidator Component="Notes" /></Helper>
-                </RadzenFormField>
-
-                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                    <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_saving" BusyText="Saving…" />
-                    @if (!IsNew)
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                    @_summary.Start.ToString("ddd dd.MM.yyyy") · @GigSchedule.FormatTimes(_summary.Start, _summary.End) · @_summary.ClientName
+                    @if (_summary.VenueName is not null)
                     {
-                        <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="DeleteAsync" />
+                        <span> · @_summary.Venue</span>
                     }
-                </RadzenStack>
+                </RadzenText>
             </RadzenStack>
-        </RadzenTemplateForm>
-    </RadzenCard>
+        }
+
+        <RadzenTabs @bind-SelectedIndex="_tabIndex" RenderMode="TabRenderMode.Server">
+            <Tabs>
+                <RadzenTabsItem Text="Details" Icon="edit_note">
+                    @DetailsCard
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Finances" Icon="payments">
+                    <GigFinancesTab GigId="Id!.Value" Quote="_summary?.QuotedPrice" GigDate="GigDate" Changed="LoadSummaryAsync" />
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Music & prep" Icon="queue_music">
+                    <GigPrepTab GigId="Id!.Value" />
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Files" Icon="folder">
+                    <GigFilesTab GigId="Id!.Value" />
+                </RadzenTabsItem>
+            </Tabs>
+        </RadzenTabs>
+    }
 }
 
 @code {
     [Parameter]
     public int? Id { get; set; }
+
+    // Only rendered once the gig is loaded.
+    private GigForm Form => _form!;
+
+    private RenderFragment DetailsCard => @<RadzenCard class="form-card">
+    <RadzenTemplateForm @ref="_editForm" TItem="GigForm" Data="Form" Submit="SaveAsync">
+        <RadzenStack Gap="1rem">
+            <RadzenRow>
+                <RadzenColumn Size="12" SizeMD="8">
+                    <RadzenFormField Text="Title" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Title" @bind-Value="Form.Title" Placeholder="Wedding Anna & Marco" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Title" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Event type" class="w-full">
+                        <RadzenDropDown TValue="EventType" Name="EventType" @bind-Value="Form.EventType" Data="Enum.GetValues<EventType>()" />
+                    </RadzenFormField>
+                </RadzenColumn>
+
+                <RadzenColumn Size="12" SizeMD="8">
+                    <RadzenFormField Text="Client" class="w-full">
+                        <ChildContent>
+                            <RadzenDropDown TValue="int?" Name="ClientId" @bind-Value="Form.ClientId" Data="_clients"
+                                            TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
+                                            AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                            FilterOperator="StringFilterOperator.Contains" />
+                        </ChildContent>
+                        <End>
+                            <RadzenButton Icon="person_add" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          Click="NewClientAsync" title="New client" />
+                        </End>
+                        <Helper><RadzenDataAnnotationValidator Component="ClientId" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Status" class="w-full">
+                        <RadzenDropDown TValue="GigStatus" Name="Status" @bind-Value="Form.Status" @bind-Value:after="CheckOverlapsAsync"
+                                        Data="Enum.GetValues<GigStatus>()" />
+                    </RadzenFormField>
+                </RadzenColumn>
+
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Date" class="w-full">
+                        <ChildContent>
+                            <RadzenDatePicker TValue="DateOnly?" Name="Date" @bind-Value="Form.Date" @bind-Value:after="CheckOverlapsAsync"
+                                              DateFormat="ddd dd.MM.yyyy" />
+                        </ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Date" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="2">
+                    <RadzenFormField Text="Start" class="w-full">
+                        <InputDate Type="InputDateType.Time" @bind-Value="Form.StartTime" @bind-Value:after="CheckOverlapsAsync"
+                                   class="rz-textbox time-input" />
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="2">
+                    <RadzenFormField Text="End" class="w-full">
+                        <ChildContent>
+                            <InputDate Type="InputDateType.Time" @bind-Value="Form.EndTime" @bind-Value:after="CheckOverlapsAsync"
+                                       class="rz-textbox time-input" />
+                        </ChildContent>
+                        <Helper>
+                            @if (Form.EndsNextDay)
+                            {
+                                <RadzenText TextStyle="TextStyle.Caption">ends next day</RadzenText>
+                            }
+                        </Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Quote (CHF)" class="w-full">
+                        <ChildContent>
+                            <RadzenNumeric TValue="decimal?" Name="QuotedPriceChf" @bind-Value="Form.QuotedPriceChf"
+                                           Format="#,##0.00" Min="0" ShowUpDown="false" />
+                        </ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="QuotedPriceChf" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            @if (_overlaps.Count > 0)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-my-0">
+                    Overlaps with
+                    @foreach (var (gig, index) in _overlaps.Select((gig, index) => (gig, index)))
+                    {
+                        @(index > 0 ? ", " : " ")
+                        <RadzenLink Path="@($"gigs/{gig.Id}")" Text="@gig.Title" />
+                        <span> (@gig.Start.ToString("ddd dd.MM."), @GigSchedule.FormatTimes(gig.Start, gig.End))</span>
+                    }
+                </RadzenAlert>
+            }
+
+            <RadzenFormField Text="Venue (optional)" class="w-full">
+                <ChildContent>
+                    <RadzenDropDown TValue="int?" Name="VenueId" @bind-Value="Form.VenueId" Data="_venues"
+                                    TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
+                                    AllowFiltering="true" AllowClear="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                    FilterOperator="StringFilterOperator.Contains" />
+                </ChildContent>
+                <End>
+                    <RadzenButton Icon="add_location_alt" Variant="Variant.Text" Size="ButtonSize.Small"
+                                  Click="NewVenueAsync" title="New venue" />
+                </End>
+            </RadzenFormField>
+
+            <RadzenFormField Text="Notes" class="w-full">
+                <ChildContent><RadzenTextArea Name="Notes" @bind-Value="Form.Notes" Rows="5" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="Notes" /></Helper>
+            </RadzenFormField>
+
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_saving" BusyText="Saving…" />
+                @if (!IsNew)
+                {
+                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="DeleteAsync"
+                                  Disabled="_hasFinancialRecords"
+                                  title="@(_hasFinancialRecords ? "Gigs with costs or payments can't be deleted. Set the status to Cancelled instead." : null)" />
+                }
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenTemplateForm>
+</RadzenCard>;
 
     // Pre-fill from links such as "New gig" on a client page or (later) a calendar day.
     [SupplyParameterFromQuery(Name = "clientId")]
@@ -162,6 +213,12 @@ else
     [SupplyParameterFromQuery(Name = "date")]
     private DateOnly? InitialDate { get; set; }
 
+    /// <summary>Opens a tab directly, e.g. ?tab=finances.</summary>
+    [SupplyParameterFromQuery(Name = "tab")]
+    private string? InitialTab { get; set; }
+
+    private static readonly string[] TabNames = ["details", "finances", "prep", "files"];
+
     private bool IsNew => Id is null;
 
     private GigForm? _form;
@@ -172,6 +229,13 @@ else
     private List<GigRow> _overlaps = [];
     private bool _notFound;
     private bool _saving;
+
+    /// <summary>The gig as last saved: header line, quote and date for the tabs.</summary>
+    private GigRow? _summary;
+    private bool _hasFinancialRecords;
+    private int _tabIndex;
+
+    private DateOnly GigDate => _summary is null ? default : DateOnly.FromDateTime(_summary.Start);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -188,9 +252,18 @@ else
             _notFound = gig is null;
             _form = gig is null ? null : GigForm.From(gig);
             _title = gig?.Title ?? "";
+            _tabIndex = Math.Max(0, Array.IndexOf(TabNames, InitialTab?.ToLowerInvariant()));
+            await LoadSummaryAsync();
         }
 
         await CheckOverlapsAsync();
+    }
+
+    private async Task LoadSummaryAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _summary = (await db.Gigs.Where(g => g.Id == Id).ToRowsAsync(db)).SingleOrDefault();
+        _hasFinancialRecords = await db.HasFinancialRecordsAsync(Id!.Value);
     }
 
     private async Task LoadLookupsAsync()
@@ -266,6 +339,10 @@ else
             {
                 Navigation.NavigateTo($"gigs/{gig.Id}", replace: true);
             }
+            else
+            {
+                await LoadSummaryAsync();
+            }
         }
         finally
         {
@@ -285,7 +362,7 @@ else
         }
 
         await using var db = await DbFactory.CreateDbContextAsync();
-        await db.Gigs.Where(g => g.Id == Id).ExecuteDeleteAsync();
+        await db.DeleteGigAsync(Id!.Value, Store);
         Notifications.Notify(NotificationSeverity.Info, $"{_title} deleted");
         Navigation.NavigateTo("gigs");
     }

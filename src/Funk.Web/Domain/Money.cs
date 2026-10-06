@@ -4,8 +4,10 @@ namespace Funk.Web.Domain;
 
 /// <summary>
 /// An amount in Swiss francs, stored as whole Rappen (1 CHF = 100 Rappen).
-/// Integer storage keeps sums exact and lets SQLite sort and aggregate natively,
+/// Integer storage keeps sums exact and lets SQLite filter and sort by amount,
 /// which it cannot do for EF Core's TEXT-backed <see cref="decimal"/>.
+/// Totals are computed in C# with <see cref="MoneyExtensions.Sum(IEnumerable{Money})"/>:
+/// LINQ's <c>Sum</c> only accepts plain number types.
 /// </summary>
 public readonly record struct Money(long Rappen) : IComparable<Money>
 {
@@ -42,4 +44,11 @@ public readonly record struct Money(long Rappen) : IComparable<Money>
 
     /// <summary>Formats as <c>CHF 1'234.50</c>, independent of the server's culture.</summary>
     public override string ToString() => $"CHF {Chf.ToString("#,##0.00", SwissFormat)}";
+}
+
+public static class MoneyExtensions
+{
+    public static Money Sum(this IEnumerable<Money> amounts) => new(amounts.Sum(m => m.Rappen));
+
+    public static Money Sum<T>(this IEnumerable<T> items, Func<T, Money> amount) => items.Select(amount).Sum();
 }

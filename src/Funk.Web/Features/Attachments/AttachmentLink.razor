@@ -1,0 +1,17 @@
+@* Opens the file in a new tab (PDFs and images) or downloads it. *@
+<a href="@($"attachments/{Attachment.Id}")" target="_blank" rel="noopener" class="attachment-link" title="@Attachment.FileName">
+    <RadzenIcon Icon="@Icon" />
+    <span>@Attachment.FileName</span>
+</a>
+
+@code {
+    [Parameter, EditorRequired]
+    public Attachment Attachment { get; set; } = default!;
+
+    private string Icon => Attachment.ContentType switch
+    {
+        "application/pdf" => "picture_as_pdf",
+        var type when type.StartsWith("image/") => "image",
+        _ => "description",
+    };
+}

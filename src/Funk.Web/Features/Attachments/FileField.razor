@@ -1,0 +1,92 @@
+@* One optional file on a form (receipt, payslip): shows the current file and lets you replace or remove it.
+   Nothing is written until the form calls SaveFileAsync. *@
+@inject AttachmentStore Store
+
+<div class="file-field">
+    @if (_pending is not null)
+    {
+        <RadzenIcon Icon="upload_file" />
+        <span>@_pending.Name (@FormatSize(_pending.Size))</span>
+        <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
+                      Click="@(() => _pending = null)" title="Don't attach" />
+    }
+    else if (Current is not null && !_remove)
+    {
+        <AttachmentLink Attachment="Current" />
+        <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
+                      Click="@(() => _remove = true)" title="Remove file" />
+    }
+
+    @* Always rendered, only hidden: Blazor reads the chosen file from this input when the form is saved,
+       so removing it from the page in between would lose the file. *@
+    <label class="rz-button rz-button-sm rz-variant-outlined rz-base file-button" hidden="@(_pending is not null || (Current is not null && !_remove))">
+        <InputFile OnChange="OnChosen" accept="@AttachmentStore.Accept" />
+        <RadzenIcon Icon="attach_file" />
+        <span>@ChooseText</span>
+    </label>
+</div>
+@if (_error is not null)
+{
+    <RadzenText TextStyle="TextStyle.Caption" class="rz-color-danger">@_error</RadzenText>
+}
+
+@code {
+    [Parameter]
+    public Attachment? Current { get; set; }
+
+    [Parameter]
+    public string ChooseText { get; set; } = "Attach file";
+
+    private IBrowserFile? _pending;
+    private bool _remove;
+    private string? _error;
+
+    private void OnChosen(InputFileChangeEventArgs args)
+    {
+        _error = null;
+        var file = args.File;
+        var extension = Path.GetExtension(file.Name);
+        if (!AttachmentStore.AllowedExtensions.Contains(extension))
+        {
+            _error = "Only PDFs, images and office documents can be attached.";
+        }
+        else if (file.Size > AttachmentStore.MaxFileSize)
+        {
+            _error = $"The file is larger than {FormatSize(AttachmentStore.MaxFileSize)}.";
+        }
+        else
+        {
+            _pending = file;
+        }
+    }
+
+    /// <summary>Stores a newly chosen file and reports which attachment to add and which to remove.</summary>
+    public async Task<AttachmentChange> SaveFileAsync(int? gigId)
+    {
+        Attachment? added = null;
+        if (_pending is not null)
+        {
+            try
+            {
+                await using var stream = _pending.OpenReadStream(AttachmentStore.MaxFileSize);
+                added = await Store.SaveAsync(stream, _pending.Name, gigId);
+            }
+            catch (Exception e) when (e is IOException or JSException)
+            {
+                var name = _pending.Name;
+                _pending = null;
+                throw new AttachmentException($"Couldn't read {name}. Please choose it again.");
+            }
+        }
+
+        var removed = _pending is not null || _remove ? Current : null;
+        return new AttachmentChange(added, removed);
+    }
+
+    public static string FormatSize(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} B",
+        < 1024 * 1024 => $"{bytes / 1024.0:0} KB",
+        _ => $"{bytes / (1024.0 * 1024):0.#} MB",
+    };
+}

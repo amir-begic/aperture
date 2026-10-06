@@ -71,7 +71,7 @@ else
         _client = await db.Clients.AsNoTracking().SingleOrDefaultAsync(c => c.Id == Id);
         _notFound = _client is null;
         _title = _client?.Name ?? "";
-        _gigs = await db.Gigs.Where(g => g.ClientId == Id).OrderByDescending(g => g.Start).ToRows().ToListAsync();
+        _gigs = await db.Gigs.Where(g => g.ClientId == Id).OrderByDescending(g => g.Start).ToRowsAsync(db);
     }
 
     private void OnSaved(Client client)

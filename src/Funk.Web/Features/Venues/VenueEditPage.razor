@@ -71,7 +71,7 @@ else
         _venue = await db.Venues.AsNoTracking().SingleOrDefaultAsync(v => v.Id == Id);
         _notFound = _venue is null;
         _title = _venue?.Name ?? "";
-        _gigs = await db.Gigs.Where(g => g.VenueId == Id).OrderByDescending(g => g.Start).ToRows().ToListAsync();
+        _gigs = await db.Gigs.Where(g => g.VenueId == Id).OrderByDescending(g => g.Start).ToRowsAsync(db);
     }
 
     private void OnSaved(Venue venue)

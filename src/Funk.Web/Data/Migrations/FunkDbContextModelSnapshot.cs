@@ -17,6 +17,43 @@ namespace Funk.Web.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("Funk.Web.Data.Entities.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("GigId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GigId");
+
+                    b.ToTable("Attachments");
+                });
+
             modelBuilder.Entity("Funk.Web.Data.Entities.BusinessSettings", b =>
                 {
                     b.Property<int>("Id")
@@ -103,6 +140,33 @@ namespace Funk.Web.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Funk.Web.Data.Entities.ChecklistItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GigId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDone")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GigId");
+
+                    b.ToTable("ChecklistItems");
+                });
+
             modelBuilder.Entity("Funk.Web.Data.Entities.Client", b =>
                 {
                     b.Property<int>("Id")
@@ -151,6 +215,52 @@ namespace Funk.Web.Data.Migrations
                     b.HasIndex("Name");
 
                     b.ToTable("Clients");
+                });
+
+            modelBuilder.Entity("Funk.Web.Data.Entities.Expense", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("BilledToClient")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("GigId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ReceiptId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Vendor")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("GigId");
+
+                    b.HasIndex("ReceiptId");
+
+                    b.ToTable("Expenses");
                 });
 
             modelBuilder.Entity("Funk.Web.Data.Entities.Gig", b =>
@@ -207,6 +317,69 @@ namespace Funk.Web.Data.Migrations
                     b.ToTable("Gigs");
                 });
 
+            modelBuilder.Entity("Funk.Web.Data.Entities.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Amount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("GigId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ProofId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date");
+
+                    b.HasIndex("GigId");
+
+                    b.HasIndex("ProofId");
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("Funk.Web.Data.Entities.PlaylistLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GigId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GigId");
+
+                    b.ToTable("PlaylistLinks");
+                });
+
             modelBuilder.Entity("Funk.Web.Data.Entities.Venue", b =>
                 {
                     b.Property<int>("Id")
@@ -241,6 +414,44 @@ namespace Funk.Web.Data.Migrations
                     b.ToTable("Venues");
                 });
 
+            modelBuilder.Entity("Funk.Web.Data.Entities.Attachment", b =>
+                {
+                    b.HasOne("Funk.Web.Data.Entities.Gig", "Gig")
+                        .WithMany("Attachments")
+                        .HasForeignKey("GigId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Gig");
+                });
+
+            modelBuilder.Entity("Funk.Web.Data.Entities.ChecklistItem", b =>
+                {
+                    b.HasOne("Funk.Web.Data.Entities.Gig", "Gig")
+                        .WithMany("ChecklistItems")
+                        .HasForeignKey("GigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Gig");
+                });
+
+            modelBuilder.Entity("Funk.Web.Data.Entities.Expense", b =>
+                {
+                    b.HasOne("Funk.Web.Data.Entities.Gig", "Gig")
+                        .WithMany("Expenses")
+                        .HasForeignKey("GigId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Funk.Web.Data.Entities.Attachment", "Receipt")
+                        .WithMany()
+                        .HasForeignKey("ReceiptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Gig");
+
+                    b.Navigation("Receipt");
+                });
+
             modelBuilder.Entity("Funk.Web.Data.Entities.Gig", b =>
                 {
                     b.HasOne("Funk.Web.Data.Entities.Client", "Client")
@@ -259,9 +470,51 @@ namespace Funk.Web.Data.Migrations
                     b.Navigation("Venue");
                 });
 
+            modelBuilder.Entity("Funk.Web.Data.Entities.Payment", b =>
+                {
+                    b.HasOne("Funk.Web.Data.Entities.Gig", "Gig")
+                        .WithMany("Payments")
+                        .HasForeignKey("GigId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Funk.Web.Data.Entities.Attachment", "Proof")
+                        .WithMany()
+                        .HasForeignKey("ProofId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Gig");
+
+                    b.Navigation("Proof");
+                });
+
+            modelBuilder.Entity("Funk.Web.Data.Entities.PlaylistLink", b =>
+                {
+                    b.HasOne("Funk.Web.Data.Entities.Gig", "Gig")
+                        .WithMany("PlaylistLinks")
+                        .HasForeignKey("GigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Gig");
+                });
+
             modelBuilder.Entity("Funk.Web.Data.Entities.Client", b =>
                 {
                     b.Navigation("Gigs");
+                });
+
+            modelBuilder.Entity("Funk.Web.Data.Entities.Gig", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("ChecklistItems");
+
+                    b.Navigation("Expenses");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("PlaylistLinks");
                 });
 
             modelBuilder.Entity("Funk.Web.Data.Entities.Venue", b =>

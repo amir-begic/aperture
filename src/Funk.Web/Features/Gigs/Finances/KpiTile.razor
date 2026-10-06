@@ -1,0 +1,24 @@
+@* One headline number: label, value in normal text color, optional note or badge below. *@
+<RadzenCard class="kpi-tile" Variant="Variant.Outlined">
+    <RadzenText TextStyle="TextStyle.Overline" class="kpi-label">@Label</RadzenText>
+    <div class="kpi-value">@Value</div>
+    @if (Note is not null)
+    {
+        <RadzenText TextStyle="TextStyle.Caption">@Note</RadzenText>
+    }
+    @ChildContent
+</RadzenCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Label { get; set; } = "";
+
+    [Parameter, EditorRequired]
+    public string Value { get; set; } = "";
+
+    [Parameter]
+    public string? Note { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

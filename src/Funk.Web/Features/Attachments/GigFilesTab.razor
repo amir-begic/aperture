@@ -1,0 +1,138 @@
+@* All files of a gig: contracts, riders and timelines uploaded here, plus receipts and payslips from its finances. *@
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject AttachmentStore Store
+@inject DialogService Dialogs
+@inject NotificationService Notifications
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">Contracts, riders, timelines… Receipts and payslips show up here too.</RadzenText>
+    <label class="rz-button rz-button-sm rz-variant-filled rz-primary file-button">
+        <InputFile OnChange="UploadAsync" accept="@AttachmentStore.Accept" multiple />
+        <RadzenIcon Icon="upload_file" />
+        <span>@(_uploading ? "Uploading…" : "Upload files")</span>
+    </label>
+</RadzenStack>
+
+<RadzenDataGrid TItem="FileRow" Data="_files" IsLoading="_files is null" EmptyText="No files yet.">
+    <Columns>
+        <RadzenDataGridColumn Title="File">
+            <Template Context="file"><AttachmentLink Attachment="file.Attachment" /></Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Belongs to">
+            <Template Context="file">@(file.UsedBy ?? "Gig")</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Size" Width="7rem" TextAlign="TextAlign.Right">
+            <Template Context="file">@FileField.FormatSize(file.Attachment.SizeBytes)</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Uploaded" Width="9rem">
+            <Template Context="file">@file.Attachment.UploadedAt.ToString("dd.MM.yyyy")</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Width="4rem" TextAlign="TextAlign.Center">
+            <Template Context="file">
+                @if (file.UsedBy is null)
+                {
+                    <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
+                                  Click="@(() => DeleteAsync(file.Attachment))" title="Delete file" />
+                }
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    private const int MaxFilesPerUpload = 10;
+
+    [Parameter, EditorRequired]
+    public int GigId { get; set; }
+
+    private List<FileRow>? _files;
+    private bool _uploading;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var attachments = await db.Attachments.AsNoTracking()
+            .Where(a => a.GigId == GigId).OrderByDescending(a => a.UploadedAt).ToListAsync();
+
+        // Receipts and payslips are deleted with their cost or payment, not here.
+        var usedBy = await db.Expenses.Where(e => e.GigId == GigId && e.ReceiptId != null)
+            .ToDictionaryAsync(e => e.ReceiptId!.Value, e => "Receipt: " + e.Description);
+        var proofs = await db.Payments.Where(p => p.GigId == GigId && p.ProofId != null)
+            .Select(p => p.ProofId!.Value).ToListAsync();
+        proofs.ForEach(id => usedBy[id] = "Payslip");
+
+        _files = attachments.Select(a => new FileRow(a, usedBy.GetValueOrDefault(a.Id))).ToList();
+    }
+
+    private async Task UploadAsync(InputFileChangeEventArgs args)
+    {
+        if (args.FileCount > MaxFilesPerUpload)
+        {
+            Notifications.Notify(NotificationSeverity.Warning, "Too many files", $"Upload at most {MaxFilesPerUpload} files at once.");
+            return;
+        }
+
+        _uploading = true;
+        var problems = new List<string>();
+        try
+        {
+            foreach (var file in args.GetMultipleFiles(MaxFilesPerUpload))
+            {
+                if (file.Size > AttachmentStore.MaxFileSize)
+                {
+                    problems.Add($"{file.Name} is larger than {FileField.FormatSize(AttachmentStore.MaxFileSize)}.");
+                    continue;
+                }
+
+                try
+                {
+                    await using var stream = file.OpenReadStream(AttachmentStore.MaxFileSize);
+                    var attachment = await Store.SaveAsync(stream, file.Name, GigId);
+                    await Store.CommitAsync(async () =>
+                    {
+                        await using var db = await DbFactory.CreateDbContextAsync();
+                        db.Attachments.Add(attachment);
+                        await db.SaveChangesAsync();
+                    }, added: attachment, removed: null);
+                }
+                catch (AttachmentException e)
+                {
+                    problems.Add(e.Message);
+                }
+            }
+        }
+        finally
+        {
+            _uploading = false;
+        }
+
+        foreach (var problem in problems)
+        {
+            Notifications.Notify(NotificationSeverity.Warning, "Not uploaded", problem, duration: 8000);
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Attachment attachment)
+    {
+        var confirmed = await Dialogs.Confirm($"Delete {attachment.FileName}?", "Delete file",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await Store.CommitAsync(async () =>
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            await db.Attachments.Where(a => a.Id == attachment.Id).ExecuteDeleteAsync();
+        }, added: null, removed: attachment);
+
+        await LoadAsync();
+    }
+
+    private sealed record FileRow(Attachment Attachment, string? UsedBy);
+}

@@ -10,6 +10,8 @@ public sealed record FunkPaths(string DataDirectory)
 {
     public string DatabasePath => Path.Combine(DataDirectory, "funk.db");
 
+    public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
+
     public string ConnectionString =>
         new SqliteConnectionStringBuilder { DataSource = DatabasePath }.ToString();
 

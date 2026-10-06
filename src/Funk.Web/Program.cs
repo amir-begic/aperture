@@ -2,6 +2,7 @@ using Funk.Web.Auth;
 using Funk.Web.Components;
 using Funk.Web.Configuration;
 using Funk.Web.Data;
+using Funk.Web.Features.Attachments;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -22,6 +23,7 @@ builder.Services.AddSingleton(paths);
 // A factory rather than a scoped DbContext: a Blazor Server circuit lives as long as the
 // browser tab, so pages create a short-lived context per operation instead.
 builder.Services.AddDbContextFactory<FunkDbContext>(options => options.UseSqlite(paths.ConnectionString));
+builder.Services.AddSingleton<AttachmentStore>();
 
 // Auth: one user, cookie login, everything requires sign-in unless marked [AllowAnonymous].
 builder.Services.AddOptions<AuthOptions>()
@@ -78,6 +80,8 @@ app.UseAntiforgery();
 app.MapStaticAssets().AllowAnonymous();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapAttachmentEndpoints();
 
 app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {
