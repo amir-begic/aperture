@@ -14,6 +14,7 @@ public sealed record GigRow(
     GigStatus Status,
     EventType EventType,
     string ClientName,
+    string? ClientPhone,
     string? VenueName,
     string? VenueCity,
     Money? QuotedPrice)
@@ -43,6 +44,7 @@ public static class GigRowQueries
             g.Status,
             g.EventType,
             g.Client.Name,
+            g.Client.Phone,
             g.Venue == null ? null : g.Venue.Name,
             g.Venue == null ? null : g.Venue.City,
             g.QuotedPrice));

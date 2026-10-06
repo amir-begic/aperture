@@ -17,10 +17,11 @@ public static class GigQueries
     /// next starts) don't count, and neither do cancelled ones.
     /// </summary>
     public static IQueryable<Gig> Overlapping(this IQueryable<Gig> gigs, DateTime start, DateTime end, int? excludeGigId = null) =>
-        gigs.Where(g => g.Status != GigStatus.Cancelled
-            && g.Id != excludeGigId
-            && g.Start < end
-            && start < g.End);
+        gigs.InRange(start, end, includeCancelled: false).Where(g => g.Id != excludeGigId);
+
+    /// <summary>Gigs that take place (at least partly) within [start, end), e.g. the days a calendar shows.</summary>
+    public static IQueryable<Gig> InRange(this IQueryable<Gig> gigs, DateTime start, DateTime end, bool includeCancelled) =>
+        gigs.Where(g => g.Start < end && start < g.End && (includeCancelled || g.Status != GigStatus.Cancelled));
 
     /// <summary>
     /// Filters for the gig list. Upcoming gigs (including one in progress) are sorted soonest first,

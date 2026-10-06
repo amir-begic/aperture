@@ -203,7 +203,7 @@ else
     </RadzenTemplateForm>
 </RadzenCard>;
 
-    // Pre-fill from links such as "New gig" on a client page or (later) a calendar day.
+    // Pre-fill from links such as "New gig" on a client page or a calendar day.
     [SupplyParameterFromQuery(Name = "clientId")]
     private int? InitialClientId { get; set; }
 
@@ -212,6 +212,12 @@ else
 
     [SupplyParameterFromQuery(Name = "date")]
     private DateOnly? InitialDate { get; set; }
+
+    /// <summary>Start time from a week-view slot; the end is then set a typical gig length later.</summary>
+    [SupplyParameterFromQuery(Name = "start")]
+    private TimeOnly? InitialStart { get; set; }
+
+    private static readonly TimeSpan TypicalGigLength = TimeSpan.FromHours(5);
 
     /// <summary>Opens a tab directly, e.g. ?tab=finances.</summary>
     [SupplyParameterFromQuery(Name = "tab")]
@@ -244,6 +250,11 @@ else
         if (IsNew)
         {
             _form = new GigForm { ClientId = InitialClientId, VenueId = InitialVenueId, Date = InitialDate };
+            if (InitialStart is { } start)
+            {
+                _form.StartTime = start;
+                _form.EndTime = start.Add(TypicalGigLength);
+            }
         }
         else
         {

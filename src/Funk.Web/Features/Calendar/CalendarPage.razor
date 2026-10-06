@@ -1,0 +1,132 @@
+@page "/calendar"
+@using Funk.Web.Features.Gigs
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject TooltipService Tooltips
+@implements IDisposable
+
+<PageTitle>Calendar · Funk</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Calendar</RadzenText>
+    <RadzenButton Text="New gig" Icon="add" Click="@(() => Navigation.NavigateTo("gigs/new"))" />
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="1rem" class="rz-mb-3">
+    <ul class="calendar-legend" aria-label="Legend">
+        @foreach (var status in LegendStatuses)
+        {
+            <li><span class="@($"gig-swatch gig-{status.ToString().ToLowerInvariant()}")"></span>@status</li>
+        }
+    </ul>
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="rz-ms-auto">
+        <RadzenSwitch Name="ShowCancelled" @bind-Value="_showCancelled" @bind-Value:after="ReloadAsync" />
+        <RadzenLabel Component="ShowCancelled" Text="Show cancelled" />
+    </RadzenStack>
+</RadzenStack>
+
+<RadzenText TextStyle="TextStyle.Caption" class="rz-mb-2">Hover a gig for details, click it to open it, or click a free day to book a new gig on that date.</RadzenText>
+
+<RadzenScheduler @ref="_scheduler" TItem="CalendarItem" Data="_items" class="calendar"
+                 StartProperty="@nameof(CalendarItem.Start)" EndProperty="@nameof(CalendarItem.End)" TextProperty="@nameof(CalendarItem.Title)"
+                 LoadData="LoadAsync" SlotSelect="OnSlotSelect" AppointmentSelect="OnGigSelect" AppointmentRender="OnGigRender"
+                 AppointmentMouseEnter="ShowCard" AppointmentMouseLeave="HideCard"
+                 TodayText="Today">
+    <Template Context="item">
+        <span class="gig-time">@item.Gig.Start.ToString("HH:mm")</span> @item.Gig.Title
+    </Template>
+    <ChildContent>
+        <RadzenMonthView Text="Month" MaxAppointmentsInSlot="3" MoreText="+{0} more" />
+        @* The whole day in hour rows: nights and after-midnight club gigs stay visible without scrolling. *@
+        <RadzenWeekView Text="Week" TimeFormat="HH:mm" MinutesPerSlot="60" StartTime="TimeSpan.Zero" EndTime="@TimeSpan.FromHours(24)" />
+        <RadzenYearPlannerView Text="Year" />
+    </ChildContent>
+</RadzenScheduler>
+
+@code {
+    private static readonly GigStatus[] LegendStatuses = [GigStatus.Inquiry, GigStatus.Confirmed, GigStatus.Done, GigStatus.Cancelled];
+
+    private RadzenScheduler<CalendarItem>? _scheduler;
+    private List<CalendarItem> _items = [];
+    private bool _showCancelled;
+    private SchedulerLoadDataEventArgs? _lastLoad;
+
+    /// <summary>Checklist progress per gig, for the hover card.</summary>
+    private Dictionary<int, (int Done, int Total)> _prep = [];
+
+    // Called by the scheduler whenever the visible range changes (navigation or view switch).
+    private async Task LoadAsync(SchedulerLoadDataEventArgs args)
+    {
+        _lastLoad = args;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var gigs = await db.Gigs
+            .InRange(args.Start, args.End, _showCancelled)
+            .OrderBy(g => g.Start)
+            .ToRowsAsync(db);
+
+        var ids = gigs.Select(g => g.Id).ToList();
+        _prep = await db.ChecklistItems
+            .Where(i => ids.Contains(i.GigId))
+            .GroupBy(i => i.GigId)
+            .Select(g => new { GigId = g.Key, Done = g.Count(i => i.IsDone), Total = g.Count() })
+            .ToDictionaryAsync(p => p.GigId, p => (p.Done, p.Total));
+
+        // In the week view hours matter, so show the real end. In month and year views a Saturday-night gig
+        // ending at 03:00 is a Saturday booking: showing it on Sunday too would make a free day look booked.
+        var showHours = args.View is RadzenWeekView;
+        _items = gigs.Select(gig => new CalendarItem(gig, showHours ? gig.End : Earlier(gig.End, gig.Start.Date.AddDays(1)))).ToList();
+    }
+
+    private async Task ReloadAsync()
+    {
+        if (_lastLoad is not null)
+        {
+            await LoadAsync(_lastLoad);
+            await _scheduler!.Reload();
+        }
+    }
+
+    private static DateTime Earlier(DateTime a, DateTime b) => a < b ? a : b;
+
+    /// <summary>A gig as the scheduler places it; <see cref="End"/> may be cut off at midnight.</summary>
+    private sealed record CalendarItem(GigRow Gig, DateTime End)
+    {
+        public DateTime Start => Gig.Start;
+        public string Title => Gig.Title;
+    }
+
+    private void OnGigSelect(SchedulerAppointmentSelectEventArgs<CalendarItem> args)
+    {
+        Tooltips.Close();
+        Navigation.NavigateTo($"gigs/{args.Data!.Gig.Id}");
+    }
+
+    private void ShowCard(SchedulerAppointmentMouseEventArgs<CalendarItem> args)
+    {
+        var gig = args.Data!.Gig;
+        var prep = _prep.TryGetValue(gig.Id, out var progress) ? progress : ((int, int)?)null;
+        Tooltips.Open(args.Element, _ => @<GigHoverCard Gig="gig" Prep="prep" />, new TooltipOptions
+        {
+            Position = TooltipPosition.Bottom,
+            Delay = 250,       // don't flash cards while moving the mouse across the calendar
+            Duration = null,   // stay until the mouse leaves the gig
+            CssClass = "gig-tooltip",
+        });
+    }
+
+    private void HideCard(SchedulerAppointmentMouseEventArgs<CalendarItem> args) => Tooltips.Close();
+
+    public void Dispose() => Tooltips.Close();
+
+    private void OnSlotSelect(SchedulerSlotSelectEventArgs args)
+    {
+        var date = args.Start.ToString("yyyy-MM-dd");
+        // Week view slots have a time of day; month and year slots start at midnight.
+        var start = args.View is RadzenWeekView ? $"&start={args.Start:HH\\:mm}" : "";
+        Navigation.NavigateTo($"gigs/new?date={date}{start}");
+    }
+
+    // Radzen puts these attributes on the inner .rz-event-content element.
+    private void OnGigRender(SchedulerAppointmentRenderEventArgs<CalendarItem> args) =>
+        args.Attributes["class"] = $"gig-event gig-{args.Data!.Gig.Status.ToString().ToLowerInvariant()}";
+}

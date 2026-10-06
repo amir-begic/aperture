@@ -72,6 +72,36 @@ public sealed class GigQueriesTests : IAsyncLifetime
         return await db.Gigs.Overlapping(start, end, excludeGigId).Select(g => g.Id).ToListAsync();
     }
 
+    // ---- InRange (calendar) ----
+
+    [Fact]
+    public async Task Range_includes_gigs_that_start_before_or_end_after_it()
+    {
+        var client = await _database.AddClientAsync();
+        // Visible month: December 2026
+        var newYearsEve = await _database.AddGigAsync(client, new DateTime(2026, 12, 31, 21, 0, 0), new DateTime(2027, 1, 1, 4, 0, 0));
+        var lateNovember = await _database.AddGigAsync(client, At(11, 30, 22), At(12, 1, 3));
+        await _database.AddGigAsync(client, At(11, 28, 20), At(11, 29, 2));
+        await _database.AddGigAsync(client, new DateTime(2027, 1, 1, 20, 0, 0), new DateTime(2027, 1, 2, 2, 0, 0));
+
+        await using var db = _database.CreateContext();
+        var ids = await db.Gigs.InRange(At(12, 1, 0), new DateTime(2027, 1, 1), includeCancelled: false)
+            .OrderBy(g => g.Start).Select(g => g.Id).ToListAsync();
+
+        Assert.Equal([lateNovember.Id, newYearsEve.Id], ids);
+    }
+
+    [Fact]
+    public async Task Range_shows_cancelled_gigs_only_on_request()
+    {
+        var client = await _database.AddClientAsync();
+        var cancelled = await _database.AddGigAsync(client, At(12, 12, 20), At(12, 13, 2), GigStatus.Cancelled);
+
+        await using var db = _database.CreateContext();
+        Assert.Empty(await db.Gigs.InRange(At(12, 1, 0), At(12, 31, 0), includeCancelled: false).ToListAsync());
+        Assert.Equal(cancelled.Id, (await db.Gigs.InRange(At(12, 1, 0), At(12, 31, 0), includeCancelled: true).SingleAsync()).Id);
+    }
+
     // ---- Filter ----
 
     [Fact]
