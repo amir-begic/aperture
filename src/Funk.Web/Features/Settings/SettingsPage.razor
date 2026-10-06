@@ -135,6 +135,19 @@ else
                 </RadzenStack>
             </RadzenFieldset>
 
+            <RadzenFieldset Text="Depreciation of equipment">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenSwitch Name="FullFirstYear" Value="@(!_settings.ProRataFirstYear)" ValueChanged="@((bool full) => _settings.ProRataFirstYear = !full)" />
+                        <RadzenLabel Component="FullFirstYear" Text="Full annual depreciation in the year of purchase" />
+                    </RadzenStack>
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                        St. Gallen allows the full rate even for equipment bought late in the year (StB 41 Nr. 1).
+                        Switch off to depreciate by month instead, e.g. if your canton requires it.
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenFieldset>
+
             <div>
                 <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_saving" BusyText="Saving…" />
             </div>

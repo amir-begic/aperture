@@ -138,6 +138,7 @@
     private FileField? _receipt;
     private bool _busy;
     private string? _error;
+    private bool _proRataFirstYear;
 
     private string EstvClass => AssetCategories.All.First(c => c.Value == _form!.Category).EstvClass;
 
@@ -146,13 +147,18 @@
         _form is { PurchaseDate: { } purchased, CostChf: > 0 }
             ? Depreciation.Schedule(purchased, Money.FromChf(_form.CostChf.Value), _form.RatePercent,
                     _form.IsDisposed ? _form.DisposedOn : null, _form.IsDisposed ? Money.FromChf(_form.SaleProceedsChf ?? 0) : null,
-                    untilYear: purchased.Year + 9)
+                    untilYear: purchased.Year + 9, _proRataFirstYear)
                 .TakeWhile((year, index) => index == 0 || year.Opening > Money.Zero)
                 .ToList()
             : [];
 
     protected override async Task OnInitializedAsync()
     {
+        await using (var settingsDb = await DbFactory.CreateDbContextAsync())
+        {
+            _proRataFirstYear = await settingsDb.BusinessSettings.Select(s => s.ProRataFirstYear).SingleAsync();
+        }
+
         if (AssetId is null)
         {
             _form = new AssetForm { PurchaseDate = DateOnly.FromDateTime(Time.GetLocalNow().DateTime) };

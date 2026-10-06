@@ -155,6 +155,9 @@ namespace Funk.Web.Data.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ProRataFirstYear")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Street")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -187,6 +190,7 @@ namespace Funk.Web.Data.Migrations
                             OwnerName = "",
                             PaymentTermsDays = 30,
                             PostalCode = "",
+                            ProRataFirstYear = false,
                             Street = "",
                             VatRatePercent = 8.1m
                         });

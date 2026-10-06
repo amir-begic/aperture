@@ -141,7 +141,9 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
         total: Statement.TotalCosts);
 
     private void ComposeEquipment(IContainer container) => Section(container, "Equipment and depreciation",
-        "Declining balance on the book value, pro rata by month in the year of purchase and sale.",
+        Statement.ProRataFirstYear
+            ? "Declining balance on the book value, pro rata by month in the year of purchase and sale."
+            : "Declining balance on the book value; full rate in the year of purchase, pro rata by month in the year of sale.",
         [
             new("Equipment", Share: 3), new("Bought", 18), new("Price", 20, Right: true), new("Rate", 11, Right: true),
             new("Start", 20, Right: true), new("Depreciation", 22, Right: true), new("End", 24, Right: true), new("Doc.", 12),

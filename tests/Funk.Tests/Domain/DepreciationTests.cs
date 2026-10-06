@@ -20,13 +20,45 @@ public class DepreciationTests
     }
 
     [Fact]
-    public void First_year_is_pro_rata_from_the_month_of_purchase()
+    public void Full_rate_in_the_year_of_purchase_by_default()
+    {
+        // St. Gallen: no pro rata, even when bought in October (StB 41 Nr. 1).
+        var schedule = Depreciation.Schedule(new DateOnly(2026, 10, 6), Chf(2000), 30, null, null, untilYear: 2027);
+
+        Assert.Equal(Chf(600), schedule[0].Depreciation);
+        Assert.Equal(Chf(420), schedule[1].Depreciation);
+    }
+
+    [Fact]
+    public void First_year_can_be_pro_rata_from_the_month_of_purchase()
     {
         // Bought in October: Oct, Nov, Dec = 3 months
-        var schedule = Depreciation.Schedule(new DateOnly(2026, 10, 6), Chf(2400), 40, null, null, untilYear: 2027);
+        var schedule = Depreciation.Schedule(new DateOnly(2026, 10, 6), Chf(2400), 40, null, null, untilYear: 2027, proRataFirstYear: true);
 
         Assert.Equal(Chf(240), schedule[0].Depreciation);   // 2400 * 40% * 3/12
         Assert.Equal(Chf(864), schedule[1].Depreciation);   // 2160 * 40%
+    }
+
+    [Fact]
+    public void Year_of_sale_is_pro_rata_after_a_full_first_year()
+    {
+        // Full-year convention: Jan–Mar before an April sale = 3 months.
+        var schedule = Depreciation.Schedule(new DateOnly(2026, 10, 1), Chf(1200), 30, new DateOnly(2027, 4, 1), Chf(1000), untilYear: 2027);
+
+        Assert.Equal(Chf(360), schedule[0].Depreciation);            // full year 2026
+        Assert.Equal(Chf(63), schedule[1].Depreciation);             // 840 * 30% * 3/12
+        Assert.Equal(Chf(223), schedule[1].DisposalResult);          // 1000 - 777
+    }
+
+    [Fact]
+    public void Bought_and_sold_in_the_same_year_counts_only_the_months_held()
+    {
+        // Bought in October, sold in December: Oct + Nov = 2 months, not a full year.
+        var schedule = Depreciation.Schedule(new DateOnly(2026, 10, 5), Chf(1200), 30, new DateOnly(2026, 12, 15), Chf(1000), untilYear: 2026);
+
+        var year = Assert.Single(schedule);
+        Assert.Equal(Chf(60), year.Depreciation);                    // 1200 * 30% * 2/12
+        Assert.Equal(Chf(-140), year.DisposalResult);                // 1000 - 1140
     }
 
     [Fact]

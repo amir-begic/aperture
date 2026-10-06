@@ -33,7 +33,8 @@ public sealed record IncomeStatement(
     IReadOnlyList<IncomeEntry> Income,
     IReadOnlyList<ExpenseEntry> Expenses,
     IReadOnlyList<AssetEntry> Assets,
-    IReadOnlyList<GigResult> Gigs)
+    IReadOnlyList<GigResult> Gigs,
+    bool ProRataFirstYear = false)
 {
     public Money TotalIncome => Income.Sum(i => i.Amount);
     public Money TotalCosts => Expenses.Sum(e => e.Amount);
@@ -88,12 +89,13 @@ public sealed record IncomeStatement(
             .Select(e => new ExpenseEntry(e.Id, e.Date, e.Category, e.Description, e.Vendor, e.GigId, e.Gig?.Title, e.Amount, e.Receipt))
             .ToList();
 
+        var proRataFirstYear = await db.BusinessSettings.Select(s => s.ProRataFirstYear).SingleAsync();
         var assets = (await db.Assets.AsNoTracking()
                 .Include(a => a.Receipt)
                 .Where(a => a.PurchaseDate < until && (a.DisposedOn == null || a.DisposedOn >= from))
                 .OrderBy(a => a.PurchaseDate)
                 .ToListAsync())
-            .Select(a => (Asset: a, Year: a.Schedule(year).LastOrDefault(y => y.Year == year)))
+            .Select(a => (Asset: a, Year: a.Schedule(year, proRataFirstYear).LastOrDefault(y => y.Year == year)))
             .Where(a => a.Year is not null)
             .Select(a => new AssetEntry(a.Asset, a.Year!))
             .ToList();
@@ -112,7 +114,7 @@ public sealed record IncomeStatement(
             .Select(r => new GigResult(r.Id, r.Title, r.Start, r.ClientName, r.Financials.Total, gigCosts.GetValueOrDefault(r.Id), r.Received))
             .ToList();
 
-        return new IncomeStatement(year, income, expenses, assets, gigs);
+        return new IncomeStatement(year, income, expenses, assets, gigs, proRataFirstYear);
     }
 
     /// <summary>Years with any data, newest first, always including the current one.</summary>

@@ -57,6 +57,12 @@ public class BusinessSettings
     [Range(0, 100)]
     public decimal VatRatePercent { get; set; } = 8.1m;
 
+    /// <summary>
+    /// Depreciate equipment by month in the year of purchase instead of the full annual rate.
+    /// Off by default: St. Gallen allows the full rate (StB 41 Nr. 1), and so do many cantons.
+    /// </summary>
+    public bool ProRataFirstYear { get; set; }
+
     /// <summary>True once everything an invoice needs has been filled in.</summary>
     public bool IsComplete =>
         !string.IsNullOrWhiteSpace(OwnerName)

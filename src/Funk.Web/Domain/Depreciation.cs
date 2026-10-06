@@ -6,8 +6,12 @@ public sealed record DepreciationYear(int Year, Money Opening, Money Depreciatio
 
 /// <summary>
 /// Declining-balance depreciation ("degressiv, vom Buchwert") as in the ESTV's Merkblatt A 1995: each year the rate
-/// applies to the remaining book value. The first and last year are pro rata by month: the month of purchase counts,
-/// the month of sale doesn't. The ESTV rates are maximums; a lower rate is always allowed.
+/// applies to the remaining book value. The ESTV rates are maximums; a lower rate is always allowed.
+/// <para>
+/// Year of purchase: the full annual rate by default, as St. Gallen practice allows ("Die Abschreibungen werden nicht
+/// pro rata temporis gekürzt", StB 41 Nr. 1); or, with <c>proRataFirstYear</c>, by month (the month of purchase counts).
+/// Year of sale: by month up to the sale (the month of sale doesn't count).
+/// </para>
 /// </summary>
 public static class Depreciation
 {
@@ -15,7 +19,8 @@ public static class Depreciation
     private static readonly Money WriteOffThreshold = Money.FromChf(1);
 
     public static IReadOnlyList<DepreciationYear> Schedule(
-        DateOnly purchased, Money cost, decimal ratePercent, DateOnly? disposedOn, Money? saleProceeds, int untilYear)
+        DateOnly purchased, Money cost, decimal ratePercent, DateOnly? disposedOn, Money? saleProceeds, int untilYear,
+        bool proRataFirstYear = false)
     {
         var years = new List<DepreciationYear>();
         var bookValue = cost;
@@ -23,8 +28,9 @@ public static class Depreciation
 
         for (var year = purchased.Year; year <= lastYear; year++)
         {
-            var firstMonth = year == purchased.Year ? purchased.Month : 1;
             var isDisposalYear = disposedOn?.Year == year;
+            // Bought and sold in the same year: only the months actually held, whatever the first-year rule.
+            var firstMonth = year == purchased.Year && (proRataFirstYear || isDisposalYear) ? purchased.Month : 1;
             var monthsInUse = isDisposalYear
                 ? Math.Max(0, disposedOn!.Value.Month - firstMonth)
                 : 12 - firstMonth + 1;

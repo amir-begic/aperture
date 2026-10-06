@@ -38,6 +38,6 @@ public class Asset
 
     public Money? SaleProceeds { get; set; }
 
-    public IReadOnlyList<DepreciationYear> Schedule(int untilYear) =>
-        Depreciation.Schedule(PurchaseDate, Cost, DepreciationRatePercent, DisposedOn, SaleProceeds, untilYear);
+    public IReadOnlyList<DepreciationYear> Schedule(int untilYear, bool proRataFirstYear) =>
+        Depreciation.Schedule(PurchaseDate, Cost, DepreciationRatePercent, DisposedOn, SaleProceeds, untilYear, proRataFirstYear);
 }

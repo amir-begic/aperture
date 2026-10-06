@@ -12,7 +12,8 @@
 </RadzenStack>
 <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
     Gear you use for several years. Its price is spread over the years as depreciation instead of counting as a cost when you buy it.
-    Small purchases can simply be added as a cost under <RadzenLink Path="costs" Text="Costs" />.
+    Cheap items are often booked directly as a cost; ask your fiduciary where the line is.
+    How the year of purchase is depreciated is set in <RadzenLink Path="settings" Text="Settings" />.
 </RadzenText>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" class="rz-mb-4">
@@ -74,11 +75,12 @@
     private List<int> _years = [];
     private int _year;
     private List<Asset>? _assets;
+    private bool _proRataFirstYear;
 
     /// <summary>Equipment owned during the selected year, with that year's figures.</summary>
     private IEnumerable<AssetRow> Rows => (_assets ?? [])
         .Where(a => a.PurchaseDate.Year <= _year && (a.DisposedOn is null || a.DisposedOn.Value.Year >= _year))
-        .Select(a => new AssetRow(a, a.Schedule(_year).LastOrDefault(y => y.Year == _year)));
+        .Select(a => new AssetRow(a, a.Schedule(_year, _proRataFirstYear).LastOrDefault(y => y.Year == _year)));
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,6 +94,7 @@
     {
         await using var db = await DbFactory.CreateDbContextAsync();
         _assets = await db.Assets.AsNoTracking().Include(a => a.Receipt).OrderByDescending(a => a.PurchaseDate).ToListAsync();
+        _proRataFirstYear = await db.BusinessSettings.Select(s => s.ProRataFirstYear).SingleAsync();
     }
 
     private async Task EditAsync(int? assetId)
