@@ -1,4 +1,4 @@
-@* Paid / partially paid / unpaid, always as text (color only reinforces it). *@
+@* Paid / partially paid / unpaid / overdue, always as text (color only reinforces it). *@
 @if (State != PaymentState.NoQuote)
 {
     <RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Text" />
@@ -8,13 +8,20 @@
     [Parameter, EditorRequired]
     public PaymentState State { get; set; }
 
-    /// <summary>Unpaid is only alarming once the gig has been played.</summary>
+    /// <summary>The gig has been played: unpaid becomes alarming.</summary>
     [Parameter]
-    public bool IsOverdue { get; set; }
+    public bool IsPlayed { get; set; }
+
+    /// <summary>An issued invoice's due date has passed.</summary>
+    [Parameter]
+    public bool IsPastDue { get; set; }
+
+    private bool IsOpen => State is PaymentState.Unpaid or PaymentState.PartiallyPaid;
 
     private string Text => State switch
     {
         PaymentState.Paid => "Paid",
+        _ when IsPastDue && IsOpen => "Overdue",
         PaymentState.PartiallyPaid => "Partially paid",
         _ => "Unpaid",
     };
@@ -22,8 +29,9 @@
     private BadgeStyle Style => State switch
     {
         PaymentState.Paid => BadgeStyle.Success,
+        _ when IsPastDue && IsOpen => BadgeStyle.Danger,
         PaymentState.PartiallyPaid => BadgeStyle.Info,
-        _ when IsOverdue => BadgeStyle.Danger,
+        _ when IsPlayed => BadgeStyle.Danger,
         _ => BadgeStyle.Base,
     };
 }

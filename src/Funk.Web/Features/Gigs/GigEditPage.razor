@@ -5,6 +5,7 @@
 @using Funk.Web.Features.Attachments
 @using Funk.Web.Features.Gigs.Finances
 @using Funk.Web.Features.Gigs.Prep
+@using Funk.Web.Features.Invoices
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
@@ -43,7 +44,8 @@ else
                 <GigStatusBadge Status="_summary.Status" />
                 @if (_summary.PaymentState is { } paymentState)
                 {
-                    <PaymentStateBadge State="paymentState" IsOverdue="@(_summary.Status == GigStatus.Done)" />
+                    <PaymentStateBadge State="paymentState" IsPlayed="@(_summary.Status == GigStatus.Done)"
+                                       IsPastDue="@_summary.IsPastDue(DateOnly.FromDateTime(Time.GetLocalNow().DateTime))" />
                 }
                 <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                     @_summary.Start.ToString("ddd dd.MM.yyyy") · @GigSchedule.FormatTimes(_summary.Start, _summary.End) · @_summary.ClientName
@@ -62,6 +64,9 @@ else
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Finances" Icon="payments">
                     <GigFinancesTab GigId="Id!.Value" Quote="_summary?.QuotedPrice" GigDate="GigDate" Changed="LoadSummaryAsync" />
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="Invoice" Icon="request_quote">
+                    <GigInvoiceTab GigId="Id!.Value" Changed="LoadSummaryAsync" />
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Music & prep" Icon="queue_music">
                     <GigPrepTab GigId="Id!.Value" />
@@ -223,7 +228,7 @@ else
     [SupplyParameterFromQuery(Name = "tab")]
     private string? InitialTab { get; set; }
 
-    private static readonly string[] TabNames = ["details", "finances", "prep", "files"];
+    private static readonly string[] TabNames = ["details", "finances", "invoice", "prep", "files"];
 
     private bool IsNew => Id is null;
 

@@ -9,12 +9,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Codecrete.SwissQRBill.Generator" Version="3.5.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
+    <PackageReference Include="QuestPDF" Version="2026.9.1" />
     <PackageReference Include="Radzen.Blazor" Version="12.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Liberation Sans (SIL OFL 1.1), one of the fonts the Swiss QR-bill standard allows. -->
+    <EmbeddedResource Include="Features/Invoices/Fonts/*.ttf" />
   </ItemGroup>
 
 </Project>

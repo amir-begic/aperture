@@ -1,0 +1,335 @@
+@using Funk.Web.Features.Gigs
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject InvoiceService Invoices
+@inject DialogService Dialogs
+@inject NotificationService Notifications
+@inject TimeProvider Time
+
+@if (_invoices is null)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else if (Active is null)
+{
+    <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
+        <RadzenStack Gap="0.75rem" AlignItems="AlignItems.Start">
+            <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0">No invoice yet.</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                The draft starts with the quote and every cost billed to the client. You can edit it before issuing.
+            </RadzenText>
+            <RadzenButton Text="Create invoice" Icon="request_quote" Click="CreateDraftAsync" IsBusy="_busy" />
+        </RadzenStack>
+    </RadzenCard>
+}
+else if (Active.Status == InvoiceStatus.Draft)
+{
+    <RadzenStack Gap="1rem">
+        @if (_problems.Count > 0)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Title="Before you can issue this invoice">
+                <ul class="rz-my-0">
+                    @foreach (var problem in _problems)
+                    {
+                        <li>@problem</li>
+                    }
+                </ul>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" class="rz-mt-2">
+                    <RadzenLink Path="settings" Text="Open settings" />
+                    <RadzenLink Path="@($"clients/{_clientId}")" Text="Open client" />
+                </RadzenStack>
+            </RadzenAlert>
+        }
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+            <RadzenFormField Text="Invoice date">
+                <RadzenDatePicker TValue="DateOnly" @bind-Value="_issueDate" @bind-Value:after="OnIssueDateChanged" DateFormat="dd.MM.yyyy" />
+            </RadzenFormField>
+            <RadzenFormField Text="Due date">
+                <RadzenDatePicker TValue="DateOnly" @bind-Value="_dueDate" @bind-Value:after="MarkDirty" DateFormat="dd.MM.yyyy" />
+            </RadzenFormField>
+        </RadzenStack>
+
+        <div class="invoice-lines">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="num">Qty</th>
+                        <th class="num">Price CHF</th>
+                        <th class="num">Amount CHF</th>
+                        <th aria-label="Remove"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in _lines)
+                    {
+                        <tr>
+                            <td>
+                                <RadzenTextBox @bind-Value="line.Description" @bind-Value:after="MarkDirty" class="w-full" aria-label="Description" />
+                            </td>
+                            <td class="num qty">
+                                <RadzenNumeric TValue="decimal" @bind-Value="line.Quantity" @bind-Value:after="MarkDirty" Min="0" Format="0.##" ShowUpDown="false" AriaLabel="Quantity" />
+                            </td>
+                            <td class="num price">
+                                <RadzenNumeric TValue="decimal" @bind-Value="line.PriceChf" @bind-Value:after="MarkDirty" Format="#,##0.00" ShowUpDown="false" AriaLabel="Price" />
+                            </td>
+                            <td class="num">@(new InvoiceLineAmount(line.Quantity, Money.FromChf(line.PriceChf)).Total.ToAmountString())</td>
+                            <td>
+                                <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
+                                              Click="@(() => RemoveLine(line))" title="Remove line" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <RadzenButton Text="Add line" Icon="add" Variant="Variant.Text" Size="ButtonSize.Small" Click="AddLine" class="rz-mt-2" />
+        </div>
+
+        <InvoiceTotalsView Totals="DraftTotals" />
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.Center">
+            <RadzenButton Text="Save draft" Icon="save" Click="SaveAsync" IsBusy="_busy" Disabled="!_dirty" Variant="Variant.Outlined" />
+            @if (_dirty)
+            {
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">Unsaved changes</RadzenText>
+            }
+            else
+            {
+                <RadzenLink Path="@($"invoices/{Active.Id}/pdf")" Target="_blank" Icon="preview" Text="Preview PDF" class="rz-mx-2" />
+            }
+            <RadzenButton Text="Issue invoice" Icon="send" Click="IssueAsync" IsBusy="_busy" Disabled="@(_problems.Count > 0 && !_dirty)" />
+            <RadzenButton Text="Delete draft" Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="DeleteDraftAsync" Disabled="_busy" />
+        </RadzenStack>
+    </RadzenStack>
+}
+else
+{
+    var invoice = Active;
+    var totals = invoice.Totals;
+    <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
+        <RadzenStack Gap="1rem">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Invoice @invoice.Number</RadzenText>
+                <RadzenBadge BadgeStyle="BadgeStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="Issued" />
+            </RadzenStack>
+            <dl class="facts">
+                <dt>Invoice date</dt><dd>@invoice.IssueDate.ToString("dd.MM.yyyy")</dd>
+                <dt>Due date</dt><dd>@invoice.DueDate.ToString("dd.MM.yyyy")</dd>
+                <dt>Billed to</dt><dd>@(invoice.Client.Company ?? invoice.Client.Name), @invoice.Client.City</dd>
+            </dl>
+            <InvoiceTotalsView Totals="totals" />
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                Payments are tracked in the Finances tab. Issued invoices can't be changed. To correct one, cancel it and create a new one.
+            </RadzenText>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <a href="@($"invoices/{invoice.Id}/pdf")" target="_blank" rel="noopener" class="rz-button rz-button-md rz-variant-filled rz-primary">
+                    <RadzenIcon Icon="picture_as_pdf" /> Open PDF
+                </a>
+                <RadzenButton Text="Cancel invoice" Icon="block" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="CancelAsync" IsBusy="_busy" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+}
+
+@if (_invoices is not null && _invoices.Any(i => i.Status == InvoiceStatus.Cancelled))
+{
+    <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-4">Cancelled invoices</RadzenText>
+    <ul class="plain-list">
+        @foreach (var cancelled in _invoices.Where(i => i.Status == InvoiceStatus.Cancelled))
+        {
+            <li class="list-row">
+                <a href="@($"invoices/{cancelled.Id}/pdf")" target="_blank" rel="noopener" class="list-row-text">Invoice @cancelled.Number</a>
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                    issued @cancelled.IssueDate.ToString("dd.MM.yyyy"), cancelled @cancelled.CancelledAt?.ToString("dd.MM.yyyy")
+                </RadzenText>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int GigId { get; set; }
+
+    /// <summary>Raised when an invoice is issued or cancelled (changes what the gig's client owes).</summary>
+    [Parameter]
+    public EventCallback Changed { get; set; }
+
+    private List<Invoice>? _invoices;
+    private Invoice? Active => _invoices?.FirstOrDefault(i => i.Status != InvoiceStatus.Cancelled);
+
+    // Draft editing state
+    private List<LineEdit> _lines = [];
+    private DateOnly _issueDate;
+    private DateOnly _dueDate;
+    private bool _dirty;
+    private IReadOnlyList<string> _problems = [];
+    private decimal? _vatRatePercent;
+    private int _paymentTermsDays;
+    private Money _received;
+    private int _clientId;
+    private bool _busy;
+
+    private InvoiceTotals DraftTotals => InvoiceTotals.Calculate(
+        _lines.Select(l => new InvoiceLineAmount(l.Quantity, Money.FromChf(l.PriceChf))), _vatRatePercent, _received);
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _invoices = await db.Invoices.AsNoTracking().Include(i => i.Lines)
+            .Where(i => i.GigId == GigId).OrderByDescending(i => i.Id).ToListAsync();
+        _clientId = await db.Gigs.Where(g => g.Id == GigId).Select(g => g.ClientId).SingleAsync();
+
+        if (Active is { Status: InvoiceStatus.Draft } draft)
+        {
+            var settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
+            _vatRatePercent = settings.IsVatRegistered ? settings.VatRatePercent : null;
+            _paymentTermsDays = settings.PaymentTermsDays;
+            _received = (await db.Payments.Where(p => p.GigId == GigId).Select(p => p.Amount).ToListAsync()).Sum();
+            _issueDate = draft.IssueDate;
+            _dueDate = draft.DueDate;
+            _lines = draft.Lines.OrderBy(l => l.SortOrder)
+                .Select(l => new LineEdit { Description = l.Description, Quantity = l.Quantity, PriceChf = l.UnitPrice.Chf })
+                .ToList();
+            _dirty = false;
+            _problems = await Invoices.CheckAsync(draft.Id);
+        }
+    }
+
+    private void MarkDirty() => _dirty = true;
+
+    // Keeps the payment terms when the invoice date moves.
+    private void OnIssueDateChanged()
+    {
+        _dueDate = _issueDate.AddDays(_paymentTermsDays);
+        MarkDirty();
+    }
+
+    private void AddLine()
+    {
+        _lines.Add(new LineEdit());
+        MarkDirty();
+    }
+
+    private void RemoveLine(LineEdit line)
+    {
+        _lines.Remove(line);
+        MarkDirty();
+    }
+
+    private async Task CreateDraftAsync()
+    {
+        _busy = true;
+        try
+        {
+            await Invoices.CreateDraftAsync(GigId);
+            await LoadAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        try
+        {
+            await Invoices.SaveDraftAsync(Active!.Id, _issueDate, _dueDate, _lines.Select(l => l.ToDraftLine()).ToList());
+            await LoadAsync();
+            Notifications.Notify(NotificationSeverity.Success, "Draft saved");
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task IssueAsync()
+    {
+        var confirmed = await Dialogs.Confirm(
+            "The invoice gets the next number and can't be changed afterwards. The PDF is saved in the gig's files.",
+            "Issue invoice?",
+            new ConfirmOptions { OkButtonText = "Issue", CancelButtonText = "Not yet" });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var id = Active!.Id;
+            if (_dirty)
+            {
+                await Invoices.SaveDraftAsync(id, _issueDate, _dueDate, _lines.Select(l => l.ToDraftLine()).ToList());
+            }
+
+            var problems = await Invoices.IssueAsync(id);
+            await LoadAsync();
+            if (problems.Count > 0)
+            {
+                _problems = problems;
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, $"Invoice {Active?.Number} issued");
+            await Changed.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        var number = Active!.Number;
+        var confirmed = await Dialogs.Confirm(
+            $"Invoice {number} stays in your records as cancelled, and you can create a new one.",
+            $"Cancel invoice {number}?",
+            new ConfirmOptions { OkButtonText = "Cancel invoice", CancelButtonText = "Keep it" });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            await Invoices.CancelAsync(Active.Id);
+            await LoadAsync();
+            Notifications.Notify(NotificationSeverity.Info, $"Invoice {number} cancelled");
+            await Changed.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteDraftAsync()
+    {
+        var confirmed = await Dialogs.Confirm("Delete this draft?", "Delete draft",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Keep" });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await Invoices.DeleteDraftAsync(Active!.Id);
+        await LoadAsync();
+    }
+
+    private sealed class LineEdit
+    {
+        public string Description { get; set; } = "";
+        public decimal Quantity { get; set; } = 1;
+        public decimal PriceChf { get; set; }
+
+        public DraftLine ToDraftLine() => new(Description, Quantity, Money.FromChf(PriceChf));
+    }
+}

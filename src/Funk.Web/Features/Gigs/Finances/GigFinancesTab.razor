@@ -1,4 +1,5 @@
 @using Funk.Web.Features.Attachments
+@using Funk.Web.Features.Invoices
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject DialogService Dialogs
 @inject TimeProvider Time
@@ -17,7 +18,8 @@ else
         <KpiTile Label="Margin" Value="@Format(financials.Margin)" Note="@(financials.Margin < Money.Zero ? "loss" : null)" />
         <KpiTile Label="Received" Value="@financials.Received.ToString()" />
         <KpiTile Label="Outstanding" Value="@Format(financials.Outstanding)">
-            <PaymentStateBadge State="financials.PaymentState" />
+            <PaymentStateBadge State="financials.PaymentState"
+                               IsPastDue="@(_invoice is not null && _invoice.DueDate < Today && financials.Outstanding > Money.Zero)" />
         </KpiTile>
     </div>
 
@@ -113,17 +115,23 @@ else
     private List<Expense>? _expenses;
     private List<Payment>? _payments;
 
+    /// <summary>Once issued, the invoice total is what the client owes.</summary>
+    private IssuedInvoice? _invoice;
+
+    private DateOnly Today => DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
+
     private GigFinancials Financials => new(
         Quote,
         Costs: _expenses!.Sum(e => e.Amount),
         Received: _payments!.Sum(p => p.Amount),
-        BilledCosts: _expenses!.Where(e => e.BilledToClient is not null).Sum(e => e.BilledToClient!.Value));
+        BilledCosts: _expenses!.Where(e => e.BilledToClient is not null).Sum(e => e.BilledToClient!.Value),
+        Invoiced: _invoice?.Total);
 
-    /// <summary>"Quote … + billed costs …", only when costs are billed on top.</summary>
-    private static string? TotalNote(GigFinancials financials) =>
-        financials.BilledCosts == Money.Zero
-            ? null
-            : $"Quote {Format(financials.Quote)} + billed costs {financials.BilledCosts}";
+    /// <summary>Where the amount comes from: the invoice, or the quote plus costs billed on top.</summary>
+    private string? TotalNote(GigFinancials financials) =>
+        _invoice is not null ? $"Invoice {_invoice.Number}, due {_invoice.DueDate:dd.MM.yyyy}"
+        : financials.BilledCosts == Money.Zero ? null
+        : $"Quote {Format(financials.Quote)} + billed costs {financials.BilledCosts}";
 
     protected override Task OnInitializedAsync() => LoadAsync();
 
@@ -134,6 +142,7 @@ else
             .Where(e => e.GigId == GigId).OrderBy(e => e.Date).ThenBy(e => e.Id).ToListAsync();
         _payments = await db.Payments.AsNoTracking().Include(p => p.Proof)
             .Where(p => p.GigId == GigId).OrderBy(p => p.Date).ThenBy(p => p.Id).ToListAsync();
+        _invoice = (await db.IssuedInvoicesAsync([GigId])).GetValueOrDefault(GigId);
     }
 
     private async Task EditExpenseAsync(int? expenseId)

@@ -12,14 +12,14 @@ public enum PaymentState
 /// <summary>
 /// The money side of one gig: what was agreed, spent and received.
 /// <paramref name="BilledCosts"/> are costs charged to the client as their own line on top of the quote,
-/// at cost or at a marked-up price.
+/// at cost or at a marked-up price. Once an invoice is issued, <paramref name="Invoiced"/> is what's owed.
 /// </summary>
-public sealed record GigFinancials(Money? Quote, Money Costs, Money Received, Money BilledCosts = default)
+public sealed record GigFinancials(Money? Quote, Money Costs, Money Received, Money BilledCosts = default, Money? Invoiced = null)
 {
-    /// <summary>Quote plus billed costs; null when there's nothing to bill yet.</summary>
-    public Money? Total => Quote is null && BilledCosts == Money.Zero
+    /// <summary>The issued invoice's total, else quote plus billed costs; null when there's nothing to bill yet.</summary>
+    public Money? Total => Invoiced ?? (Quote is null && BilledCosts == Money.Zero
         ? null
-        : (Quote ?? Money.Zero) + BilledCosts;
+        : (Quote ?? Money.Zero) + BilledCosts);
 
     /// <summary>What's left after all costs; null when there's nothing to bill yet.</summary>
     public Money? Margin => Total - Costs;

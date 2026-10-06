@@ -40,4 +40,5 @@ public class Gig
     public List<PlaylistLink> PlaylistLinks { get; set; } = [];
     public List<ChecklistItem> ChecklistItems { get; set; } = [];
     public List<Attachment> Attachments { get; set; } = [];
+    public List<Invoice> Invoices { get; set; } = [];
 }

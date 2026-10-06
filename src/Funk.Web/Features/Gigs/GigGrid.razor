@@ -1,5 +1,6 @@
 @using Funk.Web.Features.Gigs
 @inject NavigationManager Navigation
+@inject TimeProvider Time
 
 <RadzenDataGrid TItem="GigRow" Data="Gigs" IsLoading="IsLoading" AllowSorting="true"
                 AllowPaging="@(PageSize is not null)" PageSize="@(PageSize ?? 25)"
@@ -36,7 +37,7 @@
             <Template Context="gig">
                 @if (gig.PaymentState is { } state)
                 {
-                    <PaymentStateBadge State="state" IsOverdue="@(gig.Status == GigStatus.Done)" />
+                    <PaymentStateBadge State="state" IsPlayed="@(gig.Status == GigStatus.Done)" IsPastDue="@gig.IsPastDue(Today)" />
                 }
             </Template>
         </RadzenDataGridColumn>
@@ -62,4 +63,6 @@
 
     [Parameter]
     public string EmptyText { get; set; } = "No gigs.";
+
+    private DateOnly Today => DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
 }

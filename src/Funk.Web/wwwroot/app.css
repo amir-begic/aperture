@@ -218,6 +218,82 @@ h1:focus {
     color: var(--rz-text-secondary-color);
 }
 
+/* Invoices */
+.invoice-lines {
+    overflow-x: auto;
+}
+
+.invoice-lines table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-lines th {
+    text-align: left;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid var(--rz-base-400);
+}
+
+.invoice-lines td {
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid var(--rz-base-200);
+    vertical-align: middle;
+}
+
+.invoice-lines .qty {
+    width: 6rem;
+}
+
+.invoice-lines .price {
+    width: 9rem;
+}
+
+.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.invoice-lines .num .rz-numeric input {
+    text-align: right;
+}
+
+.invoice-totals {
+    margin-left: auto;
+    min-width: 18rem;
+    border-collapse: collapse;
+}
+
+.invoice-totals td, .invoice-totals th {
+    padding: 0.25rem 0.5rem;
+    text-align: left;
+}
+
+.invoice-totals .num {
+    text-align: right;
+}
+
+.invoice-totals tr.sum th {
+    border-top: 1px solid var(--rz-base-500);
+}
+
+.facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 0.25rem 1rem;
+    margin: 0;
+}
+
+.facts dt {
+    color: var(--rz-text-secondary-color);
+}
+
+.facts dd {
+    margin: 0;
+}
+
 /* Files */
 .attachment-link {
     display: inline-flex;

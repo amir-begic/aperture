@@ -6,9 +6,9 @@ namespace Funk.Web.Features.Gigs;
 
 public static class GigDeletion
 {
-    /// <summary>Gigs with costs or payments are financial records and can only be cancelled.</summary>
+    /// <summary>Gigs with costs, payments or invoices are financial records and can only be cancelled.</summary>
     public static Task<bool> HasFinancialRecordsAsync(this FunkDbContext db, int gigId) =>
-        db.Gigs.Where(g => g.Id == gigId).AnyAsync(g => g.Expenses.Any() || g.Payments.Any());
+        db.Gigs.Where(g => g.Id == gigId).AnyAsync(g => g.Expenses.Any() || g.Payments.Any() || g.Invoices.Any());
 
     /// <summary>Deletes a gig with its playlists, checklist and files (rows cascade; files are removed here).</summary>
     public static async Task DeleteGigAsync(this FunkDbContext db, int gigId, AttachmentStore store)

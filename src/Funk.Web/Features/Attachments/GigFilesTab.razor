@@ -1,4 +1,4 @@
-@* All files of a gig: contracts, riders and timelines uploaded here, plus receipts and payslips from its finances. *@
+@* All files of a gig: contracts, riders and timelines uploaded here, plus receipts, payslips and invoice PDFs. *@
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject AttachmentStore Store
 @inject DialogService Dialogs
@@ -62,6 +62,9 @@
         var proofs = await db.Payments.Where(p => p.GigId == GigId && p.ProofId != null)
             .Select(p => p.ProofId!.Value).ToListAsync();
         proofs.ForEach(id => usedBy[id] = "Payslip");
+        var invoicePdfs = await db.Invoices.Where(i => i.GigId == GigId && i.PdfId != null)
+            .Select(i => new { Id = i.PdfId!.Value, i.Number }).ToListAsync();
+        invoicePdfs.ForEach(pdf => usedBy[pdf.Id] = $"Invoice {pdf.Number}");
 
         _files = attachments.Select(a => new FileRow(a, usedBy.GetValueOrDefault(a.Id))).ToList();
     }

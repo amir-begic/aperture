@@ -43,7 +43,10 @@ public readonly record struct Money(long Rappen) : IComparable<Money>
     public int CompareTo(Money other) => Rappen.CompareTo(other.Rappen);
 
     /// <summary>Formats as <c>CHF 1'234.50</c>, independent of the server's culture.</summary>
-    public override string ToString() => $"CHF {Chf.ToString("#,##0.00", SwissFormat)}";
+    public override string ToString() => $"CHF {ToAmountString()}";
+
+    /// <summary>Just the number, <c>1'234.50</c>, for tables with a CHF column header.</summary>
+    public string ToAmountString() => Chf.ToString("#,##0.00", SwissFormat);
 }
 
 public static class MoneyExtensions

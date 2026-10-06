@@ -2,6 +2,7 @@ using Funk.Web.Data.Converters;
 using Funk.Web.Data.Entities;
 using Funk.Web.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Funk.Web.Data;
 
@@ -16,6 +17,8 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
     public DbSet<PlaylistLink> PlaylistLinks => Set<PlaylistLink>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -57,6 +60,7 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
         configurationBuilder.Properties<EventType>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<ExpenseCategory>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<PaymentMethod>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<InvoiceStatus>().HaveConversion<string>().HaveMaxLength(20);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -79,6 +83,7 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
             // Attachment rows cascade too, but their files are removed in code (see GigDeletion).
             gig.HasMany(g => g.Expenses).WithOne(e => e.Gig).OnDelete(DeleteBehavior.Restrict);
             gig.HasMany(g => g.Payments).WithOne(p => p.Gig).OnDelete(DeleteBehavior.Restrict);
+            gig.HasMany(g => g.Invoices).WithOne(i => i.Gig).OnDelete(DeleteBehavior.Restrict);
             gig.HasMany(g => g.PlaylistLinks).WithOne(l => l.Gig).OnDelete(DeleteBehavior.Cascade);
             gig.HasMany(g => g.ChecklistItems).WithOne(i => i.Gig).OnDelete(DeleteBehavior.Cascade);
             gig.HasMany(g => g.Attachments).WithOne(a => a.Gig).OnDelete(DeleteBehavior.Cascade);
@@ -90,10 +95,35 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
             expense.HasOne(e => e.Receipt).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
 
+        modelBuilder.Entity<Invoice>(invoice =>
+        {
+            // Unique among issued invoices; drafts have no number yet (SQLite allows many NULLs in a unique index).
+            invoice.HasIndex(i => i.Number).IsUnique();
+            invoice.Property(i => i.Number).HasMaxLength(20);
+            invoice.ComplexProperty(i => i.Seller, ConfigureAddress);
+            invoice.ComplexProperty(i => i.Client, ConfigureAddress);
+            invoice.Property(i => i.SellerIban).HasMaxLength(34);
+            invoice.Property(i => i.SellerEmail).HasMaxLength(200);
+            invoice.Property(i => i.SellerPhone).HasMaxLength(50);
+            invoice.Property(i => i.SellerVatNumber).HasMaxLength(32);
+            invoice.HasMany(i => i.Lines).WithOne(l => l.Invoice).OnDelete(DeleteBehavior.Cascade);
+            invoice.HasOne(i => i.Pdf).WithMany().OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<Payment>(payment =>
         {
             payment.HasIndex(p => p.Date);
             payment.HasOne(p => p.Proof).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
+    }
+
+    private static void ConfigureAddress(ComplexPropertyBuilder<InvoiceAddress> address)
+    {
+        address.Property(a => a.Name).HasMaxLength(150);
+        address.Property(a => a.Company).HasMaxLength(150);
+        address.Property(a => a.Street).HasMaxLength(100);
+        address.Property(a => a.PostalCode).HasMaxLength(16);
+        address.Property(a => a.City).HasMaxLength(100);
+        address.Property(a => a.CountryCode).HasMaxLength(2);
     }
 }

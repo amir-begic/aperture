@@ -1,6 +1,7 @@
 using Funk.Web.Data;
 using Funk.Web.Data.Entities;
 using Funk.Web.Domain;
+using Funk.Web.Features.Invoices;
 using Microsoft.EntityFrameworkCore;
 
 namespace Funk.Web.Features.Gigs;
@@ -27,10 +28,19 @@ public sealed record GigRow(
     /// <summary>Costs billed on top of the quote; filled in by <see cref="GigRowQueries.ToRowsAsync"/>.</summary>
     public Money BilledCosts { get; init; }
 
+    /// <summary>The issued invoice, if any; filled in by <see cref="GigRowQueries.ToRowsAsync"/>.</summary>
+    public IssuedInvoice? Invoice { get; init; }
+
+    public GigFinancials Financials => new(QuotedPrice, Money.Zero, Received, BilledCosts, Invoice?.Total);
+
     /// <summary>Only meaningful for gigs that are booked or played.</summary>
     public PaymentState? PaymentState => Status is GigStatus.Confirmed or GigStatus.Done
-        ? new GigFinancials(QuotedPrice, Money.Zero, Received, BilledCosts).PaymentState
+        ? Financials.PaymentState
         : null;
+
+    /// <summary>The invoice's due date has passed and it isn't fully paid.</summary>
+    public bool IsPastDue(DateOnly today) =>
+        Invoice is not null && Invoice.DueDate < today && PaymentState is Domain.PaymentState.Unpaid or Domain.PaymentState.PartiallyPaid;
 }
 
 public static class GigRowQueries
@@ -73,8 +83,15 @@ public static class GigRowQueries
             .GroupBy(e => e.GigId)
             .ToDictionary(g => g.Key, g => g.Sum(e => e.Billed));
 
+        var invoices = await db.IssuedInvoicesAsync(ids);
+
         return rows
-            .Select(r => r with { Received = received.GetValueOrDefault(r.Id), BilledCosts = billed.GetValueOrDefault(r.Id) })
+            .Select(r => r with
+            {
+                Received = received.GetValueOrDefault(r.Id),
+                BilledCosts = billed.GetValueOrDefault(r.Id),
+                Invoice = invoices.GetValueOrDefault(r.Id),
+            })
             .ToList();
     }
 }

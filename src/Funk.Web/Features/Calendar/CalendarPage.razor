@@ -3,6 +3,7 @@
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject TooltipService Tooltips
+@inject TimeProvider Time
 @implements IDisposable
 
 <PageTitle>Calendar · Funk</PageTitle>
@@ -105,7 +106,7 @@
     {
         var gig = args.Data!.Gig;
         var prep = _prep.TryGetValue(gig.Id, out var progress) ? progress : ((int, int)?)null;
-        Tooltips.Open(args.Element, _ => @<GigHoverCard Gig="gig" Prep="prep" />, new TooltipOptions
+        Tooltips.Open(args.Element, _ => @<GigHoverCard Gig="gig" Prep="prep" Today="@DateOnly.FromDateTime(Time.GetLocalNow().DateTime)" />, new TooltipOptions
         {
             Position = TooltipPosition.Bottom,
             Delay = 250,       // don't flash cards while moving the mouse across the calendar

@@ -7,7 +7,7 @@
         <GigStatusBadge Status="Gig.Status" />
         @if (Gig.PaymentState is { } paymentState)
         {
-            <PaymentStateBadge State="paymentState" IsOverdue="@(Gig.Status == GigStatus.Done)" />
+            <PaymentStateBadge State="paymentState" IsPlayed="@(Gig.Status == GigStatus.Done)" IsPastDue="@Gig.IsPastDue(Today)" />
         }
     </div>
 
@@ -64,5 +64,8 @@
     [Parameter]
     public (int Done, int Total)? Prep { get; set; }
 
-    private GigFinancials Financials => new(Gig.QuotedPrice, Money.Zero, Gig.Received, Gig.BilledCosts);
+    [Parameter, EditorRequired]
+    public DateOnly Today { get; set; }
+
+    private GigFinancials Financials => Gig.Financials;
 }
