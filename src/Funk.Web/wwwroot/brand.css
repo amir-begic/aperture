@@ -1,0 +1,818 @@
+/* Bon Ajvar look (bonajvar.eu, see the Bon Ajvar stream kit): Ajvar Blue page, white and pink cards with ink
+   outlines, pill-shaped buttons, navigation and tags, Archivo Expanded Black headlines.
+   Loaded after Radzen's "standard" theme; app.css builds on these tokens. Light only.
+
+   Contrast (WCAG): white on blue 5.2:1, ink on blue 3.2:1 (large headlines only), ink on pink 11:1,
+   blue-deep on white 6.3:1. So text directly on the blue page is white, except the big page titles. */
+
+@font-face {
+    font-family: "Archivo";
+    src: url("fonts/Archivo.woff2") format("woff2");
+    font-weight: 100 900;
+    font-stretch: 62% 125%;
+    font-display: swap;
+}
+
+:root {
+    color-scheme: light;
+
+    --ba-blue: #505FDE;
+    --ba-blue-deep: #4352D0;
+    --ba-pink: #ECC8D0;
+    --ba-pink-soft: #F8E8EC;
+    --ba-ink: #1D1D1B;
+    --ba-ink-soft: #4A4A47;
+    --ba-white: #FFFFFF;
+    --ba-hairline: rgba(29, 29, 27, 0.14);
+    --ba-good: #D5EEDC;
+    --ba-bad: #C62828;
+    --ba-warn: #B45309;
+
+    --ba-outline: 3px solid var(--ba-ink);
+    --ba-outline-thin: 2px solid var(--ba-ink);
+    --ba-radius-lg: 28px;
+    --ba-radius-md: 18px;
+    --ba-radius-sm: 12px;
+    --ba-font: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    /* Radzen: colors */
+    --rz-primary: var(--ba-blue);
+    --rz-primary-light: #7380E6;
+    --rz-primary-lighter: var(--ba-pink-soft);
+    --rz-primary-dark: var(--ba-blue-deep);
+    --rz-primary-darker: #3341B8;
+    --rz-on-primary: var(--ba-white);
+    --rz-on-primary-lighter: var(--ba-ink);
+    --rz-secondary: var(--ba-blue-deep);
+    --rz-secondary-dark: var(--ba-ink);
+    --rz-danger: var(--ba-bad);
+    --rz-danger-dark: #A31F1F;
+    --rz-white: var(--ba-white);
+    --rz-base-background-color: var(--ba-white);
+    --rz-body-background-color: var(--ba-blue);
+    --rz-outline-color: var(--ba-ink);
+    --rz-outline-width: 3px;
+    --rz-outline-offset: 2px;
+
+    /* Radzen: type */
+    --rz-text-font-family: var(--ba-font);
+    --rz-body-font-size: 0.9375rem;
+    --rz-text-h4-color: var(--ba-ink);
+    --rz-text-h4-font-size: clamp(2rem, 3.4vw, 3.25rem);
+    --rz-text-h4-font-weight: 900;
+    --rz-text-h5-font-size: 1.125rem;
+    --rz-text-h5-font-weight: 800;
+    --rz-text-h6-font-size: 1rem;
+    --rz-text-h6-font-weight: 800;
+    --rz-text-overline-font-size: 0.75rem;
+    --rz-text-overline-font-weight: 800;
+    --rz-text-overline-letter-spacing: 0.08em;
+
+    /* Radzen: shapes */
+    --rz-border-radius: var(--ba-radius-sm);
+    --rz-card-border-radius: var(--ba-radius-lg);
+    --rz-card-border: var(--ba-outline);
+    --rz-card-shadow: none;
+    --rz-card-padding: 1.5rem;
+    --rz-input-border: var(--ba-outline-thin);
+    --rz-input-hover-border: var(--ba-outline-thin);
+    --rz-input-focus-border: var(--ba-outline-thin);
+    --rz-input-border-block-end: var(--ba-outline-thin);
+    --rz-input-hover-border-block-end: var(--ba-outline-thin);
+    --rz-input-focus-border-block-end: var(--ba-outline-thin);
+    --rz-input-focus-shadow: 0 0 0 3px var(--ba-blue);
+    --rz-input-border-radius: var(--ba-radius-sm);
+    --rz-dropdown-panel-border: var(--ba-outline-thin);
+    --rz-dropdown-item-hover-background-color: var(--ba-pink);
+    --rz-dropdown-item-hover-color: var(--ba-ink);
+    --rz-dropdown-item-selected-background-color: var(--ba-pink-soft);
+    --rz-dropdown-item-selected-color: var(--ba-ink);
+    --rz-dropdown-item-selected-hover-background-color: var(--ba-pink);
+    --rz-dialog-border-radius: var(--ba-radius-lg);
+    --rz-dialog-shadow: none;
+    --rz-dialog-mask-background-color: rgba(29, 29, 27, 0.55);
+    --rz-header-shadow: none;
+    --rz-badge-font-weight: 800;
+    --rz-badge-letter-spacing: 0.06em;
+
+    /* Surfaces (cards, tables, dialogs, popups) use ink text. */
+    --rz-text-color: var(--ba-ink);
+    --rz-text-title-color: var(--ba-ink);
+    --rz-text-secondary-color: var(--ba-ink-soft);
+    --rz-text-tertiary-color: var(--ba-ink-soft);
+    --rz-link-color: var(--ba-blue-deep);
+    --rz-link-hover-color: var(--ba-ink);
+}
+
+/* Directly on the blue page: white text and links. */
+.rz-body {
+    --rz-text-color: var(--ba-white);
+    --rz-text-title-color: var(--ba-white);
+    --rz-text-secondary-color: var(--ba-white);
+    --rz-text-tertiary-color: var(--ba-white);
+    --rz-link-color: var(--ba-white);
+    --rz-link-hover-color: var(--ba-pink);
+    /* Radzen resolves these from the text color where they're declared, so they're restated per scope. */
+    --rz-text-body1-color: var(--rz-text-color);
+    --rz-text-body2-color: var(--rz-text-color);
+    --rz-text-caption-color: var(--rz-text-color);
+    --rz-text-overline-color: var(--rz-text-color);
+    --rz-text-subtitle1-color: var(--rz-text-color);
+    --rz-text-subtitle2-color: var(--rz-text-color);
+    --rz-text-h5-color: var(--rz-text-title-color);
+    --rz-text-h6-color: var(--rz-text-title-color);
+    color: var(--ba-white);
+}
+
+/* …and back to ink on anything with its own surface. */
+.rz-card, .rz-fieldset, .rz-data-grid, .rz-tabview-panels, .rz-scheduler, .rz-dialog, .rz-popup,
+.rz-dropdown-panel, .rz-datepicker-popup-container, .rz-form-field, .rz-textbox, .rz-textarea, .rz-dropdown,
+.rz-numeric, .rz-datepicker, .rz-alert, .rz-notification, .rz-tooltip, .rz-selectbar, .surface {
+    --rz-text-color: var(--ba-ink);
+    --rz-text-title-color: var(--ba-ink);
+    --rz-text-secondary-color: var(--ba-ink-soft);
+    --rz-text-tertiary-color: var(--ba-ink-soft);
+    --rz-link-color: var(--ba-blue-deep);
+    --rz-link-hover-color: var(--ba-ink);
+    /* Radzen resolves these from the text color where they're declared, so they're restated per scope. */
+    --rz-text-body1-color: var(--rz-text-color);
+    --rz-text-body2-color: var(--rz-text-color);
+    --rz-text-caption-color: var(--rz-text-color);
+    --rz-text-overline-color: var(--rz-text-color);
+    --rz-text-subtitle1-color: var(--rz-text-color);
+    --rz-text-subtitle2-color: var(--rz-text-color);
+    --rz-text-h5-color: var(--rz-text-title-color);
+    --rz-text-h6-color: var(--rz-text-title-color);
+    color: var(--rz-text-color);
+}
+
+a {
+    color: var(--rz-link-color);
+}
+
+body {
+    font-family: var(--ba-font);
+    background: var(--ba-blue);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Type */
+
+.rz-text-h4 {
+    font-stretch: 125%;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: 0.92;
+}
+
+.rz-text-h5, .rz-text-h6 {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.rz-text-overline {
+    text-transform: uppercase;
+}
+
+/* Frame: header and sidebar are blue too, separated by ink rules. */
+
+.rz-header {
+    display: flex;
+    align-items: center;
+    background: var(--ba-blue);
+    color: var(--ba-white);
+    border-bottom: var(--ba-outline);
+    min-height: 4rem;
+}
+
+.rz-header > .rz-stack {
+    flex: 1;
+}
+
+.rz-sidebar {
+    background: var(--ba-blue);
+    color: var(--ba-white);
+    border-inline-end: var(--ba-outline);
+}
+
+.rz-sidebar-toggle, .rz-sidebar-toggle:hover {
+    background: transparent;
+    color: var(--ba-white);
+    border: none;
+}
+
+.rz-body {
+    background: var(--ba-blue);
+}
+
+/* Navigation: outlined pills; the current page is filled with ink. */
+
+.rz-sidebar .rz-panel-menu {
+    background: transparent;
+    padding: 1rem 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rz-sidebar .rz-navigation-item {
+    border: none;
+    background: transparent;
+}
+
+.rz-sidebar .rz-navigation-item-wrapper {
+    border: 2.5px solid var(--ba-ink);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ba-white);
+    transition: background-color 0.12s, color 0.12s;
+}
+
+.rz-sidebar .rz-navigation-item-link {
+    padding: 0.5rem 1rem;
+    color: inherit;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.rz-sidebar .rz-navigation-item-icon {
+    color: inherit;
+}
+
+/* Only the pill animates. Radzen also transitions the link, icon and label; each of those restarts whenever the
+   color it inherits changes, so on hover they flicker between light and dark instead of fading once. */
+.rz-sidebar .rz-navigation-item-link,
+.rz-sidebar .rz-navigation-item-icon,
+.rz-sidebar .rz-navigation-item-text {
+    transition: none;
+}
+
+.rz-sidebar .rz-navigation-item-wrapper:hover {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+}
+
+.rz-sidebar .rz-navigation-item-wrapper-active,
+.rz-sidebar .rz-navigation-item-wrapper-active:hover {
+    background: var(--ba-ink);
+    color: var(--ba-white);
+}
+
+.rz-sidebar .rz-navigation-item-wrapper-active::before,
+.rz-sidebar .rz-navigation-item-wrapper-active::after {
+    display: none;
+}
+
+/* Cards: white (or pink) with an ink outline, whatever variant the page asked for. */
+
+.rz-card,
+.rz-card.rz-variant-outlined,
+.rz-card.rz-variant-flat,
+.rz-card.rz-variant-filled,
+.rz-card.rz-variant-text {
+    background: var(--ba-white);
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-lg);
+    box-shadow: none;
+}
+
+.rz-card.pink {
+    background: var(--ba-pink);
+}
+
+/* Fieldsets are cards whose legend is an ink pill on the outline. */
+
+.rz-fieldset {
+    background: var(--ba-white);
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-lg);
+    padding: 1.5rem;
+}
+
+.rz-fieldset-legend {
+    background: var(--ba-ink);
+    color: var(--ba-white);
+    border-radius: 999px;
+    padding: 0.25rem 1rem;
+    margin-inline-start: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.rz-fieldset-legend .rz-fieldset-legend-text {
+    color: var(--ba-white);
+}
+
+/* Buttons: pills. Primary = ink (like "Book me"), turning pink on hover. */
+
+.rz-button {
+    border-radius: 999px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.rz-button.rz-variant-filled.rz-primary,
+.rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
+    background: var(--ba-ink);
+    color: var(--ba-white);
+    border: 2.5px solid var(--ba-ink);
+}
+
+.rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat):not(:disabled):hover {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+}
+
+.rz-button.rz-variant-outlined,
+.rz-button.rz-variant-outlined:is(.rz-primary, .rz-secondary, .rz-base, .rz-info, .rz-success, .rz-light, .rz-dark):is(.rz-shade-default, .rz-shade-lighter, .rz-shade-light, .rz-shade-dark, .rz-shade-darker) {
+    background: var(--ba-white);
+    color: var(--ba-ink);
+    border: 2.5px solid var(--ba-ink);
+    box-shadow: none;
+}
+
+.rz-button.rz-variant-outlined:not(:disabled):hover {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+}
+
+.rz-button.rz-variant-flat {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+    border: 2.5px solid var(--ba-ink);
+}
+
+.rz-button.rz-variant-flat:not(:disabled):hover {
+    background: var(--ba-pink-soft);
+}
+
+.rz-button.rz-danger:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
+    background: var(--ba-bad);
+    color: var(--ba-white);
+    border: 2.5px solid var(--ba-ink);
+}
+
+.rz-button.rz-variant-text {
+    border: none;
+    box-shadow: none;
+}
+
+.rz-button.rz-variant-text.rz-primary {
+    color: var(--ba-blue-deep);
+}
+
+.rz-button.rz-variant-text.rz-base {
+    color: inherit;
+}
+
+.rz-header .rz-button.rz-variant-text {
+    color: var(--ba-white);
+}
+
+/* Inputs */
+
+.rz-form-field-label, .rz-label {
+    font-weight: 700;
+}
+
+.rz-form-field .rz-form-field-label {
+    color: var(--ba-ink);
+}
+
+.rz-textbox, .rz-textarea, .rz-dropdown, .rz-numeric, .rz-datepicker, .rz-multiselect {
+    background-color: var(--ba-white);
+}
+
+.rz-dropdown-panel, .rz-multiselect-panel, .rz-autocomplete-panel, .rz-popup {
+    border-radius: var(--ba-radius-sm);
+    box-shadow: none;
+}
+
+.rz-dropdown-item.rz-state-highlight {
+    font-weight: 700;
+}
+
+/* Tabs: pills on the blue page, the content in a white card below. */
+
+.rz-tabview.rz-tabview-top > .rz-tabview-nav {
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border: none;
+}
+
+.rz-tabview.rz-tabview-top > .rz-tabview-nav li {
+    border: 2.5px solid var(--ba-ink);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ba-white);
+    margin: 0;
+}
+
+.rz-tabview.rz-tabview-top > .rz-tabview-nav li a,
+.rz-tabview.rz-tabview-top > .rz-tabview-nav li button {
+    padding: 0.4rem 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.rz-tabview.rz-tabview-top > .rz-tabview-nav li:hover:not(.rz-tabview-selected) {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+    border-color: var(--ba-ink);
+}
+
+.rz-tabview.rz-tabview-top > .rz-tabview-nav li.rz-tabview-selected {
+    background: var(--ba-ink);
+    color: var(--ba-white);
+    border-color: var(--ba-ink);
+    margin: 0;
+}
+
+.rz-tabview.rz-tabview-top > .rz-tabview-nav li.rz-tabview-selected::after,
+.rz-tabview.rz-tabview-top > .rz-tabview-nav li.rz-tabview-selected::before {
+    display: none;
+}
+
+.rz-tabview-panels,
+.rz-tabview.rz-tabview-top > .rz-tabview-panels {
+    background: var(--ba-white);
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-lg);
+    padding: 1.5rem;
+}
+
+/* A card inside a tab or dialog is a section of it, not another outlined box. */
+.rz-tabview-panels .rz-card:not(.kpi-tile) {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.rz-dialog .rz-card {
+    border: var(--ba-outline-thin);
+    border-radius: var(--ba-radius-md);
+    background: var(--ba-pink-soft);
+}
+
+.rz-tabview-panel {
+    padding: 0;
+}
+
+/* Data grids: a white card; ink header rule, hairlines between rows, pink on hover. */
+
+.rz-data-grid {
+    background: var(--ba-white);
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-lg);
+    overflow: hidden;
+    --rz-grid-header-background-color: var(--ba-white);
+    --rz-grid-header-sorted-background-color: var(--ba-pink-soft);
+    --rz-grid-stripe-background-color: var(--ba-white);
+    --rz-grid-hover-background-color: var(--ba-pink-soft);
+    --rz-grid-hover-color: var(--ba-ink);
+    --rz-grid-cell-border: 1px solid var(--ba-hairline);
+    --rz-grid-header-cell-border: none;
+    --rz-grid-header-cell-border-bottom: 2.5px solid var(--ba-ink);
+    --rz-grid-header-font-size: 0.75rem;
+    --rz-grid-header-font-weight: 800;
+    --rz-grid-header-text-transform: uppercase;
+}
+
+.rz-data-grid .rz-grid-table thead th {
+    letter-spacing: 0.04em;
+}
+
+.rz-data-grid .rz-column-title-content {
+    white-space: normal;
+}
+
+.rz-data-grid .rz-grid-table th:first-child,
+.rz-data-grid .rz-grid-table td:first-child {
+    padding-inline-start: 0.75rem;
+}
+
+.rz-data-grid .rz-grid-table th:last-child,
+.rz-data-grid .rz-grid-table td:last-child {
+    padding-inline-end: 1rem;
+}
+
+.rz-data-grid .rz-grid-table td {
+    border-inline: none;
+}
+
+.rz-data-grid .rz-pager {
+    background: var(--ba-white);
+    border-top: 1px solid var(--ba-hairline);
+}
+
+/* Tags: ink-outlined pills. Gig and payment states set their own fill (app.css). */
+
+.rz-badge {
+    border: 2px solid var(--ba-ink);
+    border-radius: 999px;
+    background: var(--ba-white);
+    color: var(--ba-ink);
+    padding: 0.0625rem 0.625rem;
+    font-size: 0.6875rem;
+}
+
+.rz-badge.rz-badge-base {
+    background: var(--ba-white);
+    color: var(--ba-ink);
+}
+
+.rz-badge.rz-badge-info {
+    background: var(--ba-blue);
+    color: var(--ba-white);
+}
+
+.rz-badge.rz-badge-warning {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+    border-style: dashed;
+}
+
+.rz-badge.rz-badge-success {
+    background: var(--ba-good);
+    color: var(--ba-ink);
+}
+
+.rz-badge.rz-badge-danger {
+    background: var(--ba-bad);
+    color: var(--ba-white);
+}
+
+.rz-badge.rz-badge-secondary {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+}
+
+.rz-badge.badge-cancelled {
+    background: #E4E4E1;
+    color: var(--ba-ink-soft);
+    border-color: var(--ba-ink-soft);
+    text-decoration: line-through;
+}
+
+/* Two-way switches (chart / table) */
+
+.rz-selectbar {
+    border: 2.5px solid var(--ba-ink);
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--ba-white);
+}
+
+.rz-selectbar .rz-button {
+    border: none;
+    border-radius: 0;
+    background: var(--ba-white);
+    color: var(--ba-ink);
+}
+
+.rz-selectbar .rz-button.rz-state-active {
+    background: var(--ba-ink);
+    color: var(--ba-white);
+}
+
+/* Dialogs */
+
+.rz-dialog {
+    border: var(--ba-outline);
+    overflow: hidden;
+}
+
+.rz-dialog-titlebar .rz-dialog-title {
+    font-weight: 900;
+    font-stretch: 125%;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+}
+
+/* Alerts and notifications */
+
+.rz-alert, .rz-notification-item {
+    border: var(--ba-outline-thin);
+    border-radius: var(--ba-radius-md);
+}
+
+/* Breadcrumb on the blue page */
+
+.rz-breadcrumb-item, .rz-breadcrumb-item .rz-link {
+    color: var(--ba-white);
+    font-weight: 700;
+}
+
+.rz-breadcrumb-item .rz-link {
+    text-decoration: underline;
+}
+
+/* Links on surfaces are underlined, so they don't depend on color. */
+
+.rz-card .rz-link, .rz-tabview-panels .rz-link, .rz-data-grid .rz-link, .surface .rz-link {
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}
+
+/* Calendar (RadzenScheduler) as a white card */
+
+.rz-scheduler {
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-lg);
+    overflow: hidden;
+    --rz-scheduler-toolbar-background-color: var(--ba-white);
+    --rz-scheduler-header-background-color: var(--ba-white);
+    --rz-scheduler-header-color: var(--ba-ink);
+    --rz-scheduler-border-color: var(--ba-hairline);
+    --rz-scheduler-other-month-background-color: #F6F6F4;
+    --rz-scheduler-weekend-background-color: var(--ba-white);
+    --rz-scheduler-highlight-background-color: var(--ba-pink-soft);
+    --rz-scheduler-view-selected-background-color: var(--ba-ink);
+    --rz-scheduler-view-selected-color: var(--ba-white);
+    --rz-scheduler-view-button-border: 2px solid var(--ba-ink);
+    --rz-scheduler-toolbar-title-font-size: 1.25rem;
+    --rz-scheduler-toolbar-title-font-weight: 900;
+}
+
+.rz-scheduler .rz-scheduler-nav-title {
+    font-stretch: 125%;
+    text-transform: uppercase;
+}
+
+.rz-scheduler .rz-scheduler-nav .rz-button,
+.rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary {
+    border: 2.5px solid var(--ba-ink);
+    border-radius: 999px;
+    background: var(--ba-white);
+    color: var(--ba-ink);
+}
+
+.rz-scheduler .rz-scheduler-nav-views {
+    gap: 0.375rem;
+}
+
+.rz-scheduler .rz-scheduler-nav .rz-button:not(.rz-state-active):hover {
+    background: var(--ba-pink);
+}
+
+.rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary.rz-state-active {
+    background: var(--ba-ink);
+    border-color: var(--ba-ink);
+    color: var(--ba-white);
+}
+
+/* Decorative shapes (ajvar splats). Never in front of content. */
+
+.brand-shape {
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+
+.brand-shape path, .brand-shape ellipse, .brand-shape circle {
+    fill: var(--ba-pink);
+    stroke: var(--ba-ink);
+    stroke-width: 2.5px;
+    vector-effect: non-scaling-stroke;
+}
+
+.brand-shape .ring {
+    fill: none;
+}
+
+.sidebar-shapes {
+    position: relative;
+    height: 15rem;
+    margin-top: 2rem;
+    overflow: hidden;
+}
+
+.sidebar-shapes .brand-shape {
+    position: absolute;
+}
+
+/* The splats drift slowly, each on its own path and tempo so they never move in step.
+   translate/rotate are separate from transform, so a shape's own inline rotation stays as it is. */
+@keyframes splat-drift-a {
+    0%, 100% { translate: 0 0; rotate: 0deg; }
+    33% { translate: 4px -7px; rotate: 3deg; }
+    66% { translate: -3px -3px; rotate: -2deg; }
+}
+
+@keyframes splat-drift-b {
+    0%, 100% { translate: 0 0; rotate: 0deg; }
+    50% { translate: -6px 5px; rotate: -6deg; }
+}
+
+@keyframes splat-drift-c {
+    0%, 100% { translate: 0 0; }
+    25% { translate: 3px 4px; }
+    75% { translate: -4px -2px; }
+}
+
+.sidebar-shapes .brand-shape:nth-child(1) {
+    animation: splat-drift-a 11s ease-in-out infinite;
+}
+
+.sidebar-shapes .brand-shape:nth-child(2) {
+    animation: splat-drift-b 8s ease-in-out -3s infinite;
+}
+
+.sidebar-shapes .brand-shape:nth-child(3) {
+    animation: splat-drift-c 9.5s ease-in-out -5s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-shapes .brand-shape:nth-child(n) {
+        animation: none;
+    }
+}
+
+/* Wordmark */
+
+.wordmark {
+    margin: 0;
+    font-weight: 900;
+    font-stretch: 125%;
+    letter-spacing: -0.02em;
+    line-height: 0.86;
+    text-transform: uppercase;
+    color: var(--ba-ink);
+}
+
+.header-wordmark {
+    font-size: 1.875rem;
+    text-decoration: none;
+}
+
+.header-wordmark:hover {
+    color: var(--ba-white);
+}
+
+/* Phones: the sidebar opens as a full-screen menu below the header, with big pills. It closes again
+   after choosing a page (MainLayout). Radzen hides the collapsed responsive sidebar itself. */
+@media (max-width: 768px) {
+    .rz-sidebar.rz-sidebar-responsive.rz-sidebar-expanded {
+        position: fixed;
+        inset: calc(4rem + 3px) 0 0 0;
+        width: 100vw;
+        height: auto;
+        z-index: 100;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        border-inline-end: none;
+        display: flex;
+        flex-direction: column;
+    }
+
+    body:has(.rz-sidebar-responsive.rz-sidebar-expanded) {
+        overflow: hidden;
+    }
+
+    .rz-sidebar .rz-panel-menu {
+        flex: none;
+        padding: 1.5rem 1.25rem 0;
+        gap: 0.75rem;
+    }
+
+    .rz-sidebar .rz-navigation-item-link {
+        padding: 0.75rem 1.25rem;
+        font-size: 1.25rem;
+        font-weight: 900;
+        font-stretch: 125%;
+        letter-spacing: 0;
+    }
+
+    .rz-sidebar .rz-navigation-item-icon {
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-inline-end: 0.75rem;
+    }
+
+    .sidebar-shapes {
+        flex: 1 0 12rem;
+        margin-top: 1rem;
+    }
+
+    .rz-tabview.rz-tabview-top > .rz-tabview-nav {
+        gap: 0.375rem;
+    }
+
+    .rz-tabview.rz-tabview-top > .rz-tabview-nav li a,
+    .rz-tabview.rz-tabview-top > .rz-tabview-nav li button {
+        padding: 0.3rem 0.7rem;
+        font-size: 0.8125rem;
+        letter-spacing: 0.02em;
+    }
+
+    .rz-tabview.rz-tabview-top > .rz-tabview-nav .rz-tabview-icon {
+        display: none;
+    }
+}

@@ -1,8 +1,3 @@
-body {
-    font-family: var(--rz-text-font-family);
-    color: var(--rz-text-color);
-}
-
 h1:focus {
     outline: none;
 }
@@ -47,21 +42,24 @@ h1:focus {
     gap: 1rem;
 }
 
-.kpi-tile {
+.rz-card.kpi-tile {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    padding: 1rem;
+    padding: 1.125rem 1.25rem;
+    background: var(--ba-pink);
 }
 
 .kpi-label {
-    color: var(--rz-text-secondary-color);
+    color: var(--ba-ink);
     margin: 0;
 }
 
 .kpi-value {
-    font-size: 1.375rem;
-    font-weight: 500;
+    font-size: clamp(1.125rem, 1.5vw, 1.5rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
 
@@ -70,20 +68,19 @@ h1:focus {
         gap: 0.5rem;
     }
 
-    .kpi-tile {
-        padding: 0.75rem;
+    .rz-card.kpi-tile {
+        padding: 0.75rem 1rem;
     }
 
     .kpi-value {
-        font-size: 1.125rem;
+        font-size: 1.0625rem;
     }
 }
 
-/* Tabs stay on one line and scroll sideways on narrow screens. */
+/* Tab pills wrap onto a second line on narrow screens, so every tab stays visible and tappable. */
 .rz-tabview-nav {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
+    flex-wrap: wrap;
+    overflow: visible;
 }
 
 .rz-tabview-nav [role=tab] {
@@ -115,9 +112,9 @@ h1:focus {
 
 .gig-swatch {
     display: inline-block;
-    width: 1.5rem;
-    height: 0.875rem;
-    border-radius: 3px;
+    width: 1.75rem;
+    height: 1rem;
+    border-radius: 999px;
 }
 
 .gig-time {
@@ -125,35 +122,35 @@ h1:focus {
     font-variant-numeric: tabular-nums;
 }
 
+/* Same fills as the status tags: inquiry pink and dashed, confirmed blue, done white, cancelled grey. */
 .gig-event, .gig-swatch {
-    border: 1px solid transparent;
-    border-left-width: 4px;
+    border: 2px solid var(--ba-ink);
+}
+
+.rz-event.gig-event, .rz-event .gig-event {
+    border-radius: 8px;
 }
 
 .gig-event.gig-inquiry, .gig-swatch.gig-inquiry {
-    background: var(--rz-warning-lighter);
-    color: var(--rz-text-color);
-    border-color: var(--rz-warning);
+    background: var(--ba-pink);
+    color: var(--ba-ink);
     border-style: dashed;
-    border-left-style: solid;
 }
 
 .gig-event.gig-confirmed, .gig-swatch.gig-confirmed {
-    background: var(--rz-info-lighter);
-    color: var(--rz-text-color);
-    border-color: var(--rz-info);
+    background: var(--ba-blue);
+    color: var(--ba-white);
 }
 
 .gig-event.gig-done, .gig-swatch.gig-done {
-    background: var(--rz-success-lighter);
-    color: var(--rz-text-color);
-    border-color: var(--rz-success);
+    background: var(--ba-white);
+    color: var(--ba-ink);
 }
 
 .gig-event.gig-cancelled, .gig-swatch.gig-cancelled {
-    background: var(--rz-base-200);
-    color: var(--rz-text-secondary-color);
-    border-color: var(--rz-base-400);
+    background: #E4E4E1;
+    color: var(--ba-ink-soft);
+    border-color: var(--ba-ink-soft);
     text-decoration: line-through;
 }
 
@@ -167,11 +164,11 @@ h1:focus {
 .rz-tooltip.gig-tooltip .rz-tooltip-content {
     max-width: 22rem;
     padding: 0;
-    background: var(--rz-base-background-color);
-    color: var(--rz-text-color);
-    border: 1px solid var(--rz-base-300);
-    border-radius: var(--rz-border-radius);
-    box-shadow: var(--rz-shadow-3);
+    background: var(--ba-white);
+    color: var(--ba-ink);
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-md);
+    box-shadow: none;
 }
 
 .gig-card {
@@ -184,8 +181,11 @@ h1:focus {
 }
 
 .gig-card-title {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.0625rem;
+    font-weight: 900;
+    font-stretch: 112%;
+    text-transform: uppercase;
+    line-height: 1.1;
 }
 
 .gig-card-badges {
@@ -230,15 +230,17 @@ h1:focus {
 
 .invoice-lines th {
     text-align: left;
-    font-weight: 500;
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
-    border-bottom: 1px solid var(--rz-base-400);
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.375rem 0.5rem;
+    border-bottom: 2.5px solid var(--ba-ink);
 }
 
 .invoice-lines td {
     padding: 0.25rem 0.5rem;
-    border-bottom: 1px solid var(--rz-base-200);
+    border-bottom: 1px solid var(--ba-hairline);
     vertical-align: middle;
 }
 
@@ -276,7 +278,8 @@ h1:focus {
 }
 
 .invoice-totals tr.sum th {
-    border-top: 1px solid var(--rz-base-500);
+    border-top: 2.5px solid var(--ba-ink);
+    font-weight: 900;
 }
 
 .facts {
@@ -295,30 +298,50 @@ h1:focus {
 }
 
 /* Finance */
+/* A table straight on the page is a white card of its own. */
 .finance-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--ba-white);
+    color: var(--ba-ink);
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-lg);
+    overflow: hidden;
 }
 
 .finance-table td, .finance-table th {
-    padding: 0.375rem 0.5rem;
-    border-bottom: 1px solid var(--rz-base-200);
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--ba-hairline);
     text-align: left;
 }
 
 .finance-table thead th {
-    font-weight: 500;
-    border-bottom-color: var(--rz-base-400);
+    font-weight: 800;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 2.5px solid var(--ba-ink);
 }
 
 .finance-table tfoot th {
-    border-top: 1px solid var(--rz-base-500);
+    border-top: 2.5px solid var(--ba-ink);
     border-bottom: none;
+    font-weight: 900;
+}
+
+.finance-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.finance-table .rz-link {
+    color: var(--ba-blue-deep);
+    text-decoration: underline;
 }
 
 .finance-table .share {
     width: 4rem;
-    color: var(--rz-text-secondary-color);
+    color: var(--ba-ink-soft);
 }
 
 .export-button, .export-link {
@@ -327,22 +350,32 @@ h1:focus {
     gap: 0.375rem;
 }
 
-/* Dashboard: level is shown by icon color and a colored edge, the text says what's wrong. */
-.attention-list {
+/* Dashboard: a white card; level is shown by icon color and a colored edge, the text says what's wrong. */
+.plain-list.attention-list {
     max-width: 48rem;
+    background: var(--ba-white);
+    color: var(--ba-ink);
+    border: var(--ba-outline);
+    border-radius: var(--ba-radius-lg);
+    padding: 0.5rem 1.25rem;
 }
 
 .attention-list .list-row {
     align-items: flex-start;
-    padding: 0.5rem 0 0.5rem 0.5rem;
-    border-left: 3px solid transparent;
+    padding: 0.625rem 0 0.625rem 0.75rem;
+    border-left: 5px solid transparent;
+    border-bottom-color: var(--ba-hairline);
+}
+
+.attention-list .list-row:last-child {
+    border-bottom: none;
 }
 
 .attention-list a {
     display: flex;
     flex-direction: column;
     text-decoration: none;
-    color: var(--rz-text-color);
+    color: var(--ba-ink);
 }
 
 .attention-list a:hover .attention-text {
@@ -350,12 +383,12 @@ h1:focus {
 }
 
 .attention-text {
-    font-weight: 500;
+    font-weight: 800;
 }
 
 .attention-detail {
     font-size: 0.8125rem;
-    color: var(--rz-text-secondary-color);
+    color: var(--ba-ink-soft);
 }
 
 .attention-urgent {
@@ -367,15 +400,15 @@ h1:focus {
 }
 
 .attention-warning {
-    border-left-color: var(--rz-warning) !important;
+    border-left-color: var(--ba-warn) !important;
 }
 
 .attention-warning .rzi {
-    color: var(--rz-warning-dark);
+    color: var(--ba-warn);
 }
 
 .attention-info .rzi {
-    color: var(--rz-info);
+    color: var(--ba-blue-deep);
 }
 
 /* Files */
@@ -426,17 +459,21 @@ h1:focus {
     align-items: center;
     gap: 0.5rem;
     padding: 0.375rem 0;
-    border-bottom: 1px solid var(--rz-base-200);
+    border-bottom: 1px solid var(--ba-hairline);
 }
 
 .provider-tag {
     flex: none;
-    padding: 0 0.5rem;
-    border: 1px solid var(--rz-base-400);
+    padding: 0 0.625rem;
+    border: 2px solid var(--ba-ink);
     border-radius: 999px;
-    font-size: 0.75rem;
-    line-height: 1.5rem;
-    color: var(--rz-text-secondary-color);
+    background: var(--ba-pink);
+    font-size: 0.6875rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.375rem;
+    color: var(--ba-ink);
 }
 
 .list-row-text {
@@ -453,16 +490,48 @@ h1:focus {
 /* Login */
 
 .auth-layout {
+    position: relative;
     display: grid;
     place-items: center;
     min-height: 100vh;
     padding: 1rem;
-    background: var(--rz-base-background-color);
+    overflow: hidden;
+    background: var(--ba-blue);
+}
+
+.auth-layout .brand-shape {
+    position: absolute;
+}
+
+.login-stack {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 26rem;
+}
+
+.login-wordmark {
+    font-size: clamp(4rem, 14vw, 6.5rem);
+}
+
+.login-tagline {
+    margin: 0 0 0.5rem;
+    color: var(--ba-white);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .login-card {
     width: 100%;
-    max-width: 24rem;
+}
+
+.login-field {
+    font-weight: 700;
 }
 
 .login-field {

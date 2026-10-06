@@ -33,7 +33,7 @@
         <RadzenDataGridColumn Property="@nameof(GigRow.QuotedPrice)" Title="Quote" Width="9rem" TextAlign="TextAlign.Right">
             <Template Context="gig">@gig.QuotedPrice</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(GigRow.PaymentState)" Title="Payment" Width="9rem">
+        <RadzenDataGridColumn Property="@nameof(GigRow.PaymentState)" Title="Payment" Width="10.5rem">
             <Template Context="gig">
                 @if (gig.PaymentState is { } state)
                 {

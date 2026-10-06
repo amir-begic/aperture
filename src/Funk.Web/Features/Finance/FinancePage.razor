@@ -2,9 +2,7 @@
 @using System.Globalization
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject NavigationManager Navigation
-@inject ThemeService Themes
 @inject TimeProvider Time
-@implements IDisposable
 
 <PageTitle>Finance · Funk</PageTitle>
 
@@ -160,9 +158,8 @@ else
 }
 
 @code {
-    // Categorical slots 1 and 2 of the reference palette, validated for both themes (CVD, contrast, lightness).
-    private static readonly (string Income, string Costs) LightPalette = ("#2a78d6", "#eb6834");
-    private static readonly (string Income, string Costs) DarkPalette = ("#3987e5", "#d95926");
+    // Ajvar Blue and a roasted pink, validated on the white card (CVD separation, contrast, lightness).
+    private static readonly (string Income, string Costs) Palette = ("#505FDE", "#C2577A");
 
     private static readonly CultureInfo Swiss = CultureInfo.GetCultureInfo("de-CH");
 
@@ -172,12 +169,8 @@ else
     private List<MonthPoint> _months = [];
     private bool _showTable;
 
-    private (string Income, string Costs) Palette =>
-        Themes.Theme?.Contains("dark", StringComparison.OrdinalIgnoreCase) == true ? DarkPalette : LightPalette;
-
     protected override async Task OnInitializedAsync()
     {
-        Themes.ThemeChanged += OnThemeChanged;
         _year = Time.GetLocalNow().Year;
         await using var db = await DbFactory.CreateDbContextAsync();
         _years = await IncomeStatement.YearsAsync(db, _year);
@@ -190,10 +183,6 @@ else
         _statement = await IncomeStatement.LoadAsync(db, _year);
         _months = _statement.Months.Select(m => new MonthPoint(MonthName(m.Month)[..3], m.Income.Chf, m.Costs.Chf)).ToList();
     }
-
-    private void OnThemeChanged() => InvokeAsync(StateHasChanged);
-
-    public void Dispose() => Themes.ThemeChanged -= OnThemeChanged;
 
     private static string MonthName(int month) => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month);
 

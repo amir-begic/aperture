@@ -1,4 +1,7 @@
 @inherits LayoutComponentBase
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <RadzenComponents />
 
@@ -6,10 +9,9 @@
     <RadzenHeader>
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0">
             <RadzenSidebarToggle Click="@(() => _sidebarExpanded = !_sidebarExpanded)" />
-            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.Span" class="rz-m-0">Funk</RadzenText>
+            <a href="" class="wordmark header-wordmark">Funk</a>
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center"
                          JustifyContent="JustifyContent.End" Gap="0.5rem" class="rz-px-4" Style="flex: 1">
-                <RadzenAppearanceToggle />
                 <form action="logout" method="post">
                     <AntiforgeryToken />
                     <RadzenButton ButtonType="ButtonType.Submit" Icon="logout" Variant="Variant.Text"
@@ -21,7 +23,7 @@
 
     <RadzenSidebar @bind-Expanded="_sidebarExpanded">
         <RadzenPanelMenu>
-            <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Path="" />
+            <RadzenPanelMenuItem Text="Dashboard" Icon="dashboard" Path="/" Match="NavLinkMatch.All" />
             <RadzenPanelMenuItem Text="Calendar" Icon="calendar_month" Path="calendar" />
             <RadzenPanelMenuItem Text="Gigs" Icon="album" Path="gigs" />
             <RadzenPanelMenuItem Text="Invoices" Icon="request_quote" Path="invoices" />
@@ -32,6 +34,11 @@
             <RadzenPanelMenuItem Text="Venues" Icon="location_on" Path="venues" />
             <RadzenPanelMenuItem Text="Settings" Icon="settings" Path="settings" />
         </RadzenPanelMenu>
+        <div class="sidebar-shapes">
+            <BrandShape Kind="BrandShape.ShapeKind.Blob" Width="110" Style="left: 1.5rem; top: 1.5rem; transform: rotate(-24deg)" />
+            <BrandShape Kind="BrandShape.ShapeKind.Bean" Width="84" Style="right: 1.75rem; top: 0.5rem" />
+            <BrandShape Kind="BrandShape.ShapeKind.Seeds" Width="90" Style="right: 2.5rem; top: 7.5rem" />
+        </div>
     </RadzenSidebar>
 
     <RadzenBody>
@@ -49,4 +56,52 @@
 
 @code {
     private bool _sidebarExpanded = true;
+    private IJSObjectReference? _layout;
+
+    protected override void OnInitialized() => Navigation.LocationChanged += OnLocationChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _layout = await JS.InvokeAsync<IJSObjectReference>("import", "./layout.js");
+        }
+    }
+
+    // On phones the sidebar is a full-screen menu: close it once a page is chosen.
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (!_sidebarExpanded || _layout is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (await _layout.InvokeAsync<bool>("isNarrow"))
+            {
+                _sidebarExpanded = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // The circuit is gone; nothing to update.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+        if (_layout is not null)
+        {
+            try
+            {
+                await _layout.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
+    }
 }

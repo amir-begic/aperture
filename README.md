@@ -96,6 +96,9 @@ A few conventions:
 - **Times** are local Swiss time. Code that needs "now" takes a `TimeProvider`, so tests can fix the date.
 - **Enums** are stored as text, so the database stays readable.
 - **Issued invoices** never change; they keep a frozen copy of both addresses.
+- **Look:** Bon Ajvar brand (Ajvar Blue, Roasted Pink, Ink, Archivo), light only. The tokens and Radzen overrides
+  live in `wwwroot/brand.css` on top of Radzen's *standard* theme; `app.css` holds the app's own components.
+  Text directly on the blue page is white, text on cards, tables and dialogs is ink.
 
 ## Third-party components
 
@@ -106,3 +109,4 @@ A few conventions:
 | Codecrete.SwissQRBill.Generator | QR-bill | MIT |
 | ClosedXML | Excel export | MIT |
 | Liberation Sans | font embedded in PDFs | SIL Open Font License |
+| Archivo | app font (Bon Ajvar look), self-hosted in `wwwroot/fonts` | SIL Open Font License |

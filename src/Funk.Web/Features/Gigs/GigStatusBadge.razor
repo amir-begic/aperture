@@ -1,4 +1,6 @@
-<RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Status.ToString()" />
+@* Same fills as the calendar: inquiry pink and dashed (tentative), confirmed blue, done white, cancelled crossed out. *@
+<RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Status.ToString()"
+             class="@(Status == GigStatus.Cancelled ? "badge-cancelled" : null)" />
 
 @code {
     [Parameter, EditorRequired]
@@ -8,7 +10,6 @@
     {
         GigStatus.Inquiry => BadgeStyle.Warning,
         GigStatus.Confirmed => BadgeStyle.Info,
-        GigStatus.Done => BadgeStyle.Success,
         _ => BadgeStyle.Base,
     };
 }

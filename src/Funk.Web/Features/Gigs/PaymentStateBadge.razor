@@ -30,7 +30,7 @@
     {
         PaymentState.Paid => BadgeStyle.Success,
         _ when IsPastDue && IsOpen => BadgeStyle.Danger,
-        PaymentState.PartiallyPaid => BadgeStyle.Info,
+        PaymentState.PartiallyPaid => BadgeStyle.Secondary,
         _ when IsPlayed => BadgeStyle.Danger,
         _ => BadgeStyle.Base,
     };

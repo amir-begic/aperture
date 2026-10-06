@@ -71,11 +71,6 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddRadzenComponents();
-builder.Services.AddRadzenCookieThemeService(options =>
-{
-    options.Name = "funk.theme";
-    options.Duration = TimeSpan.FromDays(365);
-});
 
 var app = builder.Build();
 
