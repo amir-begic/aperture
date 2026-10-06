@@ -26,9 +26,18 @@ deploy/publish.sh
 
 The build is self-contained: the Mac doesn't need .NET.
 
-## 2. Install (on the Mac mini)
+## 2. Install
 
-Copy the `.tar.gz` to the Mac (here: `~/Downloads`), then in Terminal:
+**With SSH** (see *Before you start*), from the development machine:
+
+```bash
+deploy/deploy.sh amir@mac-mini
+```
+
+It builds the release, copies it to the Mac and runs the installer there; its questions appear in your terminal.
+Later runs of the same command install updates (see 3).
+
+**Without SSH**, copy the `.tar.gz` to the Mac (here: `~/Downloads`), then in Terminal on the Mac:
 
 ```bash
 cd ~/Downloads
