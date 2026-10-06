@@ -113,6 +113,29 @@ The update stops Funk, copies the database into `~/Funk/backups/before-update/` 
    sudo launchctl bootstrap system /Library/LaunchDaemons/ch.funk.web.plist
    ```
 
+## Security
+
+**What's protected:**
+- **Every page and file needs the login,** except `/health`, which only answers `ok`.
+- **Files are served by number** (`/attachments/12`), never by path. Uploaded files get generated names.
+  Only the web root (`wwwroot`) is served, so the scripts, settings and database can't be downloaded.
+- **Scripts can't be run through Funk.** The app has no page or endpoint that runs commands. Running
+  `install.sh` or `update.sh` needs a shell on the Mac (at the Mac, SSH or Tailscale SSH) and your Mac password for `sudo`.
+- **Funk runs as your user, not as root.** The service definition with the password hash is readable only by root,
+  and `~/Funk/data` and `~/Funk/backups` only by you.
+- **HTTPS headers are trusted only from the Mac itself,** i.e. from `tailscale serve`.
+
+**Things to know:**
+- **`http://<mac>.local:5080` is unencrypted.** Anyone on your home Wi-Fi could read the password and the login
+  cookie. The Tailscale address (`https://….ts.net`) is encrypted. Prefer it, also at home.
+- **Wrong passwords aren't locked out.** Each failed login waits one second, which slows guessing down but doesn't
+  stop it. Use a long password.
+- **Never use `tailscale funnel` or port forwarding on your router.** Both put Funk on the public internet.
+  `tailscale serve` is visible only to devices in your tailnet.
+- **The backup drives hold all your business data.** Format them as *APFS (Encrypted)* in Disk Utility. The
+  backup works the same. Let the Mac remember the password: it then unlocks the drives when you log in. After a
+  restart, log in once (with FileVault on, you have to anyway) or the night's backup skips the locked drives.
+
 ## Troubleshooting
 
 | Problem | What to do |

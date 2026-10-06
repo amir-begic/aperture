@@ -1,11 +1,28 @@
 # Funk
 
 A small ERP for running a DJ business: gigs, clients, costs, invoices (Swiss QR-bill) and tax exports.
-Single user, CHF, self-hosted on a Mac mini.
+Single user, CHF, English, self-hosted on a Mac mini and used from any browser at home or through Tailscale.
 
 **Stack:** .NET 10 · Blazor Web App (Interactive Server) · Radzen.Blazor · EF Core + SQLite
 
+## What it does
+
+| Area | |
+|---|---|
+| **Gigs** | Client, venue, date and time (several gigs per day, gigs past midnight), status *Inquiry → Confirmed → Done* or *Cancelled*, quote. |
+| **Gig finances** | Costs such as gear rental, either covered by the quote or billed on top (at cost or with your margin). Payments received, with the payslip attached. Margin and what's still open. |
+| **Prep** | Spotify/Tidal playlist links, notes, a checklist (wedding template included), files. |
+| **Calendar** | Month, week and year view. Hovering over a gig shows a card with the details. |
+| **Invoices** | Created from a gig: quote plus billed costs, optional VAT, rounded to 5 Rappen, Swiss QR-bill. Numbered `2026-001` once issued, then frozen and archived as PDF. |
+| **Finance** | Income statement per year on a cash basis, business costs that don't belong to a gig, equipment with depreciation. |
+| **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |
+| **Dashboard** | Year figures and a to-do list: overdue invoices, gigs without an invoice, open prep, backup problems. |
+
+How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
+
 ## Getting started
+
+Needs the .NET 10 SDK.
 
 ```bash
 # 1. Create your login (prints the commands to store it as user-secrets)
@@ -18,22 +35,35 @@ dotnet run --project src/Funk.Web
 dotnet test
 ```
 
-The database is created and migrated automatically on startup.
+The database is created and migrated automatically on startup. Then fill in your business details under
+**Settings**: address and IBAN appear on invoices.
 
 ## Running it on the Mac mini
 
-See [docs/deployment.md](docs/deployment.md): `deploy/publish.sh` builds a self-contained release for Apple silicon,
-`deploy/macos/install.sh` sets it up as a service with nightly backups, `deploy/deploy.sh` installs updates.
+See [docs/deployment.md](docs/deployment.md):
+- `deploy/publish.sh` builds a self-contained release for Apple silicon.
+- `deploy/macos/install.sh` sets it up as a service with nightly backups to your external drives.
+- `deploy/deploy.sh` installs updates and goes back to the previous version if the new one doesn't start.
 
 ## Configuration
 
 | Setting | Default | Notes |
 |---|---|---|
-| `Funk:DataDirectory` | `data` (relative to `src/Funk.Web`) | Holds `funk.db`. `~` is expanded; the Mac mini uses `~/Funk/data`. |
+| `Funk:DataDirectory` | `data` (relative to `src/Funk.Web`) | All business data. `~` is expanded; the Mac mini uses `~/Funk/data`. |
 | `Auth:Username` | – | Required. |
 | `Auth:PasswordHash` | – | Required. Generate with `hash-password`; never commit it. |
 
 In production, use environment variables (`Funk__DataDirectory`, `Auth__Username`, `Auth__PasswordHash`).
+The installer puts them in the service definition, which only root can read.
+
+The data directory holds:
+
+```
+funk.db               the database (SQLite, WAL mode)
+attachments/YYYY/     receipts, payslips, invoice PDFs, under generated names
+keys/                 keys that sign the login cookie, so a restart doesn't log you out
+backup-status.json    written by the nightly backup, shown under Settings and on the dashboard
+```
 
 ## Database migrations
 
@@ -48,13 +78,31 @@ A test fails if the model changes without a migration.
 
 ```
 src/Funk.Web/
-  Auth/            single-user cookie login
+  Auth/            single-user cookie login, hash-password command
   Components/      app shell, layouts, routing
-  Configuration/   data paths
+  Configuration/   data paths, app version
   Data/            DbContext, entities, migrations, value converters
-  Domain/          Money (CHF in Rappen), IBAN validation
-  Features/        one folder per area: Gigs, Calendar, Invoices, Finance, Dashboard, …
-tests/Funk.Tests/
-deploy/            release build, Mac mini install/update/backup scripts
-docs/              deployment guide
+  Domain/          the rules, without UI or database: Money (CHF in Rappen), invoice totals,
+                   depreciation, gig financials, categories, IBAN and contact validation
+  Features/        one folder per area, pages and their logic together:
+                   Gigs, Clients, Venues, Calendar, Attachments, Invoices, Finance, Dashboard, Backup, Settings
+tests/Funk.Tests/  xUnit; database tests run against in-memory SQLite
+deploy/            release build, Mac mini install/update/backup scripts and service definitions
+docs/              deployment guide, accounting rules
 ```
+
+A few conventions:
+- **Money** is a `Money` value holding whole Rappen, stored as an integer. Never `double`.
+- **Times** are local Swiss time. Code that needs "now" takes a `TimeProvider`, so tests can fix the date.
+- **Enums** are stored as text, so the database stays readable.
+- **Issued invoices** never change; they keep a frozen copy of both addresses.
+
+## Third-party components
+
+| Component | Used for | License |
+|---|---|---|
+| Radzen.Blazor | UI components | MIT |
+| QuestPDF | invoice and statement PDFs | Community license: free below USD 1M annual revenue |
+| Codecrete.SwissQRBill.Generator | QR-bill | MIT |
+| ClosedXML | Excel export | MIT |
+| Liberation Sans | font embedded in PDFs | SIL Open Font License |
