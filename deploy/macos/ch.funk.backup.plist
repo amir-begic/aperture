@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Nightly backup at 03:30 (run at wake-up if the Mac was asleep). Installed by install.sh.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ch.funk.backup</string>
+    <key>UserName</key>
+    <string>__USER__</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__FUNK_HOME__/app/deploy/macos/backup.sh</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>FUNK_HOME</key>
+        <string>__FUNK_HOME__</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>__FUNK_HOME__/logs/backup.log</string>
+    <key>StandardErrorPath</key>
+    <string>__FUNK_HOME__/logs/backup.log</string>
+</dict>
+</plist>

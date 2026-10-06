@@ -1,6 +1,7 @@
 @page "/settings"
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject NotificationService Notifications
+@inject Funk.Web.Configuration.FunkPaths Paths
 
 <PageTitle>Settings · Funk</PageTitle>
 
@@ -153,16 +154,44 @@ else
             </div>
         </RadzenStack>
     </RadzenTemplateForm>
+
+    <RadzenFieldset Text="Backups" class="settings-form rz-mt-6">
+        @if (_backup is null)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                No backup has run on this machine yet. The nightly backup is set up with deploy/macos/install.sh (see docs/deployment.md).
+            </RadzenText>
+        }
+        else
+        {
+            <dl class="facts">
+                <dt>Last backup</dt>
+                <dd>@(_backup.LastSuccess?.LocalDateTime.ToString("dd.MM.yyyy HH:mm") ?? "never succeeded")</dd>
+                <dt>Last run</dt>
+                <dd>@_backup.LastRun?.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</dd>
+                <dt>Saved to</dt>
+                <dd>@(_backup.Destinations.Count == 0 ? "–" : string.Join(", ", _backup.Destinations))</dd>
+            </dl>
+            @foreach (var problem in _backup.Problems)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-mt-2 rz-mb-0">@problem</RadzenAlert>
+            }
+        }
+    </RadzenFieldset>
+
+    <RadzenText TextStyle="TextStyle.Caption" class="rz-mt-4">Funk @Funk.Web.Configuration.AppVersion.Current · data in @Paths.DataDirectory</RadzenText>
 }
 
 @code {
     private BusinessSettings? _settings;
+    private Funk.Web.Features.Backup.BackupStatus? _backup;
     private bool _saving;
 
     protected override async Task OnInitializedAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
         _settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
+        _backup = Funk.Web.Features.Backup.BackupStatus.Read(Paths);
     }
 
     private async Task SaveAsync(BusinessSettings settings)

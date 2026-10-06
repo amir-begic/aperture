@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <!-- The UI is English: skip libraries' translated messages (de, es, fr, …) in the published app. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
     <UserSecretsId>53f29657-b8c3-4e4d-95ae-0e2ba8b85745</UserSecretsId>
   </PropertyGroup>
 

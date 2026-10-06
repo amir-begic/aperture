@@ -4,6 +4,8 @@
 @inject IDbContextFactory<FunkDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject TimeProvider Time
+@inject Funk.Web.Configuration.FunkPaths Paths
+@inject IWebHostEnvironment Environment
 
 <PageTitle>Dashboard · Funk</PageTitle>
 
@@ -92,6 +94,7 @@
         _openInvoices = open.Sum(g => g.Financials.Outstanding!.Value);
         _overdueCount = open.Count(g => g.IsPastDue(today));
 
-        _attention = await Attention.ItemsAsync(db, now);
+        _attention = await Attention.ItemsAsync(db, now,
+            Funk.Web.Features.Backup.BackupStatus.Read(Paths), expectBackups: !Environment.IsDevelopment());
     }
 }

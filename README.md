@@ -20,11 +20,16 @@ dotnet test
 
 The database is created and migrated automatically on startup.
 
+## Running it on the Mac mini
+
+See [docs/deployment.md](docs/deployment.md): `deploy/publish.sh` builds a self-contained release for Apple silicon,
+`deploy/macos/install.sh` sets it up as a service with nightly backups, `deploy/deploy.sh` installs updates.
+
 ## Configuration
 
 | Setting | Default | Notes |
 |---|---|---|
-| `Funk:DataDirectory` | `data` (relative to `src/Funk.Web`) | Holds `funk.db`. `~` is expanded, e.g. `~/funk-data` on the Mac mini. |
+| `Funk:DataDirectory` | `data` (relative to `src/Funk.Web`) | Holds `funk.db`. `~` is expanded; the Mac mini uses `~/Funk/data`. |
 | `Auth:Username` | – | Required. |
 | `Auth:PasswordHash` | – | Required. Generate with `hash-password`; never commit it. |
 
@@ -48,6 +53,8 @@ src/Funk.Web/
   Configuration/   data paths
   Data/            DbContext, entities, migrations, value converters
   Domain/          Money (CHF in Rappen), IBAN validation
-  Features/        one folder per area: Dashboard, Settings, Auth, …
+  Features/        one folder per area: Gigs, Calendar, Invoices, Finance, Dashboard, …
 tests/Funk.Tests/
+deploy/            release build, Mac mini install/update/backup scripts
+docs/              deployment guide
 ```

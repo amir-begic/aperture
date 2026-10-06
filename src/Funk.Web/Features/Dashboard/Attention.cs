@@ -1,6 +1,7 @@
 using Funk.Web.Data;
 using Funk.Web.Data.Entities;
 using Funk.Web.Domain;
+using Funk.Web.Features.Backup;
 using Funk.Web.Features.Gigs;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,11 +22,34 @@ public static class Attention
     /// <summary>How far ahead open prep tasks are flagged.</summary>
     public static readonly TimeSpan PrepHorizon = TimeSpan.FromDays(14);
 
-    /// <summary>Most urgent first: overdue invoices, gigs to invoice, gigs to close, open prep.</summary>
-    public static async Task<List<AttentionItem>> ItemsAsync(FunkDbContext db, DateTime now)
+    /// <summary>
+    /// Most urgent first: backups, overdue invoices, gigs to invoice, gigs to close, open prep.
+    /// Backups are only checked where they're expected (the Mac mini, not a development machine).
+    /// </summary>
+    public static async Task<List<AttentionItem>> ItemsAsync(
+        FunkDbContext db, DateTime now, BackupStatus? backup = null, bool expectBackups = false)
     {
         var today = DateOnly.FromDateTime(now);
         var items = new List<AttentionItem>();
+
+        if (expectBackups)
+        {
+            if (backup?.LastSuccess is not { } lastSuccess)
+            {
+                items.Add(new(AttentionLevel.Urgent, "backup", "No backup has run yet",
+                    "Set up the nightly backup on the Mac mini (docs/deployment.md)", "settings"));
+            }
+            else if (backup.IsStale(new DateTimeOffset(now)))
+            {
+                items.Add(new(AttentionLevel.Urgent, "backup", $"Last backup: {lastSuccess.LocalDateTime:dd.MM.yyyy HH:mm}",
+                    "Is a backup drive connected? See Settings for details.", "settings"));
+            }
+
+            foreach (var problem in backup?.Problems ?? [])
+            {
+                items.Add(new(AttentionLevel.Warning, "usb_off", "Backup problem", problem, "settings"));
+            }
+        }
 
         // Booked gigs that were played or are coming up within the prep horizon, plus every gig with an issued
         // invoice: invoices sent before the event (deposits, advance payment) can be overdue too.

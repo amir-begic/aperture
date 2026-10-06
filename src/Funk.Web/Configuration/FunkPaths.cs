@@ -12,6 +12,12 @@ public sealed record FunkPaths(string DataDirectory)
 
     public string AttachmentsDirectory => Path.Combine(DataDirectory, "attachments");
 
+    /// <summary>Keys that sign login cookies; kept with the data so updates don't log you out.</summary>
+    public string KeysDirectory => Path.Combine(DataDirectory, "keys");
+
+    /// <summary>Written by the nightly backup script (deploy/macos/backup.sh).</summary>
+    public string BackupStatusFile => Path.Combine(DataDirectory, "backup-status.json");
+
     public string ConnectionString =>
         new SqliteConnectionStringBuilder { DataSource = DatabasePath }.ToString();
 

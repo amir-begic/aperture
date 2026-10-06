@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 
@@ -55,6 +57,16 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddSingleton(TimeProvider.System);
 
+// Cookie and antiforgery keys live in the data directory: stable across updates and part of the backup.
+builder.Services.AddDataProtection()
+    .SetApplicationName("Funk")
+    .PersistKeysToFileSystem(new DirectoryInfo(paths.KeysDirectory));
+
+// On the Mac mini, `tailscale serve` terminates HTTPS on the same machine and forwards to the app.
+// Trusting its headers (from localhost only, the default) keeps redirects and cookies on https.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto);
+
 // UI
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -68,6 +80,8 @@ builder.Services.AddRadzenCookieThemeService(options =>
 var app = builder.Build();
 
 await app.InitializeDatabaseAsync();
+
+app.UseForwardedHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -87,6 +101,14 @@ app.UseAntiforgery();
 app.MapStaticAssets().AllowAnonymous();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// For the update script: is the new version up and can it reach the database?
+app.MapGet("/health", async (IDbContextFactory<FunkDbContext> dbFactory) =>
+    {
+        await using var db = await dbFactory.CreateDbContextAsync();
+        return await db.Database.CanConnectAsync() ? Results.Text("ok") : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    })
+    .AllowAnonymous();
 
 app.MapAttachmentEndpoints();
 app.MapInvoiceEndpoints();

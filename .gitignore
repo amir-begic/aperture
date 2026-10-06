@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Local app data (SQLite database, attachments)
 /src/Funk.Web/data/
+
+# Builds for the Mac mini (deploy/publish.sh)
+/artifacts/
