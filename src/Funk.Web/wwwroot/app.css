@@ -294,6 +294,33 @@ h1:focus {
     margin: 0;
 }
 
+/* Finance */
+.finance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.finance-table td, .finance-table th {
+    padding: 0.375rem 0.5rem;
+    border-bottom: 1px solid var(--rz-base-200);
+    text-align: left;
+}
+
+.finance-table thead th {
+    font-weight: 500;
+    border-bottom-color: var(--rz-base-400);
+}
+
+.finance-table tfoot th {
+    border-top: 1px solid var(--rz-base-500);
+    border-bottom: none;
+}
+
+.finance-table .share {
+    width: 4rem;
+    color: var(--rz-text-secondary-color);
+}
+
 /* Files */
 .attachment-link {
     display: inline-flex;

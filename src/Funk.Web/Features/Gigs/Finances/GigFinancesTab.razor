@@ -62,7 +62,7 @@ else
                 <Template Context="expense">@expense.Date.ToString("dd.MM.yyyy")</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Title="Category" Width="9rem">
-                <Template Context="expense">@ExpenseDialog.CategoryText(expense.Category)</Template>
+                <Template Context="expense">@expense.Category.Text()</Template>
             </RadzenDataGridColumn>
             <RadzenDataGridColumn Title="Description">
                 <Template Context="expense">

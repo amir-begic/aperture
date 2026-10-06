@@ -19,6 +19,7 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
     public DbSet<Attachment> Attachments => Set<Attachment>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
+    public DbSet<Asset> Assets => Set<Asset>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -61,6 +62,7 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
         configurationBuilder.Properties<ExpenseCategory>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<PaymentMethod>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<InvoiceStatus>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<AssetCategory>().HaveConversion<string>().HaveMaxLength(20);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -108,6 +110,12 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
             invoice.Property(i => i.SellerVatNumber).HasMaxLength(32);
             invoice.HasMany(i => i.Lines).WithOne(l => l.Invoice).OnDelete(DeleteBehavior.Cascade);
             invoice.HasOne(i => i.Pdf).WithMany().OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Asset>(asset =>
+        {
+            asset.HasIndex(a => a.PurchaseDate);
+            asset.HasOne(a => a.Receipt).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Payment>(payment =>

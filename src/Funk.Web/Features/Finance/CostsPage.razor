@@ -1,0 +1,131 @@
+@page "/costs"
+@using Funk.Web.Features.Attachments
+@using Funk.Web.Features.Gigs.Finances
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject DialogService Dialogs
+@inject TimeProvider Time
+
+<PageTitle>Costs · Funk</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Costs</RadzenText>
+    <RadzenButton Text="Add business cost" Icon="add" Click="@(() => EditAsync(null, null))" />
+</RadzenStack>
+<RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
+    Business costs like subscriptions, insurance or your phone go here; gig costs are added on the gig's Finances tab.
+    Equipment you'll use for several years belongs under <RadzenLink Path="equipment" Text="Equipment" />.
+</RadzenText>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="1rem" class="rz-mb-4">
+    <RadzenFormField Text="Year">
+        <RadzenDropDown TValue="int" @bind-Value="_year" @bind-Value:after="LoadAsync" Data="_years" />
+    </RadzenFormField>
+    <RadzenFormField Text="Category">
+        <RadzenDropDown TValue="ExpenseCategory?" @bind-Value="_category" Data="Categories" TextProperty="Text" ValueProperty="Value"
+                        AllowClear="true" Placeholder="All categories" Style="min-width: 14rem" />
+    </RadzenFormField>
+    <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0 rz-ms-auto">Total <strong>@Filtered.Sum(e => e.Amount)</strong></RadzenText>
+</RadzenStack>
+
+<RadzenDataGrid TItem="CostRow" Data="Filtered" IsLoading="_loading" AllowSorting="true" AllowPaging="true" PageSize="50"
+                EmptyText="No costs in this year." class="clickable-rows"
+                RowClick="@(args => EditAsync(args.Data!.Id, args.Data.GigId))">
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(CostRow.Date)" Title="Date" Width="8rem">
+            <Template Context="cost">@cost.Date.ToString("dd.MM.yyyy")</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(CostRow.CategoryText)" Title="Category" Width="13rem" />
+        <RadzenDataGridColumn Property="@nameof(CostRow.Description)" Title="Description">
+            <Template Context="cost">
+                <div>@cost.Description</div>
+                <RadzenText TextStyle="TextStyle.Caption">@cost.Vendor</RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(CostRow.GigTitle)" Title="For">
+            <Template Context="cost">
+                @if (cost.GigId is { } gigId)
+                {
+                    <span @onclick:stopPropagation="true"><RadzenLink Path="@($"gigs/{gigId}?tab=finances")" Text="@cost.GigTitle" /></span>
+                }
+                else
+                {
+                    <RadzenText TextStyle="TextStyle.Caption">Business</RadzenText>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Receipt">
+            <Template Context="cost">
+                @if (cost.Receipt is not null)
+                {
+                    <span @onclick:stopPropagation="true"><AttachmentLink Attachment="cost.Receipt" /></span>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(CostRow.Amount)" Title="Amount" Width="9rem" TextAlign="TextAlign.Right">
+            <Template Context="cost">@cost.Amount</Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    private static readonly List<CategoryOption> Categories =
+        ExpenseCategories.All.Select(c => new CategoryOption(c.Text, c.Value)).ToList();
+
+    private List<int> _years = [];
+    private int _year;
+    private ExpenseCategory? _category;
+    private List<CostRow> _costs = [];
+    private bool _loading = true;
+
+    private IEnumerable<CostRow> Filtered => _category is { } category ? _costs.Where(c => c.Category == category) : _costs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _year = Time.GetLocalNow().Year;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _years = await IncomeStatement.YearsAsync(db, _year);
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var from = new DateOnly(_year, 1, 1);
+        var until = from.AddYears(1);
+        _costs = (await db.Expenses.AsNoTracking()
+                .Include(e => e.Receipt).Include(e => e.Gig)
+                .Where(e => e.Date >= from && e.Date < until)
+                .OrderByDescending(e => e.Date).ThenByDescending(e => e.Id)
+                .ToListAsync())
+            .Select(e => new CostRow(e.Id, e.Date, e.Category, e.Description, e.Vendor, e.GigId, e.Gig?.Title, e.Amount, e.Receipt))
+            .ToList();
+        _loading = false;
+    }
+
+    private async Task EditAsync(int? expenseId, int? gigId)
+    {
+        var changed = await Dialogs.OpenAsync<ExpenseDialog>(
+            expenseId is null ? "Add business cost" : "Edit cost",
+            new Dictionary<string, object?>
+            {
+                ["GigId"] = gigId,
+                ["ExpenseId"] = expenseId,
+                ["DefaultDate"] = DateOnly.FromDateTime(Time.GetLocalNow().DateTime),
+            },
+            new DialogOptions { Width = "36rem" });
+        if (changed is true)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private sealed record CategoryOption(string Text, ExpenseCategory? Value);
+
+    private sealed record CostRow(
+        int Id, DateOnly Date, ExpenseCategory Category, string Description, string? Vendor,
+        int? GigId, string? GigTitle, Money Amount, Attachment? Receipt)
+    {
+        public string CategoryText => Category.Text();
+    }
+}

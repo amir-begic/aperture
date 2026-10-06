@@ -1,4 +1,4 @@
-@* Adds or edits a cost of a gig. Closes with true when something changed. *@
+@* Adds or edits a cost: of a gig, or a general business cost when GigId is null. Closes with true when something changed. *@
 @using System.ComponentModel.DataAnnotations
 @using Funk.Web.Features.Attachments
 @inject IDbContextFactory<FunkDbContext> DbFactory
@@ -42,6 +42,8 @@
                 </RadzenColumn>
             </RadzenRow>
 
+            @if (GigId is not null)
+            {
             <RadzenCard Variant="Variant.Outlined" class="rz-p-3">
                 <RadzenStack Gap="0.75rem">
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
@@ -67,6 +69,7 @@
                     }
                 </RadzenStack>
             </RadzenCard>
+            }
 
             <div>
                 <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-1">Receipt</RadzenText>
@@ -92,8 +95,9 @@
 }
 
 @code {
-    [Parameter, EditorRequired]
-    public int GigId { get; set; }
+    /// <summary>Null for general business costs (subscriptions, insurance, …), which can't be billed to a client.</summary>
+    [Parameter]
+    public int? GigId { get; set; }
 
     /// <summary>Null to add a new cost.</summary>
     [Parameter]
@@ -103,16 +107,7 @@
     [Parameter]
     public DateOnly DefaultDate { get; set; }
 
-    private static readonly IReadOnlyList<(string Text, ExpenseCategory Value)> CategoryItems =
-    [
-        ("Gear rental", ExpenseCategory.GearRental),
-        ("Travel", ExpenseCategory.Travel),
-        ("Staff", ExpenseCategory.Staff),
-        ("Music", ExpenseCategory.Music),
-        ("Other", ExpenseCategory.Other),
-    ];
-
-    private static readonly List<Option> Categories = CategoryItems.Select(c => new Option(c.Text, c.Value)).ToList();
+    private static readonly List<Option> Categories = ExpenseCategories.All.Select(c => new Option(c.Text, c.Value)).ToList();
 
     private ExpenseForm? _form;
     private Attachment? _existingReceipt;
@@ -137,9 +132,6 @@
             _form.BilledChf = _form.AmountChf;
         }
     }
-
-    public static string CategoryText(ExpenseCategory category) =>
-        CategoryItems.First(c => c.Value == category).Text;
 
     protected override async Task OnInitializedAsync()
     {
@@ -183,7 +175,7 @@
                 expense.Description = form.Description.Trim();
                 expense.Vendor = form.Vendor?.Trim();
                 expense.Amount = Money.FromChf(form.AmountChf!.Value);
-                expense.BilledToClient = form.BillToClient ? Money.FromChf(form.BilledChf!.Value) : null;
+                expense.BilledToClient = form.BillToClient && GigId is not null ? Money.FromChf(form.BilledChf!.Value) : null;
 
                 if (removed is not null)
                 {

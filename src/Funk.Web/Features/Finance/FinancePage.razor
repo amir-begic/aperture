@@ -1,0 +1,188 @@
+@page "/finance"
+@using System.Globalization
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject ThemeService Themes
+@inject TimeProvider Time
+@implements IDisposable
+
+<PageTitle>Finance · Funk</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Finance</RadzenText>
+    <RadzenFormField Text="Year">
+        <RadzenDropDown TValue="int" @bind-Value="_year" @bind-Value:after="LoadAsync" Data="_years" />
+    </RadzenFormField>
+</RadzenStack>
+<RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
+    Cash basis: income counts when it's received, costs when they're paid. Equipment is spread over the years as depreciation.
+</RadzenText>
+
+@if (_statement is null)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    var s = _statement;
+    <div class="kpi-row rz-mb-6">
+        <KpiTile Label="Income" Value="@s.TotalIncome.ToString()" Note="@($"{s.Income.Count} payment{(s.Income.Count == 1 ? "" : "s")}")" />
+        <KpiTile Label="Costs" Value="@s.TotalCosts.ToString()" Note="@($"{s.Expenses.Count} entr{(s.Expenses.Count == 1 ? "y" : "ies")}")" />
+        <KpiTile Label="Depreciation" Value="@s.TotalDepreciation.ToString()" Note="@($"{s.Assets.Count} item{(s.Assets.Count == 1 ? "" : "s")} of equipment")" />
+        <KpiTile Label="Result" Value="@s.Result.ToString()"
+                 Note="@(s.DisposalResult == Money.Zero ? (s.Result < Money.Zero ? "loss" : null) : $"incl. equipment sold: {s.DisposalResult}")" />
+    </div>
+
+    <RadzenCard Variant="Variant.Outlined" class="rz-mb-6">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Income and costs per month</RadzenText>
+            <RadzenSelectBar TValue="bool" @bind-Value="_showTable" Size="ButtonSize.Small">
+                <Items>
+                    <RadzenSelectBarItem Text="Chart" Value="false" />
+                    <RadzenSelectBarItem Text="Table" Value="true" />
+                </Items>
+            </RadzenSelectBar>
+        </RadzenStack>
+
+        @if (_showTable)
+        {
+            <table class="finance-table">
+                <thead><tr><th>Month</th><th class="num">Income</th><th class="num">Costs</th><th class="num">Difference</th></tr></thead>
+                <tbody>
+                    @foreach (var month in s.Months)
+                    {
+                        <tr>
+                            <td>@MonthName(month.Month)</td>
+                            <td class="num">@month.Income.ToAmountString()</td>
+                            <td class="num">@month.Costs.ToAmountString()</td>
+                            <td class="num">@((month.Income - month.Costs).ToAmountString())</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <RadzenChart Style="height: 280px" class="finance-chart">
+                <RadzenColumnSeries Data="_months" CategoryProperty="@nameof(MonthPoint.Label)" ValueProperty="@nameof(MonthPoint.Income)"
+                                    Title="Income" Fill="@Palette.Income" Stroke="@Palette.Income">
+                    <TooltipTemplate Context="point">@point.Label · income <strong>@Money.FromChf(point.Income)</strong></TooltipTemplate>
+                </RadzenColumnSeries>
+                <RadzenColumnSeries Data="_months" CategoryProperty="@nameof(MonthPoint.Label)" ValueProperty="@nameof(MonthPoint.Costs)"
+                                    Title="Costs" Fill="@Palette.Costs" Stroke="@Palette.Costs">
+                    <TooltipTemplate Context="point">@point.Label · costs <strong>@Money.FromChf(point.Costs)</strong></TooltipTemplate>
+                </RadzenColumnSeries>
+                <RadzenColumnOptions Radius="4" Margin="2" />
+                <RadzenValueAxis Formatter="@FormatAxis">
+                    <RadzenGridLines Visible="true" />
+                </RadzenValueAxis>
+                <RadzenCategoryAxis />
+                <RadzenLegend Position="LegendPosition.Top" />
+            </RadzenChart>
+        }
+    </RadzenCard>
+
+    <RadzenRow Gap="2rem">
+        <RadzenColumn Size="12" SizeLG="6">
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Costs by category</RadzenText>
+            <table class="finance-table">
+                <tbody>
+                    @foreach (var (category, amount) in s.CostsByCategory)
+                    {
+                        <tr>
+                            <td>@category.Text()</td>
+                            <td class="num">@amount.ToAmountString()</td>
+                            <td class="num share">@Share(amount, s.TotalCosts)</td>
+                        </tr>
+                    }
+                    @if (s.TotalDepreciation != Money.Zero)
+                    {
+                        <tr>
+                            <td><RadzenLink Path="equipment" Text="Depreciation of equipment" /></td>
+                            <td class="num">@s.TotalDepreciation.ToAmountString()</td>
+                            <td></td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr><th>Total</th><th class="num">@((s.TotalCosts + s.TotalDepreciation).ToAmountString())</th><th></th></tr>
+                </tfoot>
+            </table>
+            <RadzenLink Path="costs" Text="All costs" class="rz-mt-2" />
+        </RadzenColumn>
+
+    </RadzenRow>
+
+    <RadzenRow class="rz-mt-6">
+        <RadzenColumn Size="12">
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Gigs played in @s.Year</RadzenText>
+            <RadzenDataGrid TItem="GigResult" Data="s.Gigs" AllowSorting="true" EmptyText="No gigs in this year." class="clickable-rows"
+                            RowClick="@(args => Navigation.NavigateTo($"gigs/{args.Data!.GigId}?tab=finances"))">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(GigResult.Start)" Title="Date" Width="7rem">
+                        <Template Context="gig">@gig.Start.ToString("dd.MM.")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(GigResult.Title)" Title="Gig" />
+                    <RadzenDataGridColumn Title="To bill" TextAlign="TextAlign.Right" Width="8rem">
+                        <Template Context="gig">@gig.ToBill?.ToAmountString()</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Costs" TextAlign="TextAlign.Right" Width="7rem">
+                        <Template Context="gig">@gig.Costs.ToAmountString()</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Margin" TextAlign="TextAlign.Right" Width="8rem">
+                        <Template Context="gig">@gig.Margin?.ToAmountString()</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Received" TextAlign="TextAlign.Right" Width="8rem">
+                        <Template Context="gig">@gig.Received.ToAmountString()</Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenColumn>
+    </RadzenRow>
+}
+
+@code {
+    // Categorical slots 1 and 2 of the reference palette, validated for both themes (CVD, contrast, lightness).
+    private static readonly (string Income, string Costs) LightPalette = ("#2a78d6", "#eb6834");
+    private static readonly (string Income, string Costs) DarkPalette = ("#3987e5", "#d95926");
+
+    private static readonly CultureInfo Swiss = CultureInfo.GetCultureInfo("de-CH");
+
+    private List<int> _years = [];
+    private int _year;
+    private IncomeStatement? _statement;
+    private List<MonthPoint> _months = [];
+    private bool _showTable;
+
+    private (string Income, string Costs) Palette =>
+        Themes.Theme?.Contains("dark", StringComparison.OrdinalIgnoreCase) == true ? DarkPalette : LightPalette;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Themes.ThemeChanged += OnThemeChanged;
+        _year = Time.GetLocalNow().Year;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _years = await IncomeStatement.YearsAsync(db, _year);
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _statement = await IncomeStatement.LoadAsync(db, _year);
+        _months = _statement.Months.Select(m => new MonthPoint(MonthName(m.Month)[..3], m.Income.Chf, m.Costs.Chf)).ToList();
+    }
+
+    private void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Themes.ThemeChanged -= OnThemeChanged;
+
+    private static string MonthName(int month) => CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month);
+
+    private static string FormatAxis(object value) => Convert.ToDecimal(value).ToString("#,##0", Swiss);
+
+    private static string Share(Money part, Money total) =>
+        total == Money.Zero ? "" : $"{part.Rappen * 100m / total.Rappen:0} %";
+
+    private sealed record MonthPoint(string Label, decimal Income, decimal Costs);
+}

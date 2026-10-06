@@ -1,0 +1,52 @@
+namespace Funk.Web.Domain;
+
+/// <summary>One year of an asset's depreciation schedule.</summary>
+/// <param name="DisposalResult">Sale proceeds minus remaining book value in the year it was sold (gain, or loss if negative).</param>
+public sealed record DepreciationYear(int Year, Money Opening, Money Depreciation, Money Closing, Money? DisposalResult);
+
+/// <summary>
+/// Declining-balance depreciation ("degressiv, vom Buchwert") as in the ESTV's Merkblatt A 1995: each year the rate
+/// applies to the remaining book value. The first and last year are pro rata by month: the month of purchase counts,
+/// the month of sale doesn't. The ESTV rates are maximums; a lower rate is always allowed.
+/// </summary>
+public static class Depreciation
+{
+    /// <summary>Remaining book values below this are written off completely instead of shrinking forever.</summary>
+    private static readonly Money WriteOffThreshold = Money.FromChf(1);
+
+    public static IReadOnlyList<DepreciationYear> Schedule(
+        DateOnly purchased, Money cost, decimal ratePercent, DateOnly? disposedOn, Money? saleProceeds, int untilYear)
+    {
+        var years = new List<DepreciationYear>();
+        var bookValue = cost;
+        var lastYear = Math.Min(untilYear, disposedOn?.Year ?? untilYear);
+
+        for (var year = purchased.Year; year <= lastYear; year++)
+        {
+            var firstMonth = year == purchased.Year ? purchased.Month : 1;
+            var isDisposalYear = disposedOn?.Year == year;
+            var monthsInUse = isDisposalYear
+                ? Math.Max(0, disposedOn!.Value.Month - firstMonth)
+                : 12 - firstMonth + 1;
+
+            var depreciation = bookValue * (ratePercent / 100m * monthsInUse / 12m);
+            if (bookValue - depreciation < WriteOffThreshold && !isDisposalYear)
+            {
+                depreciation = bookValue;
+            }
+
+            var closing = bookValue - depreciation;
+            Money? disposalResult = null;
+            if (isDisposalYear)
+            {
+                disposalResult = (saleProceeds ?? Money.Zero) - closing;
+                closing = Money.Zero;
+            }
+
+            years.Add(new DepreciationYear(year, bookValue, depreciation, closing, disposalResult));
+            bookValue = closing;
+        }
+
+        return years;
+    }
+}

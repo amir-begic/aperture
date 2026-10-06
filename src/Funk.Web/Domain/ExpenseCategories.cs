@@ -1,0 +1,24 @@
+using Funk.Web.Data.Entities;
+
+namespace Funk.Web.Domain;
+
+/// <summary>Display names and order of cost categories, roughly following a Swiss income statement.</summary>
+public static class ExpenseCategories
+{
+    public static readonly IReadOnlyList<(ExpenseCategory Value, string Text)> All =
+    [
+        (ExpenseCategory.GearRental, "Gear rental"),
+        (ExpenseCategory.Travel, "Travel & transport"),
+        (ExpenseCategory.Staff, "Staff & helpers"),
+        (ExpenseCategory.Music, "Music & DJ pools"),
+        (ExpenseCategory.SmallEquipment, "Small equipment & repairs"),
+        (ExpenseCategory.Software, "Software & subscriptions"),
+        (ExpenseCategory.Marketing, "Marketing & website"),
+        (ExpenseCategory.Insurance, "Insurance & fees"),
+        (ExpenseCategory.Phone, "Phone & internet"),
+        (ExpenseCategory.Training, "Training"),
+        (ExpenseCategory.Other, "Other"),
+    ];
+
+    public static string Text(this ExpenseCategory category) => All.First(c => c.Value == category).Text;
+}

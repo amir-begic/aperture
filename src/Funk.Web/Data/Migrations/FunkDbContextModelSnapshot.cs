@@ -18,6 +18,57 @@ namespace Funk.Web.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("Funk.Web.Data.Entities.Asset", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Cost")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("DepreciationRatePercent")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("DisposedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("PurchaseDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReceiptId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("SaleProceeds")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Vendor")
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseDate");
+
+                    b.HasIndex("ReceiptId");
+
+                    b.ToTable("Assets");
+                });
+
             modelBuilder.Entity("Funk.Web.Data.Entities.Attachment", b =>
                 {
                     b.Property<int>("Id")
@@ -572,6 +623,16 @@ namespace Funk.Web.Data.Migrations
                     b.HasIndex("Name");
 
                     b.ToTable("Venues");
+                });
+
+            modelBuilder.Entity("Funk.Web.Data.Entities.Asset", b =>
+                {
+                    b.HasOne("Funk.Web.Data.Entities.Attachment", "Receipt")
+                        .WithMany()
+                        .HasForeignKey("ReceiptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Receipt");
                 });
 
             modelBuilder.Entity("Funk.Web.Data.Entities.Attachment", b =>

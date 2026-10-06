@@ -1,0 +1,282 @@
+@* Adds or edits a piece of equipment. Closes with true when something changed. *@
+@using System.ComponentModel.DataAnnotations
+@using Funk.Web.Features.Attachments
+@inject IDbContextFactory<FunkDbContext> DbFactory
+@inject AttachmentStore Store
+@inject DialogService Dialogs
+@inject TimeProvider Time
+
+@if (_form is not null)
+{
+    <RadzenTemplateForm TItem="AssetForm" Data="_form" Submit="SaveAsync">
+        <RadzenStack Gap="1rem">
+            <RadzenRow>
+                <RadzenColumn Size="12" SizeMD="7">
+                    <RadzenFormField Text="Name" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Name" @bind-Value="_form.Name" Placeholder="Pioneer DDJ-FLX10" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Name" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="5">
+                    <RadzenFormField Text="Category" class="w-full">
+                        <RadzenDropDown TValue="AssetCategory" Name="Category" @bind-Value="_form.Category" @bind-Value:after="OnCategoryChanged"
+                                        Data="Categories" TextProperty="Text" ValueProperty="Value" />
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="4">
+                    <RadzenFormField Text="Bought on" class="w-full">
+                        <ChildContent><RadzenDatePicker TValue="DateOnly?" Name="PurchaseDate" @bind-Value="_form.PurchaseDate" DateFormat="dd.MM.yyyy" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="PurchaseDate" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="4">
+                    <RadzenFormField Text="Price (CHF)" class="w-full">
+                        <ChildContent><RadzenNumeric TValue="decimal?" Name="CostChf" @bind-Value="_form.CostChf" Format="#,##0.00" ShowUpDown="false" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="CostChf" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Depreciation (% per year)" class="w-full">
+                        <ChildContent><RadzenNumeric TValue="decimal" Name="RatePercent" @bind-Value="_form.RatePercent" Min="0" Max="100" Format="0.#" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="RatePercent" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="Bought from (optional)" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Vendor" @bind-Value="_form.Vendor" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Vendor" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                Default: the ESTV maximum for "@EstvClass" (declining balance, Merkblatt A 1995). Lower rates are always allowed;
+                ask your tax office if unsure.
+            </RadzenText>
+
+            <div>
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-1">Receipt</RadzenText>
+                <FileField @ref="_receipt" Current="_existingReceipt" ChooseText="Attach receipt" />
+            </div>
+
+            <RadzenCard Variant="Variant.Outlined" class="rz-p-3">
+                <RadzenStack Gap="0.75rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenSwitch Name="IsDisposed" @bind-Value="_form.IsDisposed" />
+                        <RadzenLabel Component="IsDisposed" Text="Sold or thrown away" />
+                    </RadzenStack>
+                    @if (_form.IsDisposed)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+                            <RadzenFormField Text="On">
+                                <ChildContent><RadzenDatePicker TValue="DateOnly?" Name="DisposedOn" @bind-Value="_form.DisposedOn" DateFormat="dd.MM.yyyy" /></ChildContent>
+                                <Helper>
+                                    <RadzenCustomValidator Component="DisposedOn" Text="Enter a date after the purchase."
+                                                           Validator="@(() => _form.DisposedOn is { } d && (_form.PurchaseDate is null || d > _form.PurchaseDate))" />
+                                </Helper>
+                            </RadzenFormField>
+                            <RadzenFormField Text="Sold for (CHF, 0 if thrown away)">
+                                <RadzenNumeric TValue="decimal?" Name="SaleProceedsChf" @bind-Value="_form.SaleProceedsChf" Min="0" Format="#,##0.00" ShowUpDown="false" />
+                            </RadzenFormField>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+
+            @if (Schedule.Count > 0)
+            {
+                <details>
+                    <summary>Depreciation schedule</summary>
+                    <table class="invoice-totals rz-mt-2" style="margin-left: 0">
+                        <tr><th>Year</th><th class="num">Start</th><th class="num">Depreciation</th><th class="num">End</th></tr>
+                        @foreach (var year in Schedule)
+                        {
+                            <tr>
+                                <td>@year.Year</td>
+                                <td class="num">@year.Opening.ToAmountString()</td>
+                                <td class="num">@year.Depreciation.ToAmountString()</td>
+                                <td class="num">
+                                    @year.Closing.ToAmountString()
+                                    @if (year.DisposalResult is { } result)
+                                    {
+                                        <span> (sale @(result >= Money.Zero ? "gain" : "loss") @((result >= Money.Zero ? result : -result).ToAmountString()))</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </details>
+            }
+
+            @if (_error is not null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">@_error</RadzenAlert>
+            }
+
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_busy" BusyText="Saving…" />
+                <RadzenButton Text="Cancel" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(false))" />
+                @if (AssetId is not null)
+                {
+                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                                  Click="DeleteAsync" Disabled="_busy" class="rz-ms-auto" />
+                }
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+
+@code {
+    /// <summary>Null to add new equipment.</summary>
+    [Parameter]
+    public int? AssetId { get; set; }
+
+    private static readonly List<Option> Categories = AssetCategories.All.Select(c => new Option(c.Text, c.Value)).ToList();
+
+    private AssetForm? _form;
+    private Attachment? _existingReceipt;
+    private FileField? _receipt;
+    private bool _busy;
+    private string? _error;
+
+    private string EstvClass => AssetCategories.All.First(c => c.Value == _form!.Category).EstvClass;
+
+    /// <summary>Up to ten years or until the value is gone, for a quick sanity check.</summary>
+    private IReadOnlyList<DepreciationYear> Schedule =>
+        _form is { PurchaseDate: { } purchased, CostChf: > 0 }
+            ? Depreciation.Schedule(purchased, Money.FromChf(_form.CostChf.Value), _form.RatePercent,
+                    _form.IsDisposed ? _form.DisposedOn : null, _form.IsDisposed ? Money.FromChf(_form.SaleProceedsChf ?? 0) : null,
+                    untilYear: purchased.Year + 9)
+                .TakeWhile((year, index) => index == 0 || year.Opening > Money.Zero)
+                .ToList()
+            : [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AssetId is null)
+        {
+            _form = new AssetForm { PurchaseDate = DateOnly.FromDateTime(Time.GetLocalNow().DateTime) };
+            _form.RatePercent = _form.Category.DefaultRatePercent();
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var asset = await db.Assets.AsNoTracking().Include(a => a.Receipt).SingleAsync(a => a.Id == AssetId);
+        _existingReceipt = asset.Receipt;
+        _form = new AssetForm
+        {
+            Name = asset.Name,
+            Category = asset.Category,
+            PurchaseDate = asset.PurchaseDate,
+            CostChf = asset.Cost.Chf,
+            RatePercent = asset.DepreciationRatePercent,
+            Vendor = asset.Vendor,
+            IsDisposed = asset.DisposedOn is not null,
+            DisposedOn = asset.DisposedOn,
+            SaleProceedsChf = asset.SaleProceeds?.Chf,
+        };
+    }
+
+    /// <summary>Picks the category's default rate, unless you changed the rate yourself.</summary>
+    private void OnCategoryChanged()
+    {
+        if (AssetCategories.All.Any(c => c.DefaultRatePercent == _form!.RatePercent))
+        {
+            _form!.RatePercent = _form.Category.DefaultRatePercent();
+        }
+    }
+
+    private async Task SaveAsync(AssetForm form)
+    {
+        _busy = true;
+        _error = null;
+        try
+        {
+            var (added, removed) = await _receipt!.SaveFileAsync(gigId: null);
+            await Store.CommitAsync(async () =>
+            {
+                await using var db = await DbFactory.CreateDbContextAsync();
+                var asset = AssetId is null
+                    ? db.Assets.Add(new Asset()).Entity
+                    : await db.Assets.SingleAsync(a => a.Id == AssetId);
+
+                asset.Name = form.Name.Trim();
+                asset.Category = form.Category;
+                asset.PurchaseDate = form.PurchaseDate!.Value;
+                asset.Cost = Money.FromChf(form.CostChf!.Value);
+                asset.DepreciationRatePercent = form.RatePercent;
+                asset.Vendor = form.Vendor?.Trim();
+                asset.DisposedOn = form.IsDisposed ? form.DisposedOn : null;
+                asset.SaleProceeds = form.IsDisposed ? Money.FromChf(form.SaleProceedsChf ?? 0) : null;
+
+                if (removed is not null)
+                {
+                    asset.ReceiptId = null;
+                    db.Attachments.Remove(removed);
+                }
+
+                if (added is not null)
+                {
+                    asset.Receipt = added;
+                }
+
+                await db.SaveChangesAsync();
+            }, added, removed);
+
+            Dialogs.Close(true);
+        }
+        catch (AttachmentException e)
+        {
+            _error = e.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        _busy = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var asset = await db.Assets.Include(a => a.Receipt).SingleAsync(a => a.Id == AssetId);
+        var receipt = asset.Receipt;
+        await Store.CommitAsync(async () =>
+        {
+            db.Assets.Remove(asset);
+            if (receipt is not null) db.Attachments.Remove(receipt);
+            await db.SaveChangesAsync();
+        }, added: null, removed: receipt);
+
+        Dialogs.Close(true);
+    }
+
+    private sealed record Option(string Text, AssetCategory Value);
+
+    private sealed class AssetForm
+    {
+        [Required, MaxLength(150)]
+        public string Name { get; set; } = "";
+
+        public AssetCategory Category { get; set; } = AssetCategory.AudioEquipment;
+
+        [Required(ErrorMessage = "Enter the purchase date.")]
+        public DateOnly? PurchaseDate { get; set; }
+
+        [Required(ErrorMessage = "Enter the price.")]
+        [Range(typeof(decimal), "0.01", "1000000", ParseLimitsInInvariantCulture = true, ErrorMessage = "Enter a price above zero.")]
+        public decimal? CostChf { get; set; }
+
+        [Range(typeof(decimal), "0", "100", ParseLimitsInInvariantCulture = true)]
+        public decimal RatePercent { get; set; }
+
+        [MaxLength(150)]
+        public string? Vendor { get; set; }
+
+        public bool IsDisposed { get; set; }
+
+        public DateOnly? DisposedOn { get; set; }
+
+        public decimal? SaleProceedsChf { get; set; }
+    }
+}
