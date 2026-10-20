@@ -12,11 +12,12 @@ Single user, CHF, English, self-hosted on a Mac mini and used from any browser a
 | **Gigs** | Client, venue, date and time (several gigs per day, gigs past midnight), status *Inquiry → Confirmed → Done* or *Cancelled*, quote. |
 | **Gig finances** | Costs such as gear rental, either covered by the quote or billed on top (at cost or with your margin). Payments received, with the payslip attached. Margin and what's still open. |
 | **Prep** | Spotify/Tidal playlist links, notes, a checklist (wedding template included), files. |
-| **Calendar** | Month, week and year view. Hovering over a gig shows a card with the details. |
+| **Calendar** | Month, week and year view. Hovering over a gig shows a card with the details. A private link (Settings) puts your gigs in the iPhone's calendar. |
 | **Invoices** | Created from a gig: quote plus billed costs, optional VAT, rounded to 5 Rappen, Swiss QR-bill. Numbered `2026-001` once issued, then frozen and archived as PDF. |
 | **Finance** | Income statement per year on a cash basis, business costs that don't belong to a gig, equipment with depreciation. |
 | **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |
 | **Dashboard** | Year figures and a to-do list: overdue invoices, gigs without an invoice, open prep, backup problems. |
+| **On the go** | Installable on the phone's home screen (PWA), with a full-screen menu on small screens. |
 
 How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
 
@@ -44,6 +45,8 @@ See [docs/deployment.md](docs/deployment.md):
 - `deploy/publish.sh` builds a self-contained release for Apple silicon.
 - `deploy/macos/install.sh` sets it up as a service with nightly backups to your external drives.
 - `deploy/deploy.sh` installs updates and goes back to the previous version if the new one doesn't start.
+- Pushing to `main` on GitHub builds a release (`.github/workflows/release.yml`); Funk offers it under
+  **Settings → Updates** and installs it with the same rollback.
 
 ## Configuration
 
@@ -52,8 +55,11 @@ See [docs/deployment.md](docs/deployment.md):
 | `Funk:DataDirectory` | `data` (relative to `src/Funk.Web`) | All business data. `~` is expanded; the Mac mini uses `~/Funk/data`. |
 | `Auth:Username` | – | Required. |
 | `Auth:PasswordHash` | – | Required. Generate with `hash-password`; never commit it. |
+| `Updates:Repository` | – | `owner/name` on GitHub; with the token, enables Settings → Updates. |
+| `Updates:GitHubToken` | – | Fine-grained token, *Contents: Read-only* on that repository. |
 
-In production, use environment variables (`Funk__DataDirectory`, `Auth__Username`, `Auth__PasswordHash`).
+In production, use environment variables (`Funk__DataDirectory`, `Auth__Username`, `Auth__PasswordHash`,
+`Updates__Repository`, `Updates__GitHubToken`).
 The installer puts them in the service definition, which only root can read.
 
 The data directory holds:

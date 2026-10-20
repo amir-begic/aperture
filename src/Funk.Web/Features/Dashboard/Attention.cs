@@ -3,6 +3,7 @@ using Funk.Web.Data.Entities;
 using Funk.Web.Domain;
 using Funk.Web.Features.Backup;
 using Funk.Web.Features.Gigs;
+using Funk.Web.Features.Updates;
 using Microsoft.EntityFrameworkCore;
 
 namespace Funk.Web.Features.Dashboard;
@@ -23,11 +24,11 @@ public static class Attention
     public static readonly TimeSpan PrepHorizon = TimeSpan.FromDays(14);
 
     /// <summary>
-    /// Most urgent first: backups, overdue invoices, gigs to invoice, gigs to close, open prep.
+    /// Most urgent first: backups, overdue invoices, gigs to invoice, gigs to close, open prep, a new version of Funk.
     /// Backups are only checked where they're expected (the Mac mini, not a development machine).
     /// </summary>
     public static async Task<List<AttentionItem>> ItemsAsync(
-        FunkDbContext db, DateTime now, BackupStatus? backup = null, bool expectBackups = false)
+        FunkDbContext db, DateTime now, BackupStatus? backup = null, bool expectBackups = false, Release? update = null)
     {
         var today = DateOnly.FromDateTime(now);
         var items = new List<AttentionItem>();
@@ -100,6 +101,12 @@ public static class Attention
                 $"{count} prep task{(count == 1 ? "" : "s")} open for {gig.Title}",
                 $"{gig.Start:ddd dd.MM.yyyy, HH:mm} · {gig.ClientName}",
                 $"gigs/{gig.Id}?tab=prep"));
+        }
+
+        if (update is not null)
+        {
+            items.Add(new(AttentionLevel.Info, "system_update_alt", $"Funk {update.Version.Display} is available",
+                "Install it under Settings → Updates", "settings#updates"));
         }
 
         return items;

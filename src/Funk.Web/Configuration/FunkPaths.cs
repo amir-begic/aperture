@@ -18,6 +18,15 @@ public sealed record FunkPaths(string DataDirectory)
     /// <summary>Written by the nightly backup script (deploy/macos/backup.sh).</summary>
     public string BackupStatusFile => Path.Combine(DataDirectory, "backup-status.json");
 
+    /// <summary>Downloaded releases and the hand-over to the updater (deploy/macos/auto-update.sh).</summary>
+    public string UpdatesDirectory => Path.Combine(DataDirectory, "updates");
+
+    /// <summary>Holds the file name of a downloaded release; writing it starts the updater (launchd WatchPaths).</summary>
+    public string UpdateRequestFile => Path.Combine(UpdatesDirectory, "request");
+
+    /// <summary>Written by the updater: running, succeeded or failed.</summary>
+    public string UpdateStatusFile => Path.Combine(UpdatesDirectory, "status.json");
+
     public string ConnectionString =>
         new SqliteConnectionStringBuilder { DataSource = DatabasePath }.ToString();
 

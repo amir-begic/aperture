@@ -155,6 +155,8 @@ else
         </RadzenStack>
     </RadzenTemplateForm>
 
+    <Funk.Web.Features.CalendarFeed.CalendarFeedSettings />
+
     <RadzenFieldset Text="Backups" class="settings-form rz-mt-6">
         @if (_backup is null)
         {
@@ -179,7 +181,7 @@ else
         }
     </RadzenFieldset>
 
-    <RadzenText TextStyle="TextStyle.Caption" class="rz-mt-4">Funk @Funk.Web.Configuration.AppVersion.Current · data in @Paths.DataDirectory</RadzenText>
+    <Funk.Web.Features.Updates.UpdatesSettings />
 }
 
 @code {
@@ -203,6 +205,8 @@ else
 
             await using var db = await DbFactory.CreateDbContextAsync();
             db.BusinessSettings.Update(settings);
+            // The feed link has its own buttons; a form loaded before "New link" mustn't bring the old one back.
+            db.Entry(settings).Property(s => s.CalendarFeedToken).IsModified = false;
             await db.SaveChangesAsync();
 
             Notifications.Notify(NotificationSeverity.Success, "Settings saved");

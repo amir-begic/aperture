@@ -3,8 +3,10 @@ using Funk.Web.Components;
 using Funk.Web.Configuration;
 using Funk.Web.Data;
 using Funk.Web.Features.Attachments;
+using Funk.Web.Features.CalendarFeed;
 using Funk.Web.Features.Finance;
 using Funk.Web.Features.Invoices;
+using Funk.Web.Features.Updates;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -30,6 +32,13 @@ builder.Services.AddDbContextFactory<FunkDbContext>(options => options.UseSqlite
 builder.Services.AddSingleton<AttachmentStore>();
 builder.Services.AddSingleton<InvoiceService>();
 builder.Services.AddSingleton<TaxExport>();
+
+// Updates from GitHub releases (Settings → Updates). Off unless install.sh configured a repository and token.
+var updateOptions = builder.Configuration.GetSection("Updates").Get<UpdateOptions>() ?? new UpdateOptions();
+builder.Services.AddSingleton(updateOptions);
+builder.Services.AddHttpClient(nameof(GitHubReleases), http => GitHubReleases.Configure(http, updateOptions));
+builder.Services.AddSingleton<UpdateService>();
+builder.Services.AddHostedService<UpdateCheckWorker>();
 
 // Free for individuals and businesses under USD 1M annual revenue (questpdf.com/license).
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -108,6 +117,7 @@ app.MapGet("/health", async (IDbContextFactory<FunkDbContext> dbFactory) =>
 app.MapAttachmentEndpoints();
 app.MapInvoiceEndpoints();
 app.MapTaxExportEndpoints();
+app.MapCalendarFeedEndpoints();
 
 app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {

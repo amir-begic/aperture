@@ -176,13 +176,18 @@ body {
 
 /* Frame: header and sidebar are blue too, separated by ink rules. */
 
+/* Installed on the iPhone (Add to Home Screen), the page runs up behind the status bar and around the notch:
+   the safe-area insets keep content clear of them. They're 0 everywhere else. */
 .rz-header {
     display: flex;
     align-items: center;
+    box-sizing: content-box;
+    min-height: 4rem;
+    padding-top: env(safe-area-inset-top);
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
     background: var(--ba-blue);
     color: var(--ba-white);
     border-bottom: var(--ba-outline);
-    min-height: 4rem;
 }
 
 .rz-header > .rz-stack {
@@ -203,6 +208,8 @@ body {
 
 .rz-body {
     background: var(--ba-blue);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 
 /* Navigation: outlined pills; the current page is filled with ink. */
@@ -300,6 +307,7 @@ body {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    word-spacing: 0.15em;
 }
 
 .rz-fieldset-legend .rz-fieldset-legend-text {
@@ -760,7 +768,8 @@ body {
 @media (max-width: 768px) {
     .rz-sidebar.rz-sidebar-responsive.rz-sidebar-expanded {
         position: fixed;
-        inset: calc(4rem + 3px) 0 0 0;
+        inset: calc(4rem + 3px + env(safe-area-inset-top)) 0 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
         width: 100vw;
         height: auto;
         z-index: 100;

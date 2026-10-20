@@ -76,6 +76,33 @@ Funk updates the database to the newest version by itself when it starts.
 
 ## 3. Updates
 
+### From the app (with GitHub)
+
+Every push to `main` on GitHub runs the tests and publishes a release (`.github/workflows/release.yml`). Funk checks
+for new releases every six hours; the **Dashboard** then says *Funk build … is available*, and
+**Settings → Updates** shows what's new with an **Install update** button (and **Check for updates** to look now).
+
+Installing downloads the release; the updater on the Mac (`ch.funk.updater`) then runs the same update as below,
+with the same rollback. Funk restarts and the page reconnects; Settings shows the result. If it failed, the
+reason is there too, and the details are in `~/Funk/logs/update.log`.
+
+Setting it up, once:
+
+1. **Put the code on GitHub** as a private repository and push:
+   ```bash
+   git remote add origin git@github.com:<you>/funk.git
+   git push -u origin main
+   ```
+   The first push already builds a release (*Actions* tab, then *Releases*).
+2. **Make a token** for the Mac: *GitHub → Settings → Developer settings → Fine-grained tokens → Generate new
+   token*. Repository access: *Only select repositories* → your Funk repository. Permissions: *Contents: Read-only*.
+   Pick an expiry; when it runs out, Settings → Updates says so, and you run step 3 again with a new one.
+3. **Give it to Funk:** run `install.sh` (or `deploy/deploy.sh mac` for the first install). It asks for the
+   repository (`<you>/funk`) and the token, keeps all data and only updates the settings. The token is stored in
+   the root-only service definition, like the password hash.
+
+### From the development machine
+
 With SSH set up, one command builds the new version, copies it and installs it:
 
 ```bash
@@ -88,7 +115,10 @@ Without SSH, copy the new `.tar.gz` to the Mac and run:
 ~/Funk/app/deploy/macos/update.sh ~/Downloads/funk-<version>-osx-arm64.tar.gz
 ```
 
-The update stops Funk, copies the database into `~/Funk/backups/before-update/` and starts the new version. If the new version doesn't come up within a minute, it goes back to the old version and the old database by itself. **Settings** shows the running version at the bottom.
+The update stops Funk, copies the database into `~/Funk/backups/before-update/` and starts the new version. If the new version doesn't come up within a minute, it goes back to the old version and the old database by itself. **Settings → Updates** shows the running version.
+
+Versions look like `2026.10.20-58-ed1231e`: date, build number (the number of commits, so it only grows) and commit.
+Funk compares the build number to tell whether a release is newer.
 
 ## 4. Backups
 
@@ -125,7 +155,8 @@ The update stops Funk, copies the database into `~/Funk/backups/before-update/` 
 ## Security
 
 **What's protected:**
-- **Every page and file needs the login,** except `/health`, which only answers `ok`.
+- **Every page and file needs the login,** except `/health`, which only answers `ok`, and the calendar feed,
+  whose URL contains a 256-bit secret (Settings → Calendar on your phone; *New link* revokes the old one).
 - **Files are served by number** (`/attachments/12`), never by path. Uploaded files get generated names.
   Only the web root (`wwwroot`) is served, so the scripts, settings and database can't be downloaded.
 - **Scripts can't be run through Funk.** The app has no page or endpoint that runs commands. Running
@@ -133,6 +164,10 @@ The update stops Funk, copies the database into `~/Funk/backups/before-update/` 
 - **Funk runs as your user, not as root.** The service definition with the password hash is readable only by root,
   and `~/Funk/data` and `~/Funk/backups` only by you.
 - **HTTPS headers are trusted only from the Mac itself,** i.e. from `tailscale serve`.
+- **Updates run without a password through a narrow sudo rule** (`/etc/sudoers.d/funk`): your user may stop, start
+  and restart the Funk service and let Funk releases through the firewall, nothing else.
+- **Updates only install release packages** that Funk downloaded from your repository into `~/Funk/data/updates`.
+  The GitHub token can only read that one repository.
 
 **Things to know:**
 - **`http://<mac>.local:5080` is unencrypted.** Anyone on your home Wi-Fi could read the password and the login
@@ -144,6 +179,19 @@ The update stops Funk, copies the database into `~/Funk/backups/before-update/` 
 - **The backup drives hold all your business data.** Format them as *APFS (Encrypted)* in Disk Utility. The
   backup works the same. Let the Mac remember the password: it then unlocks the drives when you log in. After a
   restart, log in once (with FileVault on, you have to anyway) or the night's backup skips the locked drives.
+
+## On your phone
+
+The phone needs Tailscale switched on. Use the Tailscale address, `https://<mac>.<tailnet>.ts.net`:
+the `.local` address only works at home, and the app features below need HTTPS.
+
+- **Funk as an app:** open the address in Safari, tap *Share → Add to Home Screen*. Funk then opens full screen
+  from its own icon. It needs a connection to the Mac; without one it shows a "No connection" page.
+- **Gigs in the iPhone calendar:** in Funk on the phone, *Settings → Calendar on your phone → Create calendar link*,
+  copy it, then *iPhone Settings → Apps → Calendar → Calendar Accounts → Add Account → Other → Add Subscribed
+  Calendar* and paste it. The link is the only key to the calendar (calendar apps can't sign in), so keep it to
+  yourself; *New link* there replaces it if it got out. The feed is `/calendar/<secret>.ics`, the only page besides
+  `/health` and the login that works without signing in.
 
 ## Troubleshooting
 

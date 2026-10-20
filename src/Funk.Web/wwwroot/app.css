@@ -487,6 +487,89 @@ h1:focus {
     color: var(--rz-text-secondary-color);
 }
 
+/* Calendar feed (Settings) */
+.feed-url {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.8125rem;
+    text-overflow: ellipsis;
+}
+
+.copy-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    margin-inline-end: 0.25rem;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ba-blue-deep);
+    cursor: pointer;
+}
+
+.copy-button:hover, .copy-button:focus-visible {
+    background: var(--ba-pink);
+    color: var(--ba-ink);
+}
+
+.copy-button .copied-icon, .copy-button.copied .copy-icon {
+    display: none;
+}
+
+.copy-button.copied .copied-icon {
+    display: inline;
+}
+
+.copy-status {
+    min-height: 1.25rem;
+    margin-top: -0.75rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--ba-ink);
+}
+
+.copy-status:empty {
+    display: none;
+}
+
+.steps {
+    margin: 0 0 0.5rem;
+    padding-inline-start: 1.25rem;
+}
+
+.steps li + li {
+    margin-top: 0.25rem;
+}
+
+/* Updates (Settings) */
+.update-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--ba-pink);
+    border: var(--ba-outline-thin);
+    border-radius: var(--ba-radius-md);
+}
+
+.update-notes {
+    white-space: pre-line;
+    font-size: 0.875rem;
+}
+
+.update-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+}
+
+.version-text {
+    color: var(--ba-ink-soft);
+    font-size: 0.8125rem;
+}
+
 /* Login */
 
 .auth-layout {
@@ -494,7 +577,7 @@ h1:focus {
     display: grid;
     place-items: center;
     min-height: 100vh;
-    padding: 1rem;
+    padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
     overflow: hidden;
     background: var(--ba-blue);
 }

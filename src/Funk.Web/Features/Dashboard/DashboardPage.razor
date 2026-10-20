@@ -6,6 +6,7 @@
 @inject TimeProvider Time
 @inject Funk.Web.Configuration.FunkPaths Paths
 @inject IWebHostEnvironment Environment
+@inject Funk.Web.Features.Updates.UpdateService Updates
 
 <PageTitle>Dashboard · Funk</PageTitle>
 
@@ -95,6 +96,6 @@
         _overdueCount = open.Count(g => g.IsPastDue(today));
 
         _attention = await Attention.ItemsAsync(db, now,
-            Funk.Web.Features.Backup.BackupStatus.Read(Paths), expectBackups: !Environment.IsDevelopment());
+            Funk.Web.Features.Backup.BackupStatus.Read(Paths), expectBackups: !Environment.IsDevelopment(), update: Updates.Available);
     }
 }

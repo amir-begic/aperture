@@ -4,10 +4,16 @@
 FUNK_HOME="${FUNK_HOME:-$HOME/Funk}"
 WEB_LABEL="ch.funk.web"
 BACKUP_LABEL="ch.funk.backup"
+UPDATER_LABEL="ch.funk.updater"
 WEB_PLIST="/Library/LaunchDaemons/$WEB_LABEL.plist"
 BACKUP_PLIST="/Library/LaunchDaemons/$BACKUP_LABEL.plist"
+UPDATER_PLIST="/Library/LaunchDaemons/$UPDATER_LABEL.plist"
+SUDOERS_FILE="/etc/sudoers.d/funk"
 FIREWALL="/usr/libexec/ApplicationFirewall/socketfilterfw"
 KEEP_RELEASES=3
+
+# Several passwords come up during setup; sudo's bare "Password:" is easy to mistake for one of the others.
+export SUDO_PROMPT="Mac password for %u (for system settings): "
 
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 fail() { printf '\n\033[31mError: %s\033[0m\n' "$*" >&2; exit 1; }
@@ -79,8 +85,36 @@ stop_web() {
     done
 }
 
+# install.sh writes the port to a file, so updates don't need sudo to read it from the service definition.
 web_port() {
-    sudo /usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:ASPNETCORE_URLS" "$WEB_PLIST" 2>/dev/null | sed 's/.*://'
+    if [[ -f $FUNK_HOME/port ]]; then
+        head -n 1 "$FUNK_HOME/port"
+    else
+        sudo /usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:ASPNETCORE_URLS" "$WEB_PLIST" 2>/dev/null | sed 's/.*://'
+    fi
+}
+
+# Lets update.sh restart Funk without a password, so updates from Settings can run unattended (and deploy.sh
+# doesn't ask): exactly the commands it uses, nothing else. Checked with visudo before it's installed.
+install_sudo_rules() {
+    local file="$FUNK_HOME/.sudoers"
+    cat > "$file" <<RULES
+# Funk: lets $USER's update script restart the Funk service without a password (installed by install.sh).
+$USER ALL=(root) NOPASSWD: /bin/launchctl bootout system/$WEB_LABEL
+$USER ALL=(root) NOPASSWD: /bin/launchctl bootstrap system $WEB_PLIST
+$USER ALL=(root) NOPASSWD: /bin/launchctl kickstart -k system/$WEB_LABEL
+$USER ALL=(root) NOPASSWD: $FIREWALL --getglobalstate
+$USER ALL=(root) NOPASSWD: $FIREWALL --add $FUNK_HOME/releases/*/Funk.Web
+$USER ALL=(root) NOPASSWD: $FIREWALL --unblockapp $FUNK_HOME/releases/*/Funk.Web
+RULES
+    if /usr/sbin/visudo -cf "$file" >/dev/null; then
+        sudo install -m 440 -o root -g wheel "$file" "$SUDOERS_FILE"
+        rm -f "$file"
+    else
+        rm -f "$file"
+        echo "Couldn't set up the sudo rules (is there a space in $FUNK_HOME?). Updates will ask for your password."
+        return 1
+    fi
 }
 
 wait_until_healthy() {

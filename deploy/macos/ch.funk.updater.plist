@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Installs updates Funk downloaded (Settings → Updates): launchd starts auto-update.sh whenever Funk writes the
+  request file. Runs as your user. Installed by install.sh.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ch.funk.updater</string>
+    <key>UserName</key>
+    <string>__USER__</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__FUNK_HOME__/app/deploy/macos/auto-update.sh</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>FUNK_HOME</key>
+        <string>__FUNK_HOME__</string>
+    </dict>
+    <key>WatchPaths</key>
+    <array>
+        <string>__FUNK_HOME__/data/updates/request</string>
+    </array>
+    <key>StandardOutPath</key>
+    <string>__FUNK_HOME__/logs/update.log</string>
+    <key>StandardErrorPath</key>
+    <string>__FUNK_HOME__/logs/update.log</string>
+</dict>
+</plist>

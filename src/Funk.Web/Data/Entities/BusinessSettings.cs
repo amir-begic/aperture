@@ -63,6 +63,13 @@ public class BusinessSettings
     /// </summary>
     public bool ProRataFirstYear { get; set; }
 
+    /// <summary>
+    /// Secret part of the calendar feed URL (/calendar/{token}.ics); null while the feed is off.
+    /// Managed on its own in Settings, never by the settings form.
+    /// </summary>
+    [MaxLength(Features.CalendarFeed.CalendarFeedToken.MaxLength)]
+    public string? CalendarFeedToken { get; set; }
+
     /// <summary>True once everything an invoice needs has been filled in.</summary>
     public bool IsComplete =>
         !string.IsNullOrWhiteSpace(OwnerName)

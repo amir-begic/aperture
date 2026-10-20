@@ -1,0 +1,72 @@
+# Every push to main: run the tests, build the Mac mini release and publish it as a GitHub release.
+# Funk on the Mac finds it under Settings → Updates (and on the dashboard) and installs it from there.
+#
+# Kept small for the free plan: no workflow artifacts or caches (the package goes to Releases, which don't count
+# towards Actions storage), no run for changes that are only docs, a newer push cancels the older run, and only
+# the last 5 releases are kept.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - ".gitignore"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Only the newest push matters: a run still going when the next one starts is cancelled. gh uploads the package
+# to a draft and publishes it only when complete, so a cancelled run never leaves a half release behind.
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15   # a hung run would otherwise burn minutes up to the 6-hour default
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the build number counts all commits
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Test
+        run: dotnet test --nologo
+
+      - name: Build the release
+        id: build
+        run: |
+          tarball="$(deploy/publish.sh)"
+          version="$(basename "$tarball" -osx-arm64.tar.gz)"
+          version="${version#funk-}"
+          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.build.outputs.version }}
+          TARBALL: ${{ steps.build.outputs.tarball }}
+        run: |
+          previous="$(git describe --tags --abbrev=0 2>/dev/null || true)"
+          if [ -n "$previous" ]; then
+            git log --format='- %s' "$previous..HEAD" > notes.md
+          else
+            git log -1 --format='- %s' > notes.md
+          fi
+          gh release create "v$VERSION" "$TARBALL" --title "Funk $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
+
+      - name: Keep the last 5 releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 100 --json tagName,createdAt \
+            | jq -r 'sort_by(.createdAt) | reverse | .[5:] | .[].tagName' \
+            | while read -r tag; do gh release delete "$tag" --yes --cleanup-tag; done
