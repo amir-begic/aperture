@@ -542,6 +542,24 @@ h1:focus {
     margin-top: 0.25rem;
 }
 
+/* Notifications (Settings) */
+.push-on {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.push-devices .list-row-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.push-device-detail {
+    font-size: 0.8125rem;
+    color: var(--ba-ink-soft);
+}
+
 /* Updates (Settings) */
 .update-card {
     display: flex;

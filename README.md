@@ -17,7 +17,7 @@ Single user, CHF, English, self-hosted on a Mac mini and used from any browser a
 | **Finance** | Income statement per year on a cash basis, business costs that don't belong to a gig, equipment with depreciation. |
 | **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |
 | **Dashboard** | Year figures and a to-do list: overdue invoices, gigs without an invoice, open prep, backup problems. |
-| **On the go** | Installable on the phone's home screen (PWA), with a full-screen menu on small screens. |
+| **On the go** | Installable on the phone's home screen (PWA), with a full-screen menu on small screens. Notifications on the phone for overdue invoices, open prep three days before a gig, backup problems and new versions. |
 
 How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
 
@@ -67,7 +67,8 @@ The data directory holds:
 ```
 funk.db               the database (SQLite, WAL mode)
 attachments/YYYY/     receipts, payslips, invoice PDFs, under generated names
-keys/                 keys that sign the login cookie, so a restart doesn't log you out
+keys/                 keys that sign the login cookie, so a restart doesn't log you out, and the
+                      key pair that signs notifications (push-vapid.json)
 backup-status.json    written by the nightly backup, shown under Settings and on the dashboard
 ```
 
@@ -91,7 +92,8 @@ src/Funk.Web/
   Domain/          the rules, without UI or database: Money (CHF in Rappen), invoice totals,
                    depreciation, gig financials, categories, IBAN and contact validation
   Features/        one folder per area, pages and their logic together:
-                   Gigs, Clients, Venues, Calendar, Attachments, Invoices, Finance, Dashboard, Backup, Settings
+                   Gigs, Clients, Venues, Calendar, Attachments, Invoices, Finance, Dashboard, Backup,
+                   Notifications, Settings
 tests/Funk.Tests/  xUnit; database tests run against in-memory SQLite
 deploy/            release build, Mac mini install/update/backup scripts and service definitions
 docs/              deployment guide, accounting rules

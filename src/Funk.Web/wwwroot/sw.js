@@ -1,6 +1,6 @@
 // Funk's service worker. Funk runs on the server (Blazor Server), so it can't work offline; this only replaces the
-// browser's error page with a branded "no connection" page when a page can't be loaded (e.g. Tailscale is off).
-// Everything else goes straight to the network, uncached.
+// browser's error page with a branded "no connection" page when a page can't be loaded (e.g. Tailscale is off),
+// and shows notifications (Settings → Notifications). Everything else goes straight to the network, uncached.
 const CACHE = "funk-offline-v1";
 const OFFLINE_PAGE = "offline.html";
 const OFFLINE_ASSETS = [OFFLINE_PAGE, "fonts/Archivo.woff2", "icon-192.png"];
@@ -24,4 +24,39 @@ self.addEventListener("fetch", event => {
         // The offline page's own font and icon, when the network is gone.
         event.respondWith(fetch(request).catch(() => caches.match(request)));
     }
+});
+
+// A notification from Funk (Features/Notifications/PushService.cs): { title, body, url, tag }.
+self.addEventListener("push", event => {
+    let message = {};
+    try {
+        message = event.data?.json() ?? {};
+    } catch {
+        message = { body: event.data?.text() };
+    }
+    // Every push has to show a notification (iPhones stop delivering otherwise), so there's always a title.
+    event.waitUntil(self.registration.showNotification(message.title || "Funk", {
+        body: message.body || "",
+        icon: "icon-192.png",
+        tag: message.tag || undefined,
+        data: { url: message.url || "" },
+    }));
+});
+
+// Tapping it opens the page it's about: in Funk's window if one is open, otherwise in a new one.
+self.addEventListener("notificationclick", event => {
+    event.notification.close();
+    const url = new URL(event.notification.data?.url ?? "", self.registration.scope).href;
+    event.waitUntil((async () => {
+        const windows = await self.clients.matchAll({ type: "window" });
+        for (const client of windows) {
+            try {
+                await client.focus();
+                return await client.navigate(url);
+            } catch {
+                // Not ours to navigate; try the next one or open a new window.
+            }
+        }
+        return self.clients.openWindow(url);
+    })());
 });

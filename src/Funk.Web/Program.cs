@@ -6,6 +6,7 @@ using Funk.Web.Features.Attachments;
 using Funk.Web.Features.CalendarFeed;
 using Funk.Web.Features.Finance;
 using Funk.Web.Features.Invoices;
+using Funk.Web.Features.Notifications;
 using Funk.Web.Features.Updates;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -39,6 +40,12 @@ builder.Services.AddSingleton(updateOptions);
 builder.Services.AddHttpClient(nameof(GitHubReleases), http => GitHubReleases.Configure(http, updateOptions));
 builder.Services.AddSingleton<UpdateService>();
 builder.Services.AddHostedService<UpdateCheckWorker>();
+
+// Notifications on the phone (Settings → Notifications), sent through the browser's push service.
+builder.Services.AddHttpClient(nameof(PushService), http => http.Timeout = TimeSpan.FromSeconds(30));
+builder.Services.AddSingleton<PushService>();
+builder.Services.AddSingleton<PushReminders>();
+builder.Services.AddHostedService<PushReminderWorker>();
 
 // Free for individuals and businesses under USD 1M annual revenue (questpdf.com/license).
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;

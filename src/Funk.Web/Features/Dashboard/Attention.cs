@@ -15,8 +15,11 @@ public enum AttentionLevel
     Urgent,
 }
 
-/// <summary>Something on the dashboard that needs doing, with a link to where it's done.</summary>
-public sealed record AttentionItem(AttentionLevel Level, string Icon, string Text, string Detail, string Link);
+/// <summary>
+/// Something on the dashboard that needs doing, with a link to where it's done. Items worth a notification on the
+/// phone have a <paramref name="PushKey"/>: the same key means the same news, so it's sent only once (see PushReminders).
+/// </summary>
+public sealed record AttentionItem(AttentionLevel Level, string Icon, string Text, string Detail, string Link, string? PushKey = null);
 
 public static class Attention
 {
@@ -26,11 +29,14 @@ public static class Attention
     /// <summary>
     /// Most urgent first: backups, overdue invoices, gigs to invoice, gigs to close, open prep, a new version of Funk.
     /// Backups are only checked where they're expected (the Mac mini, not a development machine).
+    /// Open prep is flagged for gigs within <paramref name="prepHorizon"/> (default <see cref="PrepHorizon"/>).
     /// </summary>
     public static async Task<List<AttentionItem>> ItemsAsync(
-        FunkDbContext db, DateTime now, BackupStatus? backup = null, bool expectBackups = false, Release? update = null)
+        FunkDbContext db, DateTime now, BackupStatus? backup = null, bool expectBackups = false, Release? update = null,
+        TimeSpan? prepHorizon = null)
     {
         var today = DateOnly.FromDateTime(now);
+        var horizon = prepHorizon ?? PrepHorizon;
         var items = new List<AttentionItem>();
 
         if (expectBackups)
@@ -38,17 +44,19 @@ public static class Attention
             if (backup?.LastSuccess is not { } lastSuccess)
             {
                 items.Add(new(AttentionLevel.Urgent, "backup", "No backup has run yet",
-                    "Set up the nightly backup on the Mac mini (docs/deployment.md)", "settings"));
+                    "Set up the nightly backup on the Mac mini (docs/deployment.md)", "settings", "backup-none"));
             }
             else if (backup.IsStale(new DateTimeOffset(now)))
             {
                 items.Add(new(AttentionLevel.Urgent, "backup", $"Last backup: {lastSuccess.LocalDateTime:dd.MM.yyyy HH:mm}",
-                    "Is a backup drive connected? See Settings for details.", "settings"));
+                    "Is a backup drive connected? See Settings for details.", "settings", $"backup-stale:{lastSuccess:O}"));
             }
 
-            foreach (var problem in backup?.Problems ?? [])
+            // Per nightly run: a drive that's still missing tomorrow is news again.
+            foreach (var (problem, i) in (backup?.Problems ?? []).Select((p, i) => (p, i)))
             {
-                items.Add(new(AttentionLevel.Warning, "usb_off", "Backup problem", problem, "settings"));
+                items.Add(new(AttentionLevel.Warning, "usb_off", "Backup problem", problem, "settings",
+                    $"backup-problem:{backup!.LastRun:O}:{i}"));
             }
         }
 
@@ -56,7 +64,7 @@ public static class Attention
         // invoice: invoices sent before the event (deposits, advance payment) can be overdue too.
         var gigs = await db.Gigs
             .Where(g => g.Status == GigStatus.Confirmed || g.Status == GigStatus.Done)
-            .Where(g => g.End <= now || g.Start <= now + PrepHorizon || g.Invoices.Any(i => i.Status == InvoiceStatus.Issued))
+            .Where(g => g.End <= now || g.Start <= now + horizon || g.Invoices.Any(i => i.Status == InvoiceStatus.Issued))
             .OrderBy(g => g.Start)
             .ToRowsAsync(db);
         var withInvoice = (await db.Invoices.Where(i => i.Status != InvoiceStatus.Cancelled).Select(i => i.GigId).ToListAsync()).ToHashSet();
@@ -67,7 +75,7 @@ public static class Attention
             items.Add(new(AttentionLevel.Urgent, "assignment_late",
                 $"Invoice {invoice.Number} is overdue",
                 $"{gig.Financials.Outstanding} open since {invoice.DueDate:dd.MM.yyyy} · {gig.Title}",
-                $"gigs/{gig.Id}?tab=invoice"));
+                $"gigs/{gig.Id}?tab=invoice", $"invoice-overdue:{invoice.Id}"));
         }
 
         foreach (var gig in gigs.Where(g => g.End <= now && !withInvoice.Contains(g.Id)
@@ -87,7 +95,7 @@ public static class Attention
                 $"gigs/{gig.Id}"));
         }
 
-        var soon = gigs.Where(g => g.Start > now && g.Start <= now + PrepHorizon).ToList();
+        var soon = gigs.Where(g => g.Start > now && g.Start <= now + horizon).ToList();
         var soonIds = soon.Select(g => g.Id).ToList();
         var openTasks = await db.ChecklistItems
             .Where(i => soonIds.Contains(i.GigId) && !i.IsDone)
@@ -100,13 +108,13 @@ public static class Attention
             items.Add(new(AttentionLevel.Info, "checklist",
                 $"{count} prep task{(count == 1 ? "" : "s")} open for {gig.Title}",
                 $"{gig.Start:ddd dd.MM.yyyy, HH:mm} · {gig.ClientName}",
-                $"gigs/{gig.Id}?tab=prep"));
+                $"gigs/{gig.Id}?tab=prep", $"prep:{gig.Id}:{gig.Start:yyyy-MM-dd}"));
         }
 
         if (update is not null)
         {
             items.Add(new(AttentionLevel.Info, "system_update_alt", $"Funk {update.Version.Display} is available",
-                "Install it under Settings → Updates", "settings#updates"));
+                "Install it under Settings → Updates", "settings#updates", $"update:{update.Version.Text}"));
         }
 
         return items;

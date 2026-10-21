@@ -20,6 +20,8 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
     public DbSet<Asset> Assets => Set<Asset>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
+    public DbSet<SentNotification> SentNotifications => Set<SentNotification>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -123,6 +125,9 @@ public class FunkDbContext(DbContextOptions<FunkDbContext> options) : DbContext(
             payment.HasIndex(p => p.Date);
             payment.HasOne(p => p.Proof).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
+
+        // A browser subscribing again gets the same endpoint: update the row instead of adding a second one.
+        modelBuilder.Entity<PushSubscription>().HasIndex(s => s.Endpoint).IsUnique();
     }
 
     private static void ConfigureAddress(ComplexPropertyBuilder<InvoiceAddress> address)

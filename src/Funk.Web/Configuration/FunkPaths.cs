@@ -15,6 +15,9 @@ public sealed record FunkPaths(string DataDirectory)
     /// <summary>Keys that sign login cookies; kept with the data so updates don't log you out.</summary>
     public string KeysDirectory => Path.Combine(DataDirectory, "keys");
 
+    /// <summary>The key pair that signs notifications (VAPID); the devices' subscriptions are tied to it.</summary>
+    public string PushKeysFile => Path.Combine(KeysDirectory, "push-vapid.json");
+
     /// <summary>Written by the nightly backup script (deploy/macos/backup.sh).</summary>
     public string BackupStatusFile => Path.Combine(DataDirectory, "backup-status.json");
 

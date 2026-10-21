@@ -168,6 +168,10 @@ Funk compares the build number to tell whether a release is newer.
   and restart the Funk service and let Funk releases through the firewall, nothing else.
 - **Updates only install release packages** that Funk downloaded from your repository into `~/Funk/data/updates`.
   The GitHub token can only read that one repository.
+- **Notifications are end-to-end encrypted.** Funk sends them through the phone's push service (Apple's for an
+  iPhone), which only passes them on: it can't read the text. Funk signs them with a key pair in
+  `~/Funk/data/keys/push-vapid.json`; the push service only accepts notifications signed with it. Nothing has to
+  reach the Mac from outside for this. If that file is lost, turn notifications on again on each device.
 
 **Things to know:**
 - **`http://<mac>.local:5080` is unencrypted.** Anyone on your home Wi-Fi could read the password and the login
@@ -192,6 +196,13 @@ the `.local` address only works at home, and the app features below need HTTPS.
   Calendar* and paste it. The link is the only key to the calendar (calendar apps can't sign in), so keep it to
   yourself; *New link* there replaces it if it got out. The feed is `/calendar/<secret>.ics`, the only page besides
   `/health` and the login that works without signing in.
+- **Notifications:** in the Funk app from the home screen (not in Safari itself), *Settings → Notifications → Turn on
+  notifications*, then *Allow*. Needs iOS 16.4 or newer and your email under *Settings → Contact* (push services
+  only take notifications from senders with a contact address). Funk then tells you about overdue invoices, prep
+  still open three days before a gig, backup problems and new versions: each once, between 08:00 and 21:00.
+  They arrive even while Tailscale is off on the phone; tapping one opens Funk, which needs it. *Send a test*
+  checks that it works. Turn them off there too, or under *iPhone Settings → Notifications → Funk*.
+  Other devices with notifications are listed below the buttons and can be removed.
 
 ## Troubleshooting
 

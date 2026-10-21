@@ -157,6 +157,8 @@ else
 
     <Funk.Web.Features.CalendarFeed.CalendarFeedSettings />
 
+    <Funk.Web.Features.Notifications.NotificationSettings HasEmail="_hasSavedEmail" />
+
     <RadzenFieldset Text="Backups" class="settings-form rz-mt-6">
         @if (_backup is null)
         {
@@ -188,11 +190,13 @@ else
     private BusinessSettings? _settings;
     private Funk.Web.Features.Backup.BackupStatus? _backup;
     private bool _saving;
+    private bool _hasSavedEmail;
 
     protected override async Task OnInitializedAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
         _settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
+        _hasSavedEmail = !string.IsNullOrWhiteSpace(_settings.Email);
         _backup = Funk.Web.Features.Backup.BackupStatus.Read(Paths);
     }
 
@@ -208,6 +212,7 @@ else
             // The feed link has its own buttons; a form loaded before "New link" mustn't bring the old one back.
             db.Entry(settings).Property(s => s.CalendarFeedToken).IsModified = false;
             await db.SaveChangesAsync();
+            _hasSavedEmail = !string.IsNullOrWhiteSpace(settings.Email);
 
             Notifications.Notify(NotificationSeverity.Success, "Settings saved");
         }
