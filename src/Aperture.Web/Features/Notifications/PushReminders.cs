@@ -10,11 +10,11 @@ namespace Aperture.Web.Features.Notifications;
 
 /// <summary>
 /// Turns what the dashboard flags into notifications on the phone, each once: overdue invoices, open prep a few days
-/// before a gig, backup problems and new versions of Aperture. Gigs to invoice or to close stay on the dashboard only.
+/// before a shoot, backup problems and new versions of Aperture. Shoots to invoice or to close stay on the dashboard only.
 /// </summary>
 public sealed class PushReminders(IDbContextFactory<ApertureDbContext> dbFactory, PushService push, ILogger<PushReminders> logger)
 {
-    /// <summary>Open prep is pushed this close to a gig (the dashboard shows it two weeks ahead).</summary>
+    /// <summary>Open prep is pushed this close to a shoot (the dashboard shows it two weeks ahead).</summary>
     public static readonly TimeSpan PrepHorizon = TimeSpan.FromDays(3);
 
     /// <summary>Nothing is sent at night: what comes up then waits for the morning.</summary>

@@ -53,20 +53,20 @@ public sealed class ApertureDbContextTests : IAsyncLifetime
     public async Task Quoted_price_is_stored_as_rappen_and_may_be_empty()
     {
         var client = await _database.AddClientAsync();
-        var priced = await _database.AddGigAsync(client, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0));
-        var unpriced = await _database.AddGigAsync(client, new DateTime(2026, 12, 19, 20, 0, 0), new DateTime(2026, 12, 20, 2, 0, 0));
+        var priced = await _database.AddShootAsync(client, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0));
+        var unpriced = await _database.AddShootAsync(client, new DateTime(2026, 12, 19, 20, 0, 0), new DateTime(2026, 12, 20, 2, 0, 0));
 
         await using (var db = _database.CreateContext())
         {
-            (await db.Gigs.SingleAsync(g => g.Id == priced.Id)).QuotedPrice = Money.FromChf(1850.50m);
+            (await db.Shoots.SingleAsync(g => g.Id == priced.Id)).QuotedPrice = Money.FromChf(1850.50m);
             await db.SaveChangesAsync();
         }
 
-        Assert.Equal(185050L, await _database.ScalarAsync($"SELECT QuotedPrice FROM Gigs WHERE Id = {priced.Id}"));
+        Assert.Equal(185050L, await _database.ScalarAsync($"SELECT QuotedPrice FROM Shoots WHERE Id = {priced.Id}"));
         await using (var db = _database.CreateContext())
         {
-            Assert.Equal(Money.FromChf(1850.50m), (await db.Gigs.SingleAsync(g => g.Id == priced.Id)).QuotedPrice);
-            Assert.Null((await db.Gigs.SingleAsync(g => g.Id == unpriced.Id)).QuotedPrice);
+            Assert.Equal(Money.FromChf(1850.50m), (await db.Shoots.SingleAsync(g => g.Id == priced.Id)).QuotedPrice);
+            Assert.Null((await db.Shoots.SingleAsync(g => g.Id == unpriced.Id)).QuotedPrice);
         }
     }
 
@@ -74,21 +74,21 @@ public sealed class ApertureDbContextTests : IAsyncLifetime
     public async Task Enums_are_stored_as_text()
     {
         var client = await _database.AddClientAsync();
-        var gig = await _database.AddGigAsync(client, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0), GigStatus.Inquiry);
+        var shoot = await _database.AddShootAsync(client, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0), ShootStatus.Inquiry);
 
-        Assert.Equal("Inquiry", await _database.ScalarAsync($"SELECT Status FROM Gigs WHERE Id = {gig.Id}"));
+        Assert.Equal("Inquiry", await _database.ScalarAsync($"SELECT Status FROM Shoots WHERE Id = {shoot.Id}"));
     }
 
     [Fact]
-    public async Task Clients_and_venues_with_gigs_cannot_be_deleted()
+    public async Task Clients_and_locations_with_shoots_cannot_be_deleted()
     {
         var client = await _database.AddClientAsync();
-        var venue = await _database.AddVenueAsync();
-        await _database.AddGigAsync(client, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0), venue: venue);
+        var location = await _database.AddLocationAsync();
+        await _database.AddShootAsync(client, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0), location: location);
 
         await using var db = _database.CreateContext();
         await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => db.Clients.Where(c => c.Id == client.Id).ExecuteDeleteAsync());
-        await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => db.Venues.Where(v => v.Id == venue.Id).ExecuteDeleteAsync());
+        await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => db.Locations.Where(v => v.Id == location.Id).ExecuteDeleteAsync());
     }
 
     [Fact]

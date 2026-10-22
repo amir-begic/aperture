@@ -1,0 +1,49 @@
+@page "/locations"
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Locations · Aperture</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Locations</RadzenText>
+    <RadzenButton Text="New location" Icon="add_location_alt" Click="@(() => Navigation.NavigateTo("locations/new"))" />
+</RadzenStack>
+
+<RadzenTextBox @bind-Value="_search" Immediate="true" Placeholder="Search name, city…" class="search-box rz-mb-4" />
+
+<RadzenDataGrid TItem="LocationRow" Data="FilteredLocations" IsLoading="_locations is null" AllowSorting="true"
+                AllowPaging="true" PageSize="25" EmptyText="No locations yet." class="clickable-rows"
+                RowClick="@(args => Navigation.NavigateTo($"locations/{args.Data!.Id}"))">
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(LocationRow.Name)" Title="Name" />
+        <RadzenDataGridColumn Property="@nameof(LocationRow.Street)" Title="Street" />
+        <RadzenDataGridColumn Property="@nameof(LocationRow.City)" Title="City" />
+        <RadzenDataGridColumn Property="@nameof(LocationRow.ShootCount)" Title="Shoots" Width="6rem" TextAlign="TextAlign.Right" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    private List<LocationRow>? _locations;
+    private string? _search;
+
+    private IEnumerable<LocationRow>? FilteredLocations =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _locations
+            : _locations?.Where(v => v.Matches(_search.Trim()));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _locations = await db.Locations
+            .OrderBy(v => v.Name)
+            .Select(v => new LocationRow(v.Id, v.Name, v.Street, v.City, v.Shoots.Count))
+            .ToListAsync();
+    }
+
+    private sealed record LocationRow(int Id, string Name, string? Street, string? City, int ShootCount)
+    {
+        public bool Matches(string search) =>
+            new[] { Name, Street, City }
+                .Any(value => value?.Contains(search, StringComparison.CurrentCultureIgnoreCase) == true);
+    }
+}

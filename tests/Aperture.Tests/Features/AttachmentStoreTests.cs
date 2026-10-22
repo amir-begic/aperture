@@ -22,11 +22,11 @@ public sealed class AttachmentStoreTests : IDisposable
     [Fact]
     public async Task Saves_under_the_year_with_a_generated_name()
     {
-        var attachment = await _store.SaveAsync(Content(), "Rechnung Licht.PDF", gigId: 7);
+        var attachment = await _store.SaveAsync(Content(), "Rechnung Licht.PDF", shootId: 7);
 
         Assert.Equal("Rechnung Licht.PDF", attachment.FileName);
         Assert.Equal("application/pdf", attachment.ContentType);
-        Assert.Equal(7, attachment.GigId);
+        Assert.Equal(7, attachment.ShootId);
         Assert.Equal(13, attachment.SizeBytes);
         Assert.StartsWith("2026" + Path.DirectorySeparatorChar, attachment.StoragePath);
         Assert.EndsWith(".pdf", attachment.StoragePath);
@@ -41,14 +41,14 @@ public sealed class AttachmentStoreTests : IDisposable
     [InlineData("no-extension")]
     public async Task Rejects_files_a_browser_could_run(string fileName)
     {
-        await Assert.ThrowsAsync<AttachmentException>(() => _store.SaveAsync(Content(), fileName, gigId: null));
+        await Assert.ThrowsAsync<AttachmentException>(() => _store.SaveAsync(Content(), fileName, shootId: null));
         Assert.False(Directory.Exists(Path.Combine(_dataDirectory, "attachments")));
     }
 
     [Fact]
     public async Task Content_type_comes_from_the_extension_not_the_uploader()
     {
-        var attachment = await _store.SaveAsync(Content(), "receipt.jpg", gigId: null);
+        var attachment = await _store.SaveAsync(Content(), "receipt.jpg", shootId: null);
 
         Assert.Equal("image/jpeg", attachment.ContentType);
     }
@@ -56,7 +56,7 @@ public sealed class AttachmentStoreTests : IDisposable
     [Fact]
     public async Task Original_name_is_reduced_to_a_file_name()
     {
-        var attachment = await _store.SaveAsync(Content(), "../../etc/receipt.pdf", gigId: null);
+        var attachment = await _store.SaveAsync(Content(), "../../etc/receipt.pdf", shootId: null);
 
         Assert.Equal("receipt.pdf", attachment.FileName);
     }
@@ -71,7 +71,7 @@ public sealed class AttachmentStoreTests : IDisposable
     [Fact]
     public async Task Commit_removes_the_new_file_when_saving_fails()
     {
-        var added = await _store.SaveAsync(Content(), "receipt.pdf", gigId: null);
+        var added = await _store.SaveAsync(Content(), "receipt.pdf", shootId: null);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             _store.CommitAsync(() => throw new InvalidOperationException("db down"), added, removed: null));
@@ -82,8 +82,8 @@ public sealed class AttachmentStoreTests : IDisposable
     [Fact]
     public async Task Commit_removes_the_replaced_file_when_saving_succeeds()
     {
-        var old = await _store.SaveAsync(Content(), "old.pdf", gigId: null);
-        var added = await _store.SaveAsync(Content(), "new.pdf", gigId: null);
+        var old = await _store.SaveAsync(Content(), "old.pdf", shootId: null);
+        var added = await _store.SaveAsync(Content(), "new.pdf", shootId: null);
 
         await _store.CommitAsync(() => Task.CompletedTask, added, removed: old);
 

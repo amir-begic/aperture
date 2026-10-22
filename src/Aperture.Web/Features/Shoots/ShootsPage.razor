@@ -1,0 +1,49 @@
+@page "/shoots"
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject TimeProvider Time
+
+<PageTitle>Shoots · Aperture</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Shoots</RadzenText>
+    <RadzenButton Text="New shoot" Icon="add" Click="@(() => Navigation.NavigateTo("shoots/new"))" />
+</RadzenStack>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="1rem" class="rz-mb-4">
+    <RadzenSelectBar TValue="ShootPeriod" @bind-Value="_period" @bind-Value:after="LoadAsync" Size="ButtonSize.Small">
+        <Items>
+            <RadzenSelectBarItem Text="Upcoming" Value="ShootPeriod.Upcoming" />
+            <RadzenSelectBarItem Text="Past" Value="ShootPeriod.Past" />
+            <RadzenSelectBarItem Text="All" Value="ShootPeriod.All" />
+        </Items>
+    </RadzenSelectBar>
+    <RadzenDropDown TValue="IEnumerable<ShootStatus>" @bind-Value="_statuses" @bind-Value:after="LoadAsync"
+                    Data="Enum.GetValues<ShootStatus>()" Multiple="true" Chips="true"
+                    Placeholder="All statuses" class="status-filter" />
+    <RadzenTextBox @bind-Value="_search" @bind-Value:after="LoadAsync" Placeholder="Search title, client, location…" class="search-box" />
+</RadzenStack>
+
+<ShootGrid Shoots="_shoots" IsLoading="_loading" EmptyText="@EmptyText" />
+
+@code {
+    private ShootPeriod _period = ShootPeriod.Upcoming;
+    private IEnumerable<ShootStatus> _statuses = [ShootStatus.Inquiry, ShootStatus.Confirmed, ShootStatus.Done];
+    private string? _search;
+    private List<ShootRow> _shoots = [];
+    private bool _loading = true;
+
+    private string EmptyText => _period == ShootPeriod.Upcoming ? "No upcoming shoots." : "No shoots found.";
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _shoots = await db.Shoots
+            .Filter(_period, _statuses.ToList(), _search, Time.GetLocalNow().DateTime)
+            .ToRowsAsync(db);
+        _loading = false;
+    }
+}

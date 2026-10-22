@@ -1,23 +1,23 @@
 using Aperture.Web.Data;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
-using Aperture.Web.Features.Gigs;
+using Aperture.Web.Features.Shoots;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aperture.Web.Features.Finance;
 
 public sealed record IncomeEntry(
-    DateOnly Date, int GigId, string GigTitle, string ClientName, string? InvoiceNumber,
+    DateOnly Date, int ShootId, string ShootTitle, string ClientName, string? InvoiceNumber,
     PaymentMethod Method, string? Note, Money Amount, Attachment? Proof);
 
 public sealed record ExpenseEntry(
     int Id, DateOnly Date, ExpenseCategory Category, string Description, string? Vendor,
-    int? GigId, string? GigTitle, Money Amount, Attachment? Receipt);
+    int? ShootId, string? ShootTitle, Money Amount, Attachment? Receipt);
 
 public sealed record AssetEntry(Asset Asset, DepreciationYear Year);
 
-/// <summary>A gig played in the year: what it brings in against what it cost.</summary>
-public sealed record GigResult(int GigId, string Title, DateTime Start, string ClientName, Money? ToBill, Money Costs, Money Received)
+/// <summary>A shoot played in the year: what it brings in against what it cost.</summary>
+public sealed record ShootResult(int ShootId, string Title, DateTime Start, string ClientName, Money? ToBill, Money Costs, Money Received)
 {
     public Money? Margin => ToBill - Costs;
 }
@@ -33,7 +33,7 @@ public sealed record IncomeStatement(
     IReadOnlyList<IncomeEntry> Income,
     IReadOnlyList<ExpenseEntry> Expenses,
     IReadOnlyList<AssetEntry> Assets,
-    IReadOnlyList<GigResult> Gigs,
+    IReadOnlyList<ShootResult> Shoots,
     bool ProRataFirstYear = false)
 {
     public Money TotalIncome => Income.Sum(i => i.Amount);
@@ -67,26 +67,26 @@ public sealed record IncomeStatement(
 
         var payments = await db.Payments.AsNoTracking()
             .Include(p => p.Proof)
-            .Include(p => p.Gig).ThenInclude(g => g.Client)
+            .Include(p => p.Shoot).ThenInclude(g => g.Client)
             .Where(p => p.Date >= from && p.Date < until)
             .OrderBy(p => p.Date).ThenBy(p => p.Id)
             .ToListAsync();
         var invoiceNumbers = await db.Invoices
             .Where(i => i.Status == InvoiceStatus.Issued)
-            .Select(i => new { i.GigId, i.Number })
-            .ToDictionaryAsync(i => i.GigId, i => i.Number);
+            .Select(i => new { i.ShootId, i.Number })
+            .ToDictionaryAsync(i => i.ShootId, i => i.Number);
         var income = payments.Select(p => new IncomeEntry(
-                p.Date, p.GigId, p.Gig.Title, p.Gig.Client.Name, invoiceNumbers.GetValueOrDefault(p.GigId),
+                p.Date, p.ShootId, p.Shoot.Title, p.Shoot.Client.Name, invoiceNumbers.GetValueOrDefault(p.ShootId),
                 p.Method, p.Note, p.Amount, p.Proof))
             .ToList();
 
         var expenses = (await db.Expenses.AsNoTracking()
                 .Include(e => e.Receipt)
-                .Include(e => e.Gig)
+                .Include(e => e.Shoot)
                 .Where(e => e.Date >= from && e.Date < until)
                 .OrderBy(e => e.Date).ThenBy(e => e.Id)
                 .ToListAsync())
-            .Select(e => new ExpenseEntry(e.Id, e.Date, e.Category, e.Description, e.Vendor, e.GigId, e.Gig?.Title, e.Amount, e.Receipt))
+            .Select(e => new ExpenseEntry(e.Id, e.Date, e.Category, e.Description, e.Vendor, e.ShootId, e.Shoot?.Title, e.Amount, e.Receipt))
             .ToList();
 
         var proRataFirstYear = await db.BusinessSettings.Select(s => s.ProRataFirstYear).SingleAsync();
@@ -100,21 +100,21 @@ public sealed record IncomeStatement(
             .Select(a => new AssetEntry(a.Asset, a.Year!))
             .ToList();
 
-        var gigRows = await db.Gigs
+        var shootRows = await db.Shoots
             .Where(g => g.Start >= from.ToDateTime(TimeOnly.MinValue) && g.Start < until.ToDateTime(TimeOnly.MinValue)
-                && g.Status != GigStatus.Cancelled)
+                && g.Status != ShootStatus.Cancelled)
             .OrderBy(g => g.Start)
             .ToRowsAsync(db);
-        var gigIds = gigRows.Select(r => r.Id).ToList();
-        var gigCosts = (await db.Expenses.Where(e => e.GigId != null && gigIds.Contains(e.GigId.Value))
-                .Select(e => new { GigId = e.GigId!.Value, e.Amount }).ToListAsync())
-            .GroupBy(e => e.GigId)
+        var shootIds = shootRows.Select(r => r.Id).ToList();
+        var shootCosts = (await db.Expenses.Where(e => e.ShootId != null && shootIds.Contains(e.ShootId.Value))
+                .Select(e => new { ShootId = e.ShootId!.Value, e.Amount }).ToListAsync())
+            .GroupBy(e => e.ShootId)
             .ToDictionary(g => g.Key, g => g.Sum(e => e.Amount));
-        var gigs = gigRows
-            .Select(r => new GigResult(r.Id, r.Title, r.Start, r.ClientName, r.Financials.Total, gigCosts.GetValueOrDefault(r.Id), r.Received))
+        var shoots = shootRows
+            .Select(r => new ShootResult(r.Id, r.Title, r.Start, r.ClientName, r.Financials.Total, shootCosts.GetValueOrDefault(r.Id), r.Received))
             .ToList();
 
-        return new IncomeStatement(year, income, expenses, assets, gigs, proRataFirstYear);
+        return new IncomeStatement(year, income, expenses, assets, shoots, proRataFirstYear);
     }
 
     /// <summary>Years with any data, newest first, always including the current one.</summary>
@@ -124,7 +124,7 @@ public sealed record IncomeStatement(
         years.UnionWith(await db.Payments.Select(p => p.Date.Year).Distinct().ToListAsync());
         years.UnionWith(await db.Expenses.Select(e => e.Date.Year).Distinct().ToListAsync());
         years.UnionWith(await db.Assets.Select(a => a.PurchaseDate.Year).Distinct().ToListAsync());
-        years.UnionWith(await db.Gigs.Select(g => g.Start.Year).Distinct().ToListAsync());
+        years.UnionWith(await db.Shoots.Select(g => g.Start.Year).Distinct().ToListAsync());
         return years.OrderDescending().ToList();
     }
 }

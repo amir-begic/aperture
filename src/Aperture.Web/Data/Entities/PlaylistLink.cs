@@ -6,8 +6,8 @@ public class PlaylistLink
 {
     public int Id { get; set; }
 
-    public int GigId { get; set; }
-    public Gig Gig { get; set; } = null!;
+    public int ShootId { get; set; }
+    public Shoot Shoot { get; set; } = null!;
 
     [Required, MaxLength(500)]
     [RegularExpression(@"^https?://\S+$", ErrorMessage = "Paste a full link starting with https://")]

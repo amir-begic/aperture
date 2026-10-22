@@ -7,7 +7,7 @@ public class ReturnUrlTests
     [Theory]
     [InlineData("/", "/")]
     [InlineData("/settings", "/settings")]
-    [InlineData("/gigs/12?tab=music", "/gigs/12?tab=music")]
+    [InlineData("/shoots/12?tab=music", "/shoots/12?tab=music")]
     [InlineData(null, "/")]
     [InlineData("", "/")]
     [InlineData("settings", "/")]

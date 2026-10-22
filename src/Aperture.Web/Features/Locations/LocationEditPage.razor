@@ -1,0 +1,104 @@
+@page "/locations/new"
+@page "/locations/{Id:int}"
+@using Aperture.Web.Features.Shoots
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject NavigationManager Navigation
+@inject NotificationService Notifications
+@inject DialogService Dialogs
+
+<PageTitle>@(IsNew ? "New location" : _title) · Aperture</PageTitle>
+
+<RadzenBreadCrumb class="rz-mb-2">
+    <RadzenBreadCrumbItem Path="locations" Text="Locations" />
+    <RadzenBreadCrumbItem Text="@(IsNew ? "New location" : _title)" />
+</RadzenBreadCrumb>
+
+@if (_notFound)
+{
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">Location not found</RadzenText>
+}
+else if (_location is null)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@(IsNew ? "New location" : _title)</RadzenText>
+
+    <RadzenCard class="form-card rz-mb-6">
+        <LocationForm Location="_location" Saved="OnSaved">
+            <Buttons>
+                @if (!IsNew)
+                {
+                    <RadzenButton Text="New shoot" Icon="event" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
+                                  Click="@(() => Navigation.NavigateTo($"shoots/new?locationId={Id}"))" />
+                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                                  Disabled="@(_shoots.Count > 0)" Click="DeleteAsync"
+                                  title="@(_shoots.Count > 0 ? "Locations with shoots can't be deleted." : null)" />
+                }
+            </Buttons>
+        </LocationForm>
+    </RadzenCard>
+
+    @if (!IsNew)
+    {
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Shoots</RadzenText>
+        <ShootGrid Shoots="_shoots" ShowLocation="false" PageSize="null" EmptyText="No shoots at this location yet." />
+    }
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    private bool IsNew => Id is null;
+
+    private Location? _location;
+    private string _title = "";
+    private List<ShootRow> _shoots = [];
+    private bool _notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsNew)
+        {
+            _location = new Location();
+            _shoots = [];
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _location = await db.Locations.AsNoTracking().SingleOrDefaultAsync(v => v.Id == Id);
+        _notFound = _location is null;
+        _title = _location?.Name ?? "";
+        _shoots = await db.Shoots.Where(g => g.LocationId == Id).OrderByDescending(g => g.Start).ToRowsAsync(db);
+    }
+
+    private void OnSaved(Location location)
+    {
+        Notifications.Notify(NotificationSeverity.Success, "Location saved");
+        if (IsNew)
+        {
+            Navigation.NavigateTo($"locations/{location.Id}", replace: true);
+        }
+        else
+        {
+            _title = location.Name;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        var confirmed = await Dialogs.Confirm($"Delete {_title}?", "Delete location",
+            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        await db.Locations.Where(v => v.Id == Id).ExecuteDeleteAsync();
+        Notifications.Notify(NotificationSeverity.Info, $"{_title} deleted");
+        Navigation.NavigateTo("locations");
+    }
+}

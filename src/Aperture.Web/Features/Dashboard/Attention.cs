@@ -2,7 +2,7 @@ using Aperture.Web.Data;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
 using Aperture.Web.Features.Backup;
-using Aperture.Web.Features.Gigs;
+using Aperture.Web.Features.Shoots;
 using Aperture.Web.Features.Updates;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,9 +27,9 @@ public static class Attention
     public static readonly TimeSpan PrepHorizon = TimeSpan.FromDays(14);
 
     /// <summary>
-    /// Most urgent first: backups, overdue invoices, gigs to invoice, gigs to close, open prep, a new version of Aperture.
+    /// Most urgent first: backups, overdue invoices, shoots to invoice, shoots to close, open prep, a new version of Aperture.
     /// Backups are only checked where they're expected (the Mac mini, not a development machine).
-    /// Open prep is flagged for gigs within <paramref name="prepHorizon"/> (default <see cref="PrepHorizon"/>).
+    /// Open prep is flagged for shoots within <paramref name="prepHorizon"/> (default <see cref="PrepHorizon"/>).
     /// </summary>
     public static async Task<List<AttentionItem>> ItemsAsync(
         ApertureDbContext db, DateTime now, BackupStatus? backup = null, bool expectBackups = false, Release? update = null,
@@ -60,55 +60,55 @@ public static class Attention
             }
         }
 
-        // Booked gigs that were played or are coming up within the prep horizon, plus every gig with an issued
+        // Booked shoots that were played or are coming up within the prep horizon, plus every shoot with an issued
         // invoice: invoices sent before the event (deposits, advance payment) can be overdue too.
-        var gigs = await db.Gigs
-            .Where(g => g.Status == GigStatus.Confirmed || g.Status == GigStatus.Done)
+        var shoots = await db.Shoots
+            .Where(g => g.Status == ShootStatus.Confirmed || g.Status == ShootStatus.Done)
             .Where(g => g.End <= now || g.Start <= now + horizon || g.Invoices.Any(i => i.Status == InvoiceStatus.Issued))
             .OrderBy(g => g.Start)
             .ToRowsAsync(db);
-        var withInvoice = (await db.Invoices.Where(i => i.Status != InvoiceStatus.Cancelled).Select(i => i.GigId).ToListAsync()).ToHashSet();
+        var withInvoice = (await db.Invoices.Where(i => i.Status != InvoiceStatus.Cancelled).Select(i => i.ShootId).ToListAsync()).ToHashSet();
 
-        foreach (var gig in gigs.Where(g => g.IsPastDue(today)))
+        foreach (var shoot in shoots.Where(g => g.IsPastDue(today)))
         {
-            var invoice = gig.Invoice!;
+            var invoice = shoot.Invoice!;
             items.Add(new(AttentionLevel.Urgent, "assignment_late",
                 $"Invoice {invoice.Number} is overdue",
-                $"{gig.Financials.Outstanding} open since {invoice.DueDate:dd.MM.yyyy} · {gig.Title}",
-                $"gigs/{gig.Id}?tab=invoice", $"invoice-overdue:{invoice.Id}"));
+                $"{shoot.Financials.Outstanding} open since {invoice.DueDate:dd.MM.yyyy} · {shoot.Title}",
+                $"shoots/{shoot.Id}?tab=invoice", $"invoice-overdue:{invoice.Id}"));
         }
 
-        foreach (var gig in gigs.Where(g => g.End <= now && !withInvoice.Contains(g.Id)
+        foreach (var shoot in shoots.Where(g => g.End <= now && !withInvoice.Contains(g.Id)
                      && g.PaymentState is PaymentState.Unpaid or PaymentState.PartiallyPaid))
         {
             items.Add(new(AttentionLevel.Warning, "request_quote",
-                $"{gig.Title} has no invoice yet",
-                $"Played {gig.Start:ddd dd.MM.yyyy} · {gig.Financials.Outstanding} open",
-                $"gigs/{gig.Id}?tab=invoice"));
+                $"{shoot.Title} has no invoice yet",
+                $"Played {shoot.Start:ddd dd.MM.yyyy} · {shoot.Financials.Outstanding} open",
+                $"shoots/{shoot.Id}?tab=invoice"));
         }
 
-        foreach (var gig in gigs.Where(g => g.End <= now && g.Status == GigStatus.Confirmed))
+        foreach (var shoot in shoots.Where(g => g.End <= now && g.Status == ShootStatus.Confirmed))
         {
             items.Add(new(AttentionLevel.Info, "task_alt",
-                $"Mark {gig.Title} as done",
-                $"Played {gig.Start:ddd dd.MM.yyyy}, still marked Confirmed",
-                $"gigs/{gig.Id}"));
+                $"Mark {shoot.Title} as done",
+                $"Played {shoot.Start:ddd dd.MM.yyyy}, still marked Confirmed",
+                $"shoots/{shoot.Id}"));
         }
 
-        var soon = gigs.Where(g => g.Start > now && g.Start <= now + horizon).ToList();
+        var soon = shoots.Where(g => g.Start > now && g.Start <= now + horizon).ToList();
         var soonIds = soon.Select(g => g.Id).ToList();
         var openTasks = await db.ChecklistItems
-            .Where(i => soonIds.Contains(i.GigId) && !i.IsDone)
-            .GroupBy(i => i.GigId)
-            .Select(g => new { GigId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(g => g.GigId, g => g.Count);
-        foreach (var gig in soon.Where(g => openTasks.ContainsKey(g.Id)))
+            .Where(i => soonIds.Contains(i.ShootId) && !i.IsDone)
+            .GroupBy(i => i.ShootId)
+            .Select(g => new { ShootId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.ShootId, g => g.Count);
+        foreach (var shoot in soon.Where(g => openTasks.ContainsKey(g.Id)))
         {
-            var count = openTasks[gig.Id];
+            var count = openTasks[shoot.Id];
             items.Add(new(AttentionLevel.Info, "checklist",
-                $"{count} prep task{(count == 1 ? "" : "s")} open for {gig.Title}",
-                $"{gig.Start:ddd dd.MM.yyyy, HH:mm} · {gig.ClientName}",
-                $"gigs/{gig.Id}?tab=prep", $"prep:{gig.Id}:{gig.Start:yyyy-MM-dd}"));
+                $"{count} prep task{(count == 1 ? "" : "s")} open for {shoot.Title}",
+                $"{shoot.Start:ddd dd.MM.yyyy, HH:mm} · {shoot.ClientName}",
+                $"shoots/{shoot.Id}?tab=prep", $"prep:{shoot.Id}:{shoot.Start:yyyy-MM-dd}"));
         }
 
         if (update is not null)

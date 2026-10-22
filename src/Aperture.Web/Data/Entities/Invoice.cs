@@ -6,8 +6,8 @@ public class Invoice
 {
     public int Id { get; set; }
 
-    public int GigId { get; set; }
-    public Gig Gig { get; set; } = null!;
+    public int ShootId { get; set; }
+    public Shoot Shoot { get; set; } = null!;
 
     /// <summary>"2026-001"; assigned when issued, so drafts don't leave gaps in the sequence.</summary>
     public string? Number { get; set; }

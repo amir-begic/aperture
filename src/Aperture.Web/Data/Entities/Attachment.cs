@@ -7,9 +7,9 @@ public class Attachment
 {
     public int Id { get; set; }
 
-    /// <summary>The gig the file belongs to, including receipts and payslips of its costs and payments.</summary>
-    public int? GigId { get; set; }
-    public Gig? Gig { get; set; }
+    /// <summary>The shoot the file belongs to, including receipts and payslips of its costs and payments.</summary>
+    public int? ShootId { get; set; }
+    public Shoot? Shoot { get; set; }
 
     /// <summary>The name it was uploaded with, used for downloads.</summary>
     [Required, MaxLength(255)]

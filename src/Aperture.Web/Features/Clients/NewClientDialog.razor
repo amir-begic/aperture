@@ -1,4 +1,4 @@
-@* Opened from the gig form; closes with the saved client, or null when cancelled. *@
+@* Opened from the shoot form; closes with the saved client, or null when cancelled. *@
 @inject DialogService Dialogs
 
 <ClientForm Client="_client" Compact="true" Saved="@(client => Dialogs.Close(client))">

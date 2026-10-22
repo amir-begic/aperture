@@ -1,0 +1,68 @@
+@using Aperture.Web.Features.Shoots
+@inject NavigationManager Navigation
+@inject TimeProvider Time
+
+<RadzenDataGrid TItem="ShootRow" Data="Shoots" IsLoading="IsLoading" AllowSorting="true"
+                AllowPaging="@(PageSize is not null)" PageSize="@(PageSize ?? 25)"
+                EmptyText="@EmptyText" class="clickable-rows"
+                RowClick="@(args => Navigation.NavigateTo($"shoots/{args.Data!.Id}"))">
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(ShootRow.Start)" Title="Date" Width="11rem">
+            <Template Context="shoot">
+                <div>@shoot.Start.ToString("ddd dd.MM.yyyy")</div>
+                <RadzenText TextStyle="TextStyle.Caption">@ShootSchedule.FormatTimes(shoot.Start, shoot.End)</RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ShootRow.Title)" Title="Shoot">
+            <Template Context="shoot">
+                <div>@shoot.Title</div>
+                <RadzenText TextStyle="TextStyle.Caption">@shoot.EventType</RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        @if (ShowClient)
+        {
+            <RadzenDataGridColumn Property="@nameof(ShootRow.ClientName)" Title="Client" />
+        }
+        @if (ShowLocation)
+        {
+            <RadzenDataGridColumn Property="@nameof(ShootRow.Location)" Title="Location" />
+        }
+        <RadzenDataGridColumn Property="@nameof(ShootRow.Status)" Title="Status" Width="8rem">
+            <Template Context="shoot"><ShootStatusBadge Status="shoot.Status" /></Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ShootRow.QuotedPrice)" Title="Quote" Width="9rem" TextAlign="TextAlign.Right">
+            <Template Context="shoot">@shoot.QuotedPrice</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(ShootRow.PaymentState)" Title="Payment" Width="10.5rem">
+            <Template Context="shoot">
+                @if (shoot.PaymentState is { } state)
+                {
+                    <PaymentStateBadge State="state" IsPlayed="@(shoot.Status == ShootStatus.Done)" IsPastDue="@shoot.IsPastDue(Today)" />
+                }
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter, EditorRequired]
+    public IEnumerable<ShootRow>? Shoots { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public bool ShowClient { get; set; } = true;
+
+    [Parameter]
+    public bool ShowLocation { get; set; } = true;
+
+    /// <summary>Rows per page, or null for no paging.</summary>
+    [Parameter]
+    public int? PageSize { get; set; } = 25;
+
+    [Parameter]
+    public string EmptyText { get; set; } = "No shoots.";
+
+    private DateOnly Today => DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
+}

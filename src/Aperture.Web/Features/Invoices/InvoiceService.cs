@@ -15,32 +15,32 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
 {
     private DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
-    /// <summary>A draft pre-filled with the gig at its quote and each cost billed to the client.</summary>
-    public async Task<int> CreateDraftAsync(int gigId)
+    /// <summary>A draft pre-filled with the shoot at its quote and each cost billed to the client.</summary>
+    public async Task<int> CreateDraftAsync(int shootId)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
-        if (await db.Invoices.AnyAsync(i => i.GigId == gigId && i.Status != InvoiceStatus.Cancelled))
+        if (await db.Invoices.AnyAsync(i => i.ShootId == shootId && i.Status != InvoiceStatus.Cancelled))
         {
-            throw new InvalidOperationException("This gig already has an invoice. Cancel it first to create a new one.");
+            throw new InvalidOperationException("This shoot already has an invoice. Cancel it first to create a new one.");
         }
 
-        var gig = await db.Gigs.SingleAsync(g => g.Id == gigId);
+        var shoot = await db.Shoots.SingleAsync(g => g.Id == shootId);
         var billedCosts = await db.Expenses
-            .Where(e => e.GigId == gigId && e.BilledToClient != null)
+            .Where(e => e.ShootId == shootId && e.BilledToClient != null)
             .OrderBy(e => e.Date).ThenBy(e => e.Id)
             .ToListAsync();
         var settings = await db.BusinessSettings.SingleAsync();
 
         var invoice = new Invoice
         {
-            GigId = gigId,
+            ShootId = shootId,
             IssueDate = Today,
             DueDate = Today.AddDays(settings.PaymentTermsDays),
         };
         invoice.Lines.Add(new InvoiceLine
         {
-            Description = $"DJ performance: {gig.Title}",
-            UnitPrice = gig.QuotedPrice ?? Money.Zero,
+            Description = $"DJ performance: {shoot.Title}",
+            UnitPrice = shoot.QuotedPrice ?? Money.Zero,
         });
         invoice.Lines.AddRange(billedCosts.Select(cost => new InvoiceLine
         {
@@ -78,24 +78,24 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
     /// The invoice as it will look: issued invoices as stored; drafts with current business, client
     /// and payment data filled in (not saved).
     /// </summary>
-    public async Task<(Invoice Invoice, InvoiceGigInfo Gig)> LoadForDocumentAsync(int invoiceId)
+    public async Task<(Invoice Invoice, InvoiceShootInfo Shoot)> LoadForDocumentAsync(int invoiceId)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
         var invoice = await db.Invoices.AsNoTracking()
             .Include(i => i.Lines)
-            .Include(i => i.Gig).ThenInclude(g => g.Client)
-            .Include(i => i.Gig).ThenInclude(g => g.Venue)
+            .Include(i => i.Shoot).ThenInclude(g => g.Client)
+            .Include(i => i.Shoot).ThenInclude(g => g.Location)
             .SingleAsync(i => i.Id == invoiceId);
 
         if (invoice.Status == InvoiceStatus.Draft)
         {
-            InvoiceSnapshot.Apply(invoice, await db.BusinessSettings.AsNoTracking().SingleAsync(), invoice.Gig.Client);
-            invoice.AlreadyPaid = await ReceivedAsync(db, invoice.GigId);
+            InvoiceSnapshot.Apply(invoice, await db.BusinessSettings.AsNoTracking().SingleAsync(), invoice.Shoot.Client);
+            invoice.AlreadyPaid = await ReceivedAsync(db, invoice.ShootId);
         }
 
-        var gig = invoice.Gig;
-        var venue = gig.Venue is null ? null : gig.Venue.City is null ? gig.Venue.Name : $"{gig.Venue.Name}, {gig.Venue.City}";
-        return (invoice, new InvoiceGigInfo(gig.Title, gig.Start, gig.End, venue));
+        var shoot = invoice.Shoot;
+        var location = shoot.Location is null ? null : shoot.Location.City is null ? shoot.Location.Name : $"{shoot.Location.Name}, {shoot.Location.City}";
+        return (invoice, new InvoiceShootInfo(shoot.Title, shoot.Start, shoot.End, location));
     }
 
     /// <summary>What has to be fixed before the invoice can be issued; empty when it's ready.</summary>
@@ -136,7 +136,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
 
     /// <summary>
     /// Numbers the invoice, freezes business and client data, records payments received so far
-    /// and archives the PDF in the gig's files. Returns the problems instead if it isn't ready.
+    /// and archives the PDF in the shoot's files. Returns the problems instead if it isn't ready.
     /// </summary>
     public async Task<IReadOnlyList<string>> IssueAsync(int invoiceId)
     {
@@ -149,21 +149,21 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         await using var db = await dbFactory.CreateDbContextAsync();
         await using var transaction = await db.Database.BeginTransactionAsync();
 
-        var invoice = await db.Invoices.Include(i => i.Lines).Include(i => i.Gig).ThenInclude(g => g.Client)
+        var invoice = await db.Invoices.Include(i => i.Lines).Include(i => i.Shoot).ThenInclude(g => g.Client)
             .SingleAsync(i => i.Id == invoiceId);
         EnsureDraft(invoice);
 
-        InvoiceSnapshot.Apply(invoice, await db.BusinessSettings.SingleAsync(), invoice.Gig.Client);
-        invoice.AlreadyPaid = await ReceivedAsync(db, invoice.GigId);
+        InvoiceSnapshot.Apply(invoice, await db.BusinessSettings.SingleAsync(), invoice.Shoot.Client);
+        invoice.AlreadyPaid = await ReceivedAsync(db, invoice.ShootId);
         invoice.Number = await NextNumberAsync(db, invoice.IssueDate.Year);
         invoice.Status = InvoiceStatus.Issued;
         invoice.IssuedAt = time.GetLocalNow().DateTime;
 
-        var gig = invoice.Gig;
-        var venue = await db.Venues.Where(v => v.Id == gig.VenueId)
+        var shoot = invoice.Shoot;
+        var location = await db.Locations.Where(v => v.Id == shoot.LocationId)
             .Select(v => v.City == null ? v.Name : v.Name + ", " + v.City).SingleOrDefaultAsync();
-        var pdf = new InvoiceDocument(invoice, new InvoiceGigInfo(gig.Title, gig.Start, gig.End, venue)).GeneratePdf();
-        var attachment = await store.SaveAsync(new MemoryStream(pdf), $"Invoice {invoice.Number}.pdf", invoice.GigId);
+        var pdf = new InvoiceDocument(invoice, new InvoiceShootInfo(shoot.Title, shoot.Start, shoot.End, location)).GeneratePdf();
+        var attachment = await store.SaveAsync(new MemoryStream(pdf), $"Invoice {invoice.Number}.pdf", invoice.ShootId);
         invoice.Pdf = attachment;
 
         await store.CommitAsync(async () =>
@@ -210,8 +210,8 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         return $"{prefix}{last + 1:000}";
     }
 
-    private static async Task<Money> ReceivedAsync(ApertureDbContext db, int gigId) =>
-        (await db.Payments.Where(p => p.GigId == gigId).Select(p => p.Amount).ToListAsync()).Sum();
+    private static async Task<Money> ReceivedAsync(ApertureDbContext db, int shootId) =>
+        (await db.Payments.Where(p => p.ShootId == shootId).Select(p => p.Amount).ToListAsync()).Sum();
 
     private static void EnsureDraft(Invoice invoice)
     {

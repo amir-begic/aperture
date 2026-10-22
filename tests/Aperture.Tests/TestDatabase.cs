@@ -42,38 +42,38 @@ public sealed class TestDatabase : IAsyncLifetime
         return client;
     }
 
-    public async Task<Venue> AddVenueAsync(string name = "Schloss Laufen", string? city = "Laufen-Uhwiesen")
+    public async Task<Location> AddLocationAsync(string name = "Schloss Laufen", string? city = "Laufen-Uhwiesen")
     {
         await using var db = CreateContext();
-        var venue = new Venue { Name = name, City = city };
-        db.Venues.Add(venue);
+        var location = new Location { Name = name, City = city };
+        db.Locations.Add(location);
         await db.SaveChangesAsync();
-        return venue;
+        return location;
     }
 
-    public async Task<Gig> AddGigAsync(
+    public async Task<Shoot> AddShootAsync(
         Client client, DateTime start, DateTime end,
-        GigStatus status = GigStatus.Confirmed, Venue? venue = null, string title = "Wedding")
+        ShootStatus status = ShootStatus.Confirmed, Location? location = null, string title = "Wedding")
     {
         await using var db = CreateContext();
-        var gig = new Gig
+        var shoot = new Shoot
         {
             Title = title,
             ClientId = client.Id,
-            VenueId = venue?.Id,
+            LocationId = location?.Id,
             Start = start,
             End = end,
             Status = status,
         };
-        db.Gigs.Add(gig);
+        db.Shoots.Add(shoot);
         await db.SaveChangesAsync();
-        return gig;
+        return shoot;
     }
 
-    public async Task<Payment> AddPaymentAsync(Gig gig, decimal chf)
+    public async Task<Payment> AddPaymentAsync(Shoot shoot, decimal chf)
     {
         await using var db = CreateContext();
-        var payment = new Payment { GigId = gig.Id, Amount = Aperture.Web.Domain.Money.FromChf(chf), Date = new DateOnly(2026, 12, 14) };
+        var payment = new Payment { ShootId = shoot.Id, Amount = Aperture.Web.Domain.Money.FromChf(chf), Date = new DateOnly(2026, 12, 14) };
         db.Payments.Add(payment);
         await db.SaveChangesAsync();
         return payment;

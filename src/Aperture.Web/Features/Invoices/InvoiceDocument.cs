@@ -7,14 +7,14 @@ using QuestPDF.Infrastructure;
 
 namespace Aperture.Web.Features.Invoices;
 
-/// <summary>What the invoice says about the gig it bills.</summary>
-public sealed record InvoiceGigInfo(string Title, DateTime Start, DateTime End, string? Venue);
+/// <summary>What the invoice says about the shoot it bills.</summary>
+public sealed record InvoiceShootInfo(string Title, DateTime Start, DateTime End, string? Location);
 
 /// <summary>
 /// The invoice PDF: sender, recipient in the window position of a Swiss envelope (right),
 /// lines, totals, payment note and the QR-bill along the bottom edge of the last page.
 /// </summary>
-public sealed class InvoiceDocument(Invoice invoice, InvoiceGigInfo gig) : IDocument
+public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : IDocument
 {
     private const float PagePadding = 20; // mm, everywhere except the QR-bill, which spans the full width
 
@@ -121,9 +121,9 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceGigInfo gig) : IDocu
 
             Fact("Invoice date", invoice.IssueDate.ToString("dd.MM.yyyy"));
             Fact("Due date", invoice.DueDate.ToString("dd.MM.yyyy"));
-            Fact("Event", gig.Title);
-            Fact("Event date", $"{gig.Start:ddd dd.MM.yyyy}, {GigSchedule.FormatTimes(gig.Start, gig.End)}");
-            if (gig.Venue is not null) Fact("Venue", gig.Venue);
+            Fact("Event", shoot.Title);
+            Fact("Event date", $"{shoot.Start:ddd dd.MM.yyyy}, {ShootSchedule.FormatTimes(shoot.Start, shoot.End)}");
+            if (shoot.Location is not null) Fact("Location", shoot.Location);
         });
     });
 

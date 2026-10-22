@@ -1,6 +1,6 @@
 @page "/"
 @using Aperture.Web.Features.Finance
-@using Aperture.Web.Features.Gigs
+@using Aperture.Web.Features.Shoots
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject TimeProvider Time
@@ -12,7 +12,7 @@
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
     <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Dashboard</RadzenText>
-    <RadzenButton Text="New gig" Icon="add" Click="@(() => Navigation.NavigateTo("gigs/new"))" />
+    <RadzenButton Text="New shoot" Icon="add" Click="@(() => Navigation.NavigateTo("shoots/new"))" />
 </RadzenStack>
 
 @if (_settingsComplete == false)
@@ -60,8 +60,8 @@
         }
 </div>
 
-<RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Next gigs</RadzenText>
-<GigGrid Gigs="_upcoming" IsLoading="_upcoming is null" PageSize="null" EmptyText="No upcoming gigs." />
+<RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Next shoots</RadzenText>
+<ShootGrid Shoots="_upcoming" IsLoading="_upcoming is null" PageSize="null" EmptyText="No upcoming shoots." />
 
 @code {
     private const int UpcomingCount = 5;
@@ -71,7 +71,7 @@
     private Money _openInvoices;
     private int _overdueCount;
     private List<AttentionItem>? _attention;
-    private List<GigRow>? _upcoming;
+    private List<ShootRow>? _upcoming;
 
     protected override async Task OnInitializedAsync()
     {
@@ -82,15 +82,15 @@
         var settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
         _settingsComplete = settings.IsComplete;
 
-        _upcoming = await db.Gigs
-            .Filter(GigPeriod.Upcoming, [GigStatus.Inquiry, GigStatus.Confirmed], search: null, now)
+        _upcoming = await db.Shoots
+            .Filter(ShootPeriod.Upcoming, [ShootStatus.Inquiry, ShootStatus.Confirmed], search: null, now)
             .Take(UpcomingCount)
             .ToRowsAsync(db);
 
         _statement = await IncomeStatement.LoadAsync(db, now.Year);
 
         // Open amounts of issued invoices, from all years.
-        var invoiced = await db.Gigs.Where(g => g.Invoices.Any(i => i.Status == InvoiceStatus.Issued)).ToRowsAsync(db);
+        var invoiced = await db.Shoots.Where(g => g.Invoices.Any(i => i.Status == InvoiceStatus.Issued)).ToRowsAsync(db);
         var open = invoiced.Where(g => g.Financials.Outstanding > Money.Zero).ToList();
         _openInvoices = open.Sum(g => g.Financials.Outstanding!.Value);
         _overdueCount = open.Count(g => g.IsPastDue(today));

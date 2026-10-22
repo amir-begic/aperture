@@ -3,14 +3,14 @@ using Aperture.Web.Domain;
 
 namespace Aperture.Web.Data.Entities;
 
-/// <summary>A cost, such as renting lights for a gig.</summary>
+/// <summary>A cost, such as renting lights for a shoot.</summary>
 public class Expense
 {
     public int Id { get; set; }
 
     /// <summary>Null for general business costs (added in a later phase).</summary>
-    public int? GigId { get; set; }
-    public Gig? Gig { get; set; }
+    public int? ShootId { get; set; }
+    public Shoot? Shoot { get; set; }
 
     public DateOnly Date { get; set; }
 

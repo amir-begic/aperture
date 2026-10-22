@@ -6,35 +6,35 @@ when in doubt, ask your fiduciary or the cantonal tax office.
 
 All amounts are in CHF, calculated to the Rappen.
 
-## Gigs
+## Shoots
 
 | Status | Meaning |
 |---|---|
-| **Inquiry** | A client asked; the date is held. Time and venue may still be unknown. |
+| **Inquiry** | A client asked; the date is held. Time and location may still be unknown. |
 | **Confirmed** | Booked. |
 | **Done** | Played. |
 | **Cancelled** | Kept for the records; it no longer blocks the date. |
 
-### Money per gig
+### Money per shoot
 
 - **Quote:** the agreed fee.
-- **Costs:** what the gig cost you, e.g. renting lights. Each cost is either
+- **Costs:** what the shoot cost you, e.g. renting lights. Each cost is either
   - **covered by the quote:** it reduces your margin and doesn't appear on the invoice, or
   - **billed to the client:** it appears as its own line on the invoice, at what you paid or at a higher price
     with your margin on top.
 - **Total:** quote plus billed costs. Once an invoice is issued, its total.
 - **Margin:** total minus all costs.
-- **Received:** the payments recorded for the gig, each with an optional payslip.
+- **Received:** the payments recorded for the shoot, each with an optional payslip.
 - **Open:** total minus received, never below zero.
 
 The payment state follows from this: *unpaid*, *partly paid*, *paid*, or *no quote* while there's nothing to bill yet.
 
 ## Invoices
 
-1. **Draft:** created from the gig with the quote and the billed costs as lines. You can change lines, dates
+1. **Draft:** created from the shoot with the quote and the billed costs as lines. You can change lines, dates
    and amounts. A draft has no number yet and can be deleted.
 2. **Issued:** gets the next number of its year (`2026-001`, `2026-002`, …). From then on it can't change:
-   your and the client's addresses are copied into it, and the PDF is archived with the gig's files.
+   your and the client's addresses are copied into it, and the PDF is archived with the shoot's files.
 3. **Cancelled:** keeps its number, so the sequence has no gaps. Create a new invoice to replace it.
 
 The total is calculated as:
@@ -44,14 +44,14 @@ The total is calculated as:
 + VAT, only if you're registered for VAT (Settings, default rate 8.1%)
 ± rounding to 5 Rappen
 = total
-− already paid (payments recorded for the gig when the invoice is issued, e.g. a deposit)
+− already paid (payments recorded for the shoot when the invoice is issued, e.g. a deposit)
 = amount due, which is also the amount on the QR-bill
 ```
 
 The **QR-bill** uses an RF creditor reference made from the invoice number. Your bank reports it with the payment,
 so you can see which invoice was paid. Payments still have to be entered in Aperture by hand.
 
-An invoice is **overdue** when its due date has passed and the gig isn't paid in full. The due date defaults to
+An invoice is **overdue** when its due date has passed and the shoot isn't paid in full. The due date defaults to
 the payment terms in Settings (30 days).
 
 ## Income statement
@@ -60,8 +60,8 @@ the payment terms in Settings (30 days).
 
 | | Counted in the year when… |
 |---|---|
-| **Income** | the money arrived (the payment date), not when the gig was played or invoiced. |
-| **Costs** | you paid them. These are gig costs plus business costs that don't belong to a gig (DJ pools, software, phone, …). |
+| **Income** | the money arrived (the payment date), not when the shoot was played or invoiced. |
+| **Costs** | you paid them. These are shoot costs plus business costs that don't belong to a shoot (DJ pools, software, phone, …). |
 | **Depreciation** | see below. |
 
 ```
@@ -72,7 +72,7 @@ the payment terms in Settings (30 days).
 = profit or loss
 ```
 
-A gig played in December and paid in January counts as income in January's year.
+A shoot played in December and paid in January counts as income in January's year.
 
 ## Equipment and depreciation
 

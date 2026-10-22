@@ -131,25 +131,25 @@ else
 
     <RadzenRow class="rz-mt-6">
         <RadzenColumn Size="12">
-            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Gigs played in @s.Year</RadzenText>
-            <RadzenDataGrid TItem="GigResult" Data="s.Gigs" AllowSorting="true" EmptyText="No gigs in this year." class="clickable-rows"
-                            RowClick="@(args => Navigation.NavigateTo($"gigs/{args.Data!.GigId}?tab=finances"))">
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Shoots played in @s.Year</RadzenText>
+            <RadzenDataGrid TItem="ShootResult" Data="s.Shoots" AllowSorting="true" EmptyText="No shoots in this year." class="clickable-rows"
+                            RowClick="@(args => Navigation.NavigateTo($"shoots/{args.Data!.ShootId}?tab=finances"))">
                 <Columns>
-                    <RadzenDataGridColumn Property="@nameof(GigResult.Start)" Title="Date" Width="7rem">
-                        <Template Context="gig">@gig.Start.ToString("dd.MM.")</Template>
+                    <RadzenDataGridColumn Property="@nameof(ShootResult.Start)" Title="Date" Width="7rem">
+                        <Template Context="shoot">@shoot.Start.ToString("dd.MM.")</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Property="@nameof(GigResult.Title)" Title="Gig" />
+                    <RadzenDataGridColumn Property="@nameof(ShootResult.Title)" Title="Shoot" />
                     <RadzenDataGridColumn Title="To bill" TextAlign="TextAlign.Right" Width="8rem">
-                        <Template Context="gig">@gig.ToBill?.ToAmountString()</Template>
+                        <Template Context="shoot">@shoot.ToBill?.ToAmountString()</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn Title="Costs" TextAlign="TextAlign.Right" Width="7rem">
-                        <Template Context="gig">@gig.Costs.ToAmountString()</Template>
+                        <Template Context="shoot">@shoot.Costs.ToAmountString()</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn Title="Margin" TextAlign="TextAlign.Right" Width="8rem">
-                        <Template Context="gig">@gig.Margin?.ToAmountString()</Template>
+                        <Template Context="shoot">@shoot.Margin?.ToAmountString()</Template>
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn Title="Received" TextAlign="TextAlign.Right" Width="8rem">
-                        <Template Context="gig">@gig.Received.ToAmountString()</Template>
+                        <Template Context="shoot">@shoot.Received.ToAmountString()</Template>
                     </RadzenDataGridColumn>
                 </Columns>
             </RadzenDataGrid>

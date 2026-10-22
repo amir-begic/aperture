@@ -1,5 +1,5 @@
 @page "/invoices"
-@using Aperture.Web.Features.Gigs
+@using Aperture.Web.Features.Shoots
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject TimeProvider Time
@@ -19,11 +19,11 @@
     </div>
 }
 
-<RadzenText TextStyle="TextStyle.Caption" class="rz-mb-2">Invoices are created on a gig's Invoice tab. Click one to open its gig.</RadzenText>
+<RadzenText TextStyle="TextStyle.Caption" class="rz-mb-2">Invoices are created on a shoot's Invoice tab. Click one to open its shoot.</RadzenText>
 
 <RadzenDataGrid TItem="InvoiceRow" Data="_rows" IsLoading="_rows is null" AllowSorting="true" AllowPaging="true" PageSize="25"
                 EmptyText="No invoices yet." class="clickable-rows"
-                RowClick="@(args => Navigation.NavigateTo($"gigs/{args.Data!.GigId}?tab=invoice"))">
+                RowClick="@(args => Navigation.NavigateTo($"shoots/{args.Data!.ShootId}?tab=invoice"))">
     <Columns>
         <RadzenDataGridColumn Property="@nameof(InvoiceRow.Number)" Title="Number" Width="7rem">
             <Template Context="row">@(row.Number ?? "Draft")</Template>
@@ -32,7 +32,7 @@
             <Template Context="row">@row.IssueDate.ToString("dd.MM.yyyy")</Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Property="@nameof(InvoiceRow.ClientName)" Title="Client" />
-        <RadzenDataGridColumn Property="@nameof(InvoiceRow.GigTitle)" Title="Gig" />
+        <RadzenDataGridColumn Property="@nameof(InvoiceRow.ShootTitle)" Title="Shoot" />
         <RadzenDataGridColumn Property="@nameof(InvoiceRow.Total)" Title="Total" Width="9rem" TextAlign="TextAlign.Right">
             <Template Context="row">@row.Total</Template>
         </RadzenDataGridColumn>
@@ -62,20 +62,20 @@
         await using var db = await DbFactory.CreateDbContextAsync();
         var invoices = await db.Invoices.AsNoTracking()
             .Include(i => i.Lines)
-            .Include(i => i.Gig).ThenInclude(g => g.Client)
+            .Include(i => i.Shoot).ThenInclude(g => g.Client)
             .ToListAsync();
-        var gigIds = invoices.Select(i => i.GigId).Distinct().ToList();
-        var payments = await db.Payments.Where(p => gigIds.Contains(p.GigId)).Select(p => new { p.GigId, p.Amount }).ToListAsync();
-        var received = payments.GroupBy(p => p.GigId).ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
+        var shootIds = invoices.Select(i => i.ShootId).Distinct().ToList();
+        var payments = await db.Payments.Where(p => shootIds.Contains(p.ShootId)).Select(p => new { p.ShootId, p.Amount }).ToListAsync();
+        var received = payments.GroupBy(p => p.ShootId).ToDictionary(g => g.Key, g => g.Sum(p => p.Amount));
         var today = DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
 
         _rows = invoices
             .Select(i =>
             {
                 // Drafts show the client as it is now; issued invoices the frozen copy.
-                var clientName = i.Status == InvoiceStatus.Draft ? i.Gig.Client.Name : i.Client.Company ?? i.Client.Name;
-                var financials = new GigFinancials(null, Money.Zero, received.GetValueOrDefault(i.GigId), Invoiced: i.Totals.Total);
-                return new InvoiceRow(i.GigId, i.Number, i.Status, i.IssueDate, i.DueDate, clientName, i.Gig.Title,
+                var clientName = i.Status == InvoiceStatus.Draft ? i.Shoot.Client.Name : i.Client.Company ?? i.Client.Name;
+                var financials = new ShootFinancials(null, Money.Zero, received.GetValueOrDefault(i.ShootId), Invoiced: i.Totals.Total);
+                return new InvoiceRow(i.ShootId, i.Number, i.Status, i.IssueDate, i.DueDate, clientName, i.Shoot.Title,
                     i.Totals.Total, financials.Outstanding ?? Money.Zero, financials.PaymentState, today);
             })
             .OrderBy(r => r.Status == InvoiceStatus.Draft ? 0 : 1)
@@ -84,8 +84,8 @@
     }
 
     private sealed record InvoiceRow(
-        int GigId, string? Number, InvoiceStatus Status, DateOnly IssueDate, DateOnly DueDate,
-        string ClientName, string GigTitle, Money Total, Money Outstanding, PaymentState PaymentState, DateOnly Today)
+        int ShootId, string? Number, InvoiceStatus Status, DateOnly IssueDate, DateOnly DueDate,
+        string ClientName, string ShootTitle, Money Total, Money Outstanding, PaymentState PaymentState, DateOnly Today)
     {
         public bool IsPastDue => Status == InvoiceStatus.Issued && DueDate < Today && Outstanding > Money.Zero;
     }

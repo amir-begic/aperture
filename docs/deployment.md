@@ -191,7 +191,7 @@ the `.local` address only works at home, and the app features below need HTTPS.
 
 - **Aperture as an app:** open the address in Safari, tap *Share → Add to Home Screen*. Aperture then opens full screen
   from its own icon. It needs a connection to the Mac; without one it shows a "No connection" page.
-- **Gigs in the iPhone calendar:** in Aperture on the phone, *Settings → Calendar on your phone → Create calendar link*,
+- **Shoots in the iPhone calendar:** in Aperture on the phone, *Settings → Calendar on your phone → Create calendar link*,
   copy it, then *iPhone Settings → Apps → Calendar → Calendar Accounts → Add Account → Other → Add Subscribed
   Calendar* and paste it. The link is the only key to the calendar (calendar apps can't sign in), so keep it to
   yourself; *New link* there replaces it if it got out. The feed is `/calendar/<secret>.ics`, the only page besides
@@ -199,7 +199,7 @@ the `.local` address only works at home, and the app features below need HTTPS.
 - **Notifications:** in the Aperture app from the home screen (not in Safari itself), *Settings → Notifications → Turn on
   notifications*, then *Allow*. Needs iOS 16.4 or newer and your email under *Settings → Contact* (push services
   only take notifications from senders with a contact address). Aperture then tells you about overdue invoices, prep
-  still open three days before a gig, backup problems and new versions: each once, between 08:00 and 21:00.
+  still open three days before a shoot, backup problems and new versions: each once, between 08:00 and 21:00.
   They arrive even while Tailscale is off on the phone; tapping one opens Aperture, which needs it. *Send a test*
   checks that it works. Turn them off there too, or under *iPhone Settings → Notifications → Aperture*.
   Other devices with notifications are listed below the buttons and can be removed.

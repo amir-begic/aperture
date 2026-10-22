@@ -1,0 +1,15 @@
+@* Same fills as the calendar: inquiry pink and dashed (tentative), confirmed blue, done white, cancelled crossed out. *@
+<RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Status.ToString()"
+             class="@(Status == ShootStatus.Cancelled ? "badge-cancelled" : null)" />
+
+@code {
+    [Parameter, EditorRequired]
+    public ShootStatus Status { get; set; }
+
+    private BadgeStyle Style => Status switch
+    {
+        ShootStatus.Inquiry => BadgeStyle.Warning,
+        ShootStatus.Confirmed => BadgeStyle.Info,
+        _ => BadgeStyle.Base,
+    };
+}

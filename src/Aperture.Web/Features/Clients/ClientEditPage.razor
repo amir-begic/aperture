@@ -1,6 +1,6 @@
 @page "/clients/new"
 @page "/clients/{Id:int}"
-@using Aperture.Web.Features.Gigs
+@using Aperture.Web.Features.Shoots
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
@@ -30,11 +30,11 @@ else
             <Buttons>
                 @if (!IsNew)
                 {
-                    <RadzenButton Text="New gig" Icon="event" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
-                                  Click="@(() => Navigation.NavigateTo($"gigs/new?clientId={Id}"))" />
+                    <RadzenButton Text="New shoot" Icon="event" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
+                                  Click="@(() => Navigation.NavigateTo($"shoots/new?clientId={Id}"))" />
                     <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
-                                  Disabled="@(_gigs.Count > 0)" Click="DeleteAsync"
-                                  title="@(_gigs.Count > 0 ? "Clients with gigs can't be deleted." : null)" />
+                                  Disabled="@(_shoots.Count > 0)" Click="DeleteAsync"
+                                  title="@(_shoots.Count > 0 ? "Clients with shoots can't be deleted." : null)" />
                 }
             </Buttons>
         </ClientForm>
@@ -42,8 +42,8 @@ else
 
     @if (!IsNew)
     {
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Gigs</RadzenText>
-        <GigGrid Gigs="_gigs" ShowClient="false" PageSize="null" EmptyText="No gigs for this client yet." />
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Shoots</RadzenText>
+        <ShootGrid Shoots="_shoots" ShowClient="false" PageSize="null" EmptyText="No shoots for this client yet." />
     }
 }
 
@@ -55,7 +55,7 @@ else
 
     private Client? _client;
     private string _title = "";
-    private List<GigRow> _gigs = [];
+    private List<ShootRow> _shoots = [];
     private bool _notFound;
 
     protected override async Task OnParametersSetAsync()
@@ -63,7 +63,7 @@ else
         if (IsNew)
         {
             _client = new Client();
-            _gigs = [];
+            _shoots = [];
             return;
         }
 
@@ -71,7 +71,7 @@ else
         _client = await db.Clients.AsNoTracking().SingleOrDefaultAsync(c => c.Id == Id);
         _notFound = _client is null;
         _title = _client?.Name ?? "";
-        _gigs = await db.Gigs.Where(g => g.ClientId == Id).OrderByDescending(g => g.Start).ToRowsAsync(db);
+        _shoots = await db.Shoots.Where(g => g.ClientId == Id).OrderByDescending(g => g.Start).ToRowsAsync(db);
     }
 
     private void OnSaved(Client client)

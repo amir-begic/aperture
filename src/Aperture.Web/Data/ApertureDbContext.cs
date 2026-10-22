@@ -10,8 +10,8 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
 {
     public DbSet<BusinessSettings> BusinessSettings => Set<BusinessSettings>();
     public DbSet<Client> Clients => Set<Client>();
-    public DbSet<Venue> Venues => Set<Venue>();
-    public DbSet<Gig> Gigs => Set<Gig>();
+    public DbSet<Location> Locations => Set<Location>();
+    public DbSet<Shoot> Shoots => Set<Shoot>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PlaylistLink> PlaylistLinks => Set<PlaylistLink>();
@@ -59,7 +59,7 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
         configurationBuilder.Properties<Money>().HaveConversion<MoneyConverter>();
 
         // Enums as text: readable in the database and safe to reorder.
-        configurationBuilder.Properties<GigStatus>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<ShootStatus>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<EventType>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<ExpenseCategory>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<PaymentMethod>().HaveConversion<string>().HaveMaxLength(20);
@@ -73,24 +73,24 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
         modelBuilder.Entity<BusinessSettings>().HasData(new BusinessSettings());
 
         modelBuilder.Entity<Client>().HasIndex(c => c.Name);
-        modelBuilder.Entity<Venue>().HasIndex(v => v.Name);
+        modelBuilder.Entity<Location>().HasIndex(v => v.Name);
 
-        modelBuilder.Entity<Gig>(gig =>
+        modelBuilder.Entity<Shoot>(shoot =>
         {
-            gig.HasIndex(g => g.Start);
+            shoot.HasIndex(g => g.Start);
 
-            // Never lose a gig's history by deleting its client or venue.
-            gig.HasOne(g => g.Client).WithMany(c => c.Gigs).OnDelete(DeleteBehavior.Restrict);
-            gig.HasOne(g => g.Venue).WithMany(v => v.Gigs).OnDelete(DeleteBehavior.Restrict);
+            // Never lose a shoot's history by deleting its client or location.
+            shoot.HasOne(g => g.Client).WithMany(c => c.Shoots).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasOne(g => g.Location).WithMany(v => v.Shoots).OnDelete(DeleteBehavior.Restrict);
 
-            // Financial records block deleting a gig; prep data goes with it.
-            // Attachment rows cascade too, but their files are removed in code (see GigDeletion).
-            gig.HasMany(g => g.Expenses).WithOne(e => e.Gig).OnDelete(DeleteBehavior.Restrict);
-            gig.HasMany(g => g.Payments).WithOne(p => p.Gig).OnDelete(DeleteBehavior.Restrict);
-            gig.HasMany(g => g.Invoices).WithOne(i => i.Gig).OnDelete(DeleteBehavior.Restrict);
-            gig.HasMany(g => g.PlaylistLinks).WithOne(l => l.Gig).OnDelete(DeleteBehavior.Cascade);
-            gig.HasMany(g => g.ChecklistItems).WithOne(i => i.Gig).OnDelete(DeleteBehavior.Cascade);
-            gig.HasMany(g => g.Attachments).WithOne(a => a.Gig).OnDelete(DeleteBehavior.Cascade);
+            // Financial records block deleting a shoot; prep data goes with it.
+            // Attachment rows cascade too, but their files are removed in code (see ShootDeletion).
+            shoot.HasMany(g => g.Expenses).WithOne(e => e.Shoot).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasMany(g => g.Payments).WithOne(p => p.Shoot).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasMany(g => g.Invoices).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasMany(g => g.PlaylistLinks).WithOne(l => l.Shoot).OnDelete(DeleteBehavior.Cascade);
+            shoot.HasMany(g => g.ChecklistItems).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Cascade);
+            shoot.HasMany(g => g.Attachments).WithOne(a => a.Shoot).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Expense>(expense =>

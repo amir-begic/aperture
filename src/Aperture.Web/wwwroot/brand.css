@@ -519,7 +519,7 @@ body {
     border-top: 1px solid var(--ba-hairline);
 }
 
-/* Tags: ink-outlined pills. Gig and payment states set their own fill (app.css). */
+/* Tags: ink-outlined pills. Shoot and payment states set their own fill (app.css). */
 
 .rz-badge {
     border: 2px solid var(--ba-ink);

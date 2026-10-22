@@ -61,7 +61,7 @@
     }
 
     /// <summary>Stores a newly chosen file and reports which attachment to add and which to remove.</summary>
-    public async Task<AttachmentChange> SaveFileAsync(int? gigId)
+    public async Task<AttachmentChange> SaveFileAsync(int? shootId)
     {
         Attachment? added = null;
         if (_pending is not null)
@@ -69,7 +69,7 @@
             try
             {
                 await using var stream = _pending.OpenReadStream(AttachmentStore.MaxFileSize);
-                added = await Store.SaveAsync(stream, _pending.Name, gigId);
+                added = await Store.SaveAsync(stream, _pending.Name, shootId);
             }
             catch (Exception e) when (e is IOException or JSException)
             {

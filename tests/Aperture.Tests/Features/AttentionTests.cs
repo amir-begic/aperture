@@ -13,19 +13,19 @@ public sealed class AttentionTests : IAsyncLifetime
 
     public Task DisposeAsync() => _database.DisposeAsync();
 
-    private async Task<Gig> AddAsync(string title, DateTime start, GigStatus status, decimal? quote = 1000,
-        Action<Gig>? configure = null)
+    private async Task<Shoot> AddAsync(string title, DateTime start, ShootStatus status, decimal? quote = 1000,
+        Action<Shoot>? configure = null)
     {
         await using var db = _database.CreateContext();
-        var gig = new Gig
+        var shoot = new Shoot
         {
             Title = title, Client = new Client { Name = $"Client of {title}" }, Status = status,
             Start = start, End = start.AddHours(5), QuotedPrice = quote is { } q ? Money.FromChf(q) : null,
         };
-        configure?.Invoke(gig);
-        db.Gigs.Add(gig);
+        configure?.Invoke(shoot);
+        db.Shoots.Add(shoot);
         await db.SaveChangesAsync();
-        return gig;
+        return shoot;
     }
 
     private async Task<List<AttentionItem>> ItemsAsync()
@@ -37,8 +37,8 @@ public sealed class AttentionTests : IAsyncLifetime
     [Fact]
     public async Task Overdue_invoice_is_urgent()
     {
-        await AddAsync("Wedding", new DateTime(2026, 8, 1, 18, 0, 0), GigStatus.Done, configure: gig =>
-            gig.Invoices.Add(new Invoice
+        await AddAsync("Wedding", new DateTime(2026, 8, 1, 18, 0, 0), ShootStatus.Done, configure: shoot =>
+            shoot.Invoices.Add(new Invoice
             {
                 Number = "2026-001", Status = InvoiceStatus.Issued,
                 IssueDate = new DateOnly(2026, 8, 5), DueDate = new DateOnly(2026, 9, 4),
@@ -53,10 +53,10 @@ public sealed class AttentionTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Invoices_sent_before_the_gig_can_be_overdue_too()
+    public async Task Invoices_sent_before_the_shoot_can_be_overdue_too()
     {
-        await AddAsync("Wedding in December", new DateTime(2026, 12, 12, 18, 0, 0), GigStatus.Confirmed, configure: gig =>
-            gig.Invoices.Add(new Invoice
+        await AddAsync("Wedding in December", new DateTime(2026, 12, 12, 18, 0, 0), ShootStatus.Confirmed, configure: shoot =>
+            shoot.Invoices.Add(new Invoice
             {
                 Number = "2026-002", Status = InvoiceStatus.Issued,
                 IssueDate = new DateOnly(2026, 9, 1), DueDate = new DateOnly(2026, 10, 1),
@@ -69,9 +69,9 @@ public sealed class AttentionTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Played_gig_without_invoice_and_one_still_marked_confirmed()
+    public async Task Played_shoot_without_invoice_and_one_still_marked_confirmed()
     {
-        await AddAsync("Club night", new DateTime(2026, 9, 26, 22, 0, 0), GigStatus.Confirmed);
+        await AddAsync("Club night", new DateTime(2026, 9, 26, 22, 0, 0), ShootStatus.Confirmed);
 
         var items = await ItemsAsync();
 
@@ -79,12 +79,12 @@ public sealed class AttentionTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Paid_or_unpriced_gigs_need_no_invoice_reminder()
+    public async Task Paid_or_unpriced_shoots_need_no_invoice_reminder()
     {
-        await AddAsync("Paid in cash", new DateTime(2026, 9, 1, 20, 0, 0), GigStatus.Done, configure: gig =>
-            gig.Payments.Add(new Payment { Date = new DateOnly(2026, 9, 1), Amount = Money.FromChf(1000), Method = PaymentMethod.Cash }));
-        await AddAsync("Favour for a friend", new DateTime(2026, 9, 5, 20, 0, 0), GigStatus.Done, quote: null);
-        await AddAsync("Old inquiry", new DateTime(2026, 9, 12, 20, 0, 0), GigStatus.Inquiry);
+        await AddAsync("Paid in cash", new DateTime(2026, 9, 1, 20, 0, 0), ShootStatus.Done, configure: shoot =>
+            shoot.Payments.Add(new Payment { Date = new DateOnly(2026, 9, 1), Amount = Money.FromChf(1000), Method = PaymentMethod.Cash }));
+        await AddAsync("Favour for a friend", new DateTime(2026, 9, 5, 20, 0, 0), ShootStatus.Done, quote: null);
+        await AddAsync("Old inquiry", new DateTime(2026, 9, 12, 20, 0, 0), ShootStatus.Inquiry);
 
         Assert.Empty(await ItemsAsync());
     }
@@ -92,18 +92,18 @@ public sealed class AttentionTests : IAsyncLifetime
     [Fact]
     public async Task Open_prep_tasks_within_two_weeks()
     {
-        await AddAsync("Wedding soon", new DateTime(2026, 10, 10, 15, 0, 0), GigStatus.Confirmed, configure: gig =>
-            gig.ChecklistItems.AddRange([
+        await AddAsync("Wedding soon", new DateTime(2026, 10, 10, 15, 0, 0), ShootStatus.Confirmed, configure: shoot =>
+            shoot.ChecklistItems.AddRange([
                 new ChecklistItem { Text = "First dance" },
                 new ChecklistItem { Text = "Timeline", IsDone = true },
                 new ChecklistItem { Text = "Do-not-play list" },
             ]));
-        await AddAsync("Wedding later", new DateTime(2026, 12, 12, 15, 0, 0), GigStatus.Confirmed, configure: gig =>
-            gig.ChecklistItems.Add(new ChecklistItem { Text = "First dance" }));
+        await AddAsync("Wedding later", new DateTime(2026, 12, 12, 15, 0, 0), ShootStatus.Confirmed, configure: shoot =>
+            shoot.ChecklistItems.Add(new ChecklistItem { Text = "First dance" }));
 
         var item = Assert.Single(await ItemsAsync());
 
         Assert.Equal("2 prep tasks open for Wedding soon", item.Text);
-        Assert.Equal($"gigs/{1}?tab=prep", item.Link);
+        Assert.Equal($"shoots/{1}?tab=prep", item.Link);
     }
 }

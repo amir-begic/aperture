@@ -67,9 +67,9 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
     private async Task AddOverdueInvoiceAsync(string number, string title = "Wedding")
     {
         await using var db = _database.CreateContext();
-        db.Gigs.Add(new Gig
+        db.Shoots.Add(new Shoot
         {
-            Title = title, Client = new Client { Name = $"Client of {title}" }, Status = GigStatus.Done,
+            Title = title, Client = new Client { Name = $"Client of {title}" }, Status = ShootStatus.Done,
             Start = new DateTime(2026, 8, 1, 18, 0, 0), End = new DateTime(2026, 8, 1, 23, 0, 0),
             QuotedPrice = Money.FromChf(1000),
             Invoices =
@@ -91,7 +91,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
         var push = Push();
         await push.SaveAsync(_iPhone.Subscription(AppleEndpoint), "iPhone");
 
-        var delivered = await push.SendAsync(new PushMessage("Invoice 2026-001 is overdue", "CHF 1'000.00 open", "gigs/1?tab=invoice", "invoice-overdue:1"));
+        var delivered = await push.SendAsync(new PushMessage("Invoice 2026-001 is overdue", "CHF 1'000.00 open", "shoots/1?tab=invoice", "invoice-overdue:1"));
 
         Assert.Equal(1, delivered);
         var (request, _) = Assert.Single(_pushService.Received);
@@ -100,7 +100,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
         Assert.Equal("86400", Assert.Single(request.Headers.GetValues("TTL")));
         Assert.StartsWith("vapid t=", Assert.Single(request.Headers.GetValues("Authorization")));
         Assert.EndsWith($", k={push.PublicKey}", Assert.Single(request.Headers.GetValues("Authorization")));
-        Assert.Equal(new PushMessage("Invoice 2026-001 is overdue", "CHF 1'000.00 open", "gigs/1?tab=invoice", "invoice-overdue:1"), ReceivedMessage());
+        Assert.Equal(new PushMessage("Invoice 2026-001 is overdue", "CHF 1'000.00 open", "shoots/1?tab=invoice", "invoice-overdue:1"), ReceivedMessage());
 
         await using var db = _database.CreateContext();
         Assert.Equal(Now, (await db.PushSubscriptions.SingleAsync()).LastDeliveredAt);
@@ -171,7 +171,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
         var message = ReceivedMessage();
         Assert.Equal("Invoice 2026-001 is overdue", message.Title);
         Assert.Contains("open since 04.09.2026", message.Body);
-        Assert.Equal("gigs/1?tab=invoice", message.Url);
+        Assert.Equal("shoots/1?tab=invoice", message.Url);
     }
 
     [Fact]
@@ -233,17 +233,17 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
     }
 
     [Fact]
-    public async Task Open_prep_is_sent_three_days_before_the_gig()
+    public async Task Open_prep_is_sent_three_days_before_the_shoot()
     {
         await Push().SaveAsync(_iPhone.Subscription(AppleEndpoint), "iPhone");
         var client = await _database.AddClientAsync();
-        var gig = await _database.AddGigAsync(client, new DateTime(2026, 10, 23, 18, 0, 0), new DateTime(2026, 10, 23, 23, 0, 0));
-        var later = await _database.AddGigAsync(client, new DateTime(2026, 10, 30, 18, 0, 0), new DateTime(2026, 10, 30, 23, 0, 0), title: "Birthday");
+        var shoot = await _database.AddShootAsync(client, new DateTime(2026, 10, 23, 18, 0, 0), new DateTime(2026, 10, 23, 23, 0, 0));
+        var later = await _database.AddShootAsync(client, new DateTime(2026, 10, 30, 18, 0, 0), new DateTime(2026, 10, 30, 23, 0, 0), title: "Birthday");
         await using (var db = _database.CreateContext())
         {
             db.ChecklistItems.AddRange(
-                new ChecklistItem { GigId = gig.Id, Text = "First dance song" },
-                new ChecklistItem { GigId = later.Id, Text = "Playlist" });
+                new ChecklistItem { ShootId = shoot.Id, Text = "First dance song" },
+                new ChecklistItem { ShootId = later.Id, Text = "Playlist" });
             await db.SaveChangesAsync();
         }
 
@@ -251,7 +251,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
 
         Assert.Single(_pushService.Received);
         Assert.Equal("1 prep task open for Wedding", ReceivedMessage().Title);
-        Assert.Equal($"gigs/{gig.Id}?tab=prep", ReceivedMessage().Url);
+        Assert.Equal($"shoots/{shoot.Id}?tab=prep", ReceivedMessage().Url);
     }
 
     [Fact]
@@ -270,11 +270,11 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
     }
 
     [Fact]
-    public async Task Gigs_to_invoice_or_close_stay_on_the_dashboard()
+    public async Task Shoots_to_invoice_or_close_stay_on_the_dashboard()
     {
         await Push().SaveAsync(_iPhone.Subscription(AppleEndpoint), "iPhone");
         var client = await _database.AddClientAsync();
-        await _database.AddGigAsync(client, new DateTime(2026, 10, 10, 18, 0, 0), new DateTime(2026, 10, 10, 23, 0, 0));
+        await _database.AddShootAsync(client, new DateTime(2026, 10, 10, 18, 0, 0), new DateTime(2026, 10, 10, 23, 0, 0));
 
         await Reminders().SendDueAsync(Now, null, expectBackups: false, update: null);
 

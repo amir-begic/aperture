@@ -60,17 +60,17 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
         summary.Column(1).Width = 40;
         summary.Column(2).Width = 16;
 
-        Sheet(workbook, "Income", ["Date", "Gig", "Client", "Invoice", "Method", "Note", "Doc.", "Amount"],
+        Sheet(workbook, "Income", ["Date", "Shoot", "Client", "Invoice", "Method", "Note", "Doc.", "Amount"],
             statement.Income.Select(i => new object?[]
             {
-                i.Date, i.GigTitle, i.ClientName, i.InvoiceNumber, i.Method.ToString(), i.Note, data.Documents.NumberOf(i.Proof), i.Amount,
+                i.Date, i.ShootTitle, i.ClientName, i.InvoiceNumber, i.Method.ToString(), i.Note, data.Documents.NumberOf(i.Proof), i.Amount,
             }),
             widths: [12, 30, 25, 12, 14, 20, 8, 14], totals: ["Amount"]);
 
-        Sheet(workbook, "Costs", ["Date", "Category", "Description", "Vendor", "Gig", "Doc.", "Amount"],
+        Sheet(workbook, "Costs", ["Date", "Category", "Description", "Vendor", "Shoot", "Doc.", "Amount"],
             statement.Expenses.Select(e => new object?[]
             {
-                e.Date, e.Category.Text(), e.Description, e.Vendor, e.GigTitle, data.Documents.NumberOf(e.Receipt), e.Amount,
+                e.Date, e.Category.Text(), e.Description, e.Vendor, e.ShootTitle, data.Documents.NumberOf(e.Receipt), e.Amount,
             }),
             widths: [12, 26, 34, 20, 25, 8, 14], totals: ["Amount"]);
 

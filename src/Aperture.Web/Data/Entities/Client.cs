@@ -35,5 +35,5 @@ public class Client
     [MaxLength(4000)]
     public string? Notes { get; set; }
 
-    public List<Gig> Gigs { get; set; } = [];
+    public List<Shoot> Shoots { get; set; } = [];
 }

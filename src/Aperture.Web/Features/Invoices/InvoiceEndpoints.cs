@@ -30,8 +30,8 @@ public static class InvoiceEndpoints
                 return Results.Redirect($"/attachments/{pdfId}");
             }
 
-            var (draft, gig) = await invoices.LoadForDocumentAsync(id);
-            var pdf = new InvoiceDocument(draft, gig).GeneratePdf();
+            var (draft, shoot) = await invoices.LoadForDocumentAsync(id);
+            var pdf = new InvoiceDocument(draft, shoot).GeneratePdf();
             return Results.File(pdf, "application/pdf", fileDownloadName: null);
         });
     }

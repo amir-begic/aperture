@@ -18,20 +18,20 @@ public sealed class IncomeStatementTests : IAsyncLifetime
     {
         await using var db = _database.CreateContext();
         var client = new Client { Name = "Anna & Marco Rossi" };
-        var wedding = new Gig
+        var wedding = new Shoot
         {
-            Title = "Wedding Rossi", Client = client, Status = GigStatus.Done, QuotedPrice = Chf(1800),
+            Title = "Wedding Rossi", Client = client, Status = ShootStatus.Done, QuotedPrice = Chf(1800),
             Start = new DateTime(2026, 6, 13, 20, 0, 0), End = new DateTime(2026, 6, 14, 2, 0, 0),
         };
         wedding.Expenses.Add(new Expense { Date = new DateOnly(2026, 6, 13), Category = ExpenseCategory.GearRental,
             Description = "Lights", Amount = Chf(350), BilledToClient = Chf(450) });
         wedding.Payments.Add(new Payment { Date = new DateOnly(2025, 12, 20), Amount = Chf(500), Note = "Deposit" }); // previous year
         wedding.Payments.Add(new Payment { Date = new DateOnly(2026, 6, 20), Amount = Chf(1750) });
-        db.Gigs.Add(wedding);
+        db.Shoots.Add(wedding);
 
-        db.Gigs.Add(new Gig
+        db.Shoots.Add(new Shoot
         {
-            Title = "Cancelled party", Client = client, Status = GigStatus.Cancelled,
+            Title = "Cancelled party", Client = client, Status = ShootStatus.Cancelled,
             Start = new DateTime(2026, 7, 1, 20, 0, 0), End = new DateTime(2026, 7, 1, 23, 0, 0),
         });
 
@@ -81,18 +81,18 @@ public sealed class IncomeStatementTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Gig_results_show_played_gigs_with_billed_costs_and_all_payments()
+    public async Task Shoot_results_show_played_shoots_with_billed_costs_and_all_payments()
     {
         await SeedAsync();
         await using var db = _database.CreateContext();
 
-        var gig = (await IncomeStatement.LoadAsync(db, 2026)).Gigs.Single(); // cancelled gig left out
+        var shoot = (await IncomeStatement.LoadAsync(db, 2026)).Shoots.Single(); // cancelled shoot left out
 
-        Assert.Equal("Wedding Rossi", gig.Title);
-        Assert.Equal(Chf(2250), gig.ToBill);    // 1800 quote + 450 billed lights
-        Assert.Equal(Chf(350), gig.Costs);
-        Assert.Equal(Chf(1900), gig.Margin);
-        Assert.Equal(Chf(2250), gig.Received);  // incl. last year's deposit
+        Assert.Equal("Wedding Rossi", shoot.Title);
+        Assert.Equal(Chf(2250), shoot.ToBill);    // 1800 quote + 450 billed lights
+        Assert.Equal(Chf(350), shoot.Costs);
+        Assert.Equal(Chf(1900), shoot.Margin);
+        Assert.Equal(Chf(2250), shoot.Received);  // incl. last year's deposit
     }
 
     [Fact]

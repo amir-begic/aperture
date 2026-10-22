@@ -3,13 +3,13 @@ using Aperture.Web.Domain;
 
 namespace Aperture.Web.Data.Entities;
 
-/// <summary>Money received for a gig.</summary>
+/// <summary>Money received for a shoot.</summary>
 public class Payment
 {
     public int Id { get; set; }
 
-    public int GigId { get; set; }
-    public Gig Gig { get; set; } = null!;
+    public int ShootId { get; set; }
+    public Shoot Shoot { get; set; } = null!;
 
     public DateOnly Date { get; set; }
 

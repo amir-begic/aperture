@@ -12,7 +12,7 @@ public static class ChecklistTemplates
         "Speeches and games schedule known",
         "Must-play list received",
         "Do-not-play list received",
-        "Venue tech checked (power, space, sound limits, curfew)",
+        "Location tech checked (power, space, sound limits, curfew)",
         "Load-in and parking clarified",
     ];
 }

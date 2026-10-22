@@ -4,11 +4,11 @@ using Aperture.Web.Data.Entities;
 
 namespace Aperture.Web.Features.CalendarFeed;
 
-/// <summary>One gig as a calendar event. Times are local Swiss time, like everywhere in the app.</summary>
+/// <summary>One shoot as a calendar event. Times are local Swiss time, like everywhere in the app.</summary>
 public sealed record FeedEvent(
-    int GigId,
+    int ShootId,
     string Title,
-    GigStatus Status,
+    ShootStatus Status,
     EventType EventType,
     DateTime Start,
     DateTime End,
@@ -18,7 +18,7 @@ public sealed record FeedEvent(
     string? Notes);
 
 /// <summary>
-/// Writes gigs as an iCalendar (RFC 5545) subscription feed: inquiries are tentative, everything else confirmed.
+/// Writes shoots as an iCalendar (RFC 5545) subscription feed: inquiries are tentative, everything else confirmed.
 /// Times carry the Europe/Zurich time zone, so phones show them right whatever zone they're in.
 /// </summary>
 public static class IcsCalendar
@@ -47,7 +47,7 @@ public static class IcsCalendar
         END:VTIMEZONE
         """;
 
-    /// <param name="appUrl">Base URL of the app ending in "/", for the link back to each gig.</param>
+    /// <param name="appUrl">Base URL of the app ending in "/", for the link back to each shoot.</param>
     /// <param name="now">For DTSTAMP, in UTC.</param>
     public static string Write(IEnumerable<FeedEvent> events, string appUrl, DateTime now)
     {
@@ -59,7 +59,7 @@ public static class IcsCalendar
         Line("PRODID:-//Aperture//DJ office//EN");
         Line("CALSCALE:GREGORIAN");
         Line("METHOD:PUBLISH");
-        Line("X-WR-CALNAME:Aperture gigs");
+        Line("X-WR-CALNAME:Aperture shoots");
         Line("X-WR-TIMEZONE:Europe/Zurich");
         // Hints for how often to refresh; Apple and Google mostly decide themselves.
         Line("REFRESH-INTERVAL;VALUE=DURATION:PT1H");
@@ -72,11 +72,11 @@ public static class IcsCalendar
         var stamp = now.ToString("yyyyMMdd'T'HHmmss'Z'", CultureInfo.InvariantCulture);
         foreach (var e in events)
         {
-            var tentative = e.Status == GigStatus.Inquiry;
-            var url = $"{appUrl}gigs/{e.GigId}";
+            var tentative = e.Status == ShootStatus.Inquiry;
+            var url = $"{appUrl}shoots/{e.ShootId}";
 
             Line("BEGIN:VEVENT");
-            Line($"UID:gig-{e.GigId}@aperture");
+            Line($"UID:shoot-{e.ShootId}@aperture");
             Line($"DTSTAMP:{stamp}");
             Line($"DTSTART;TZID=Europe/Zurich:{Local(e.Start)}");
             Line($"DTEND;TZID=Europe/Zurich:{Local(e.End)}");

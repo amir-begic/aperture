@@ -16,7 +16,7 @@ public class CalendarFeedTests : IAsyncLifetime
     private static readonly DateTime Now = new(2026, 10, 20, 12, 0, 0);
 
     private static FeedEvent Event(
-        GigStatus status = GigStatus.Confirmed, string title = "Wedding Rossi", string? notes = null,
+        ShootStatus status = ShootStatus.Confirmed, string title = "Wedding Rossi", string? notes = null,
         EventType type = EventType.Wedding, string? location = "Schloss Laufen, 8447 Laufen-Uhwiesen") =>
         new(7, title, status, type, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0),
             "Anna & Marco Rossi", "+41 79 123 45 67", location, notes);
@@ -44,11 +44,11 @@ public class CalendarFeedTests : IAsyncLifetime
     {
         var lines = Unfolded(Write(Event()));
 
-        Assert.Contains("UID:gig-7@aperture", lines);
+        Assert.Contains("UID:shoot-7@aperture", lines);
         Assert.Contains("DTSTAMP:20261020T100000Z", lines);
         Assert.Contains("DTSTART;TZID=Europe/Zurich:20261212T200000", lines);
         Assert.Contains("DTEND;TZID=Europe/Zurich:20261213T020000", lines);
-        Assert.Contains("URL:https://mini.example.ts.net/gigs/7", lines);
+        Assert.Contains("URL:https://mini.example.ts.net/shoots/7", lines);
         Assert.Contains("STATUS:CONFIRMED", lines);
         Assert.Contains("SUMMARY:Wedding Rossi", lines);
         Assert.Contains("LOCATION:Schloss Laufen\\, 8447 Laufen-Uhwiesen", lines);
@@ -61,14 +61,14 @@ public class CalendarFeedTests : IAsyncLifetime
             .Single(l => l.StartsWith("DESCRIPTION:"));
 
         Assert.Equal(
-            "DESCRIPTION:Confirmed · Wedding\\nAnna & Marco Rossi · +41 79 123 45 67\\n\\nCeremony 14:00\\; first dance: \"Perfect\"\\n\\nhttps://mini.example.ts.net/gigs/7",
+            "DESCRIPTION:Confirmed · Wedding\\nAnna & Marco Rossi · +41 79 123 45 67\\n\\nCeremony 14:00\\; first dance: \"Perfect\"\\n\\nhttps://mini.example.ts.net/shoots/7",
             description);
     }
 
     [Fact]
     public void Inquiries_are_tentative_and_marked_in_the_title()
     {
-        var lines = Unfolded(Write(Event(GigStatus.Inquiry, type: EventType.Other)));
+        var lines = Unfolded(Write(Event(ShootStatus.Inquiry, type: EventType.Other)));
 
         Assert.Contains("STATUS:TENTATIVE", lines);
         Assert.Contains("SUMMARY:Wedding Rossi (inquiry)", lines);
@@ -76,7 +76,7 @@ public class CalendarFeedTests : IAsyncLifetime
     }
 
     [Fact]
-    public void Gig_without_venue_has_no_location()
+    public void Shoot_without_location_leaves_LOCATION_out()
     {
         Assert.DoesNotContain("LOCATION:", Write(Event(location: null)));
     }
@@ -123,15 +123,15 @@ public class CalendarFeedTests : IAsyncLifetime
         Assert.Equal(matches, CalendarFeedToken.Matches(stored, given));
 
     [Fact]
-    public async Task Feed_has_gigs_from_the_last_year_on_without_cancelled_ones()
+    public async Task Feed_has_shoots_from_the_last_year_on_without_cancelled_ones()
     {
         var client = await _db.AddClientAsync();
-        var venue = await _db.AddVenueAsync();
-        await _db.AddGigAsync(client, Now.AddDays(-400), Now.AddDays(-400).AddHours(5), GigStatus.Done, title: "Too old");
-        await _db.AddGigAsync(client, Now.AddDays(-30), Now.AddDays(-30).AddHours(5), GigStatus.Done, title: "Played");
-        await _db.AddGigAsync(client, Now.AddDays(10), Now.AddDays(10).AddHours(5), GigStatus.Cancelled, title: "Cancelled");
-        await _db.AddGigAsync(client, Now.AddDays(20), Now.AddDays(20).AddHours(5), GigStatus.Inquiry, title: "Asked");
-        await _db.AddGigAsync(client, Now.AddDays(5), Now.AddDays(5).AddHours(5), venue: venue, title: "Booked");
+        var location = await _db.AddLocationAsync();
+        await _db.AddShootAsync(client, Now.AddDays(-400), Now.AddDays(-400).AddHours(5), ShootStatus.Done, title: "Too old");
+        await _db.AddShootAsync(client, Now.AddDays(-30), Now.AddDays(-30).AddHours(5), ShootStatus.Done, title: "Played");
+        await _db.AddShootAsync(client, Now.AddDays(10), Now.AddDays(10).AddHours(5), ShootStatus.Cancelled, title: "Cancelled");
+        await _db.AddShootAsync(client, Now.AddDays(20), Now.AddDays(20).AddHours(5), ShootStatus.Inquiry, title: "Asked");
+        await _db.AddShootAsync(client, Now.AddDays(5), Now.AddDays(5).AddHours(5), location: location, title: "Booked");
 
         await using var db = _db.CreateContext();
         var events = await CalendarFeedEndpoints.LoadAsync(db, Now);

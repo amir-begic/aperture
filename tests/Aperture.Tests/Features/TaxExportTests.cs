@@ -35,15 +35,15 @@ public sealed class TaxExportTests : IAsyncLifetime
             ("Max Muster", "DJ Aperture", "Musterstrasse 1", "8000", "Zürich", "CH9300762011623852957");
 
         var client = new Client { Name = "Anna & Marco Rossi", Street = "Seestrasse 5", PostalCode = "8800", City = "Thalwil" };
-        var gig = new Gig
+        var shoot = new Shoot
         {
-            Title = "Wedding Rossi", Client = client, Status = GigStatus.Done, QuotedPrice = Money.FromChf(1800),
+            Title = "Wedding Rossi", Client = client, Status = ShootStatus.Done, QuotedPrice = Money.FromChf(1800),
             Start = new DateTime(2026, 6, 13, 20, 0, 0), End = new DateTime(2026, 6, 14, 2, 0, 0),
         };
-        gig.Payments.Add(new Payment { Date = new DateOnly(2026, 6, 20), Amount = Money.FromChf(1800), Proof = await FileAsync("twint.png") });
-        gig.Expenses.Add(new Expense { Date = new DateOnly(2026, 6, 13), Category = ExpenseCategory.GearRental, Description = "Light/set rental",
+        shoot.Payments.Add(new Payment { Date = new DateOnly(2026, 6, 20), Amount = Money.FromChf(1800), Proof = await FileAsync("twint.png") });
+        shoot.Expenses.Add(new Expense { Date = new DateOnly(2026, 6, 13), Category = ExpenseCategory.GearRental, Description = "Light/set rental",
             Vendor = "Showtech AG", Amount = Money.FromChf(350), Receipt = await FileAsync("Rechnung.pdf") });
-        db.Gigs.Add(gig);
+        db.Shoots.Add(shoot);
         db.Expenses.Add(new Expense { Date = new DateOnly(2026, 1, 5), Category = ExpenseCategory.Software,
             Description = "Rekordbox", Amount = Money.FromChf(120) });
         db.Assets.Add(new Asset { Name = "Controller", PurchaseDate = new DateOnly(2026, 1, 10), Cost = Money.FromChf(2000),
@@ -51,12 +51,12 @@ public sealed class TaxExportTests : IAsyncLifetime
         await db.SaveChangesAsync();
 
         var invoices = new InvoiceService(factory, _store, time);
-        var invoiceId = await invoices.CreateDraftAsync(gig.Id);
+        var invoiceId = await invoices.CreateDraftAsync(shoot.Id);
         Assert.Empty(await invoices.IssueAsync(invoiceId));
     }
 
     private async Task<Attachment> FileAsync(string name) =>
-        await _store.SaveAsync(new MemoryStream(Encoding.UTF8.GetBytes($"content of {name}")), name, gigId: null);
+        await _store.SaveAsync(new MemoryStream(Encoding.UTF8.GetBytes($"content of {name}")), name, shootId: null);
 
     public async Task DisposeAsync()
     {

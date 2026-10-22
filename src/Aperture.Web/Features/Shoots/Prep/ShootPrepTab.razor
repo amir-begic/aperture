@@ -1,0 +1,157 @@
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+
+@if (_links is null || _items is null)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    <RadzenRow Gap="2rem">
+        <RadzenColumn Size="12" SizeLG="6">
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Playlists</RadzenText>
+
+            @if (_links.Count == 0)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">No playlists yet. Paste a Spotify, Tidal, Apple Music or YouTube link below.</RadzenText>
+            }
+            <ul class="plain-list rz-mb-4">
+                @foreach (var link in _links)
+                {
+                    <li class="list-row">
+                        <span class="provider-tag">@PlaylistProvider.FromUrl(link.Url)</span>
+                        <a href="@link.Url" target="_blank" rel="noopener noreferrer" class="list-row-text">@(link.Label ?? link.Url)</a>
+                        <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
+                                      Click="@(() => DeleteLinkAsync(link))" title="Remove playlist" />
+                    </li>
+                }
+            </ul>
+
+            <RadzenTemplateForm TItem="PlaylistLink" Data="_newLink" Submit="AddLinkAsync">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenFormField Text="Playlist link" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Url" @bind-Value="_newLink.Url" Placeholder="https://open.spotify.com/playlist/…" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Url" /></Helper>
+                    </RadzenFormField>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
+                        <RadzenFormField Text="What for? (optional)" Style="flex: 1">
+                            <ChildContent><RadzenTextBox Name="Label" @bind-Value="_newLink.Label" Placeholder="First dance" /></ChildContent>
+                            <Helper><RadzenDataAnnotationValidator Component="Label" /></Helper>
+                        </RadzenFormField>
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="Add" Icon="add" class="rz-mt-1" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeLG="6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Checklist</RadzenText>
+                @if (_items.Count > 0)
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@_items.Count(i => i.IsDone) of @_items.Count done</RadzenText>
+                }
+            </RadzenStack>
+
+            @if (_items.Count == 0)
+            {
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-my-4">
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">No tasks yet.</RadzenText>
+                    <RadzenButton Text="Use wedding checklist" Icon="playlist_add_check" Variant="Variant.Outlined" Size="ButtonSize.Small"
+                                  Click="AddWeddingChecklistAsync" />
+                </RadzenStack>
+            }
+            <ul class="plain-list rz-my-2">
+                @foreach (var item in _items)
+                {
+                    <li class="list-row">
+                        <RadzenCheckBox TValue="bool" Value="item.IsDone" Change="@(done => SetDoneAsync(item, done))" Name="@($"item-{item.Id}")" />
+                        <RadzenLabel Component="@($"item-{item.Id}")" Text="@item.Text" class="@(item.IsDone ? "list-row-text done" : "list-row-text")" />
+                        <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
+                                      Click="@(() => DeleteItemAsync(item))" title="Remove task" />
+                    </li>
+                }
+            </ul>
+
+            <RadzenTemplateForm TItem="ChecklistItem" Data="_newItem" Submit="AddItemAsync">
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
+                    <RadzenFormField Text="New task" Style="flex: 1">
+                        <ChildContent><RadzenTextBox Name="Text" @bind-Value="_newItem.Text" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Text" /></Helper>
+                    </RadzenFormField>
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Add" Icon="add" class="rz-mt-1" />
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenColumn>
+    </RadzenRow>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int ShootId { get; set; }
+
+    private List<PlaylistLink>? _links;
+    private List<ChecklistItem>? _items;
+    private PlaylistLink _newLink = new();
+    private ChecklistItem _newItem = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _links = await db.PlaylistLinks.AsNoTracking().Where(l => l.ShootId == ShootId).OrderBy(l => l.Id).ToListAsync();
+        _items = await db.ChecklistItems.AsNoTracking().Where(i => i.ShootId == ShootId)
+            .OrderBy(i => i.SortOrder).ThenBy(i => i.Id).ToListAsync();
+    }
+
+    private async Task AddLinkAsync(PlaylistLink link)
+    {
+        link.ShootId = ShootId;
+        link.Url = link.Url.Trim();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        db.PlaylistLinks.Add(link);
+        await db.SaveChangesAsync();
+        _links!.Add(link);
+        _newLink = new PlaylistLink();
+    }
+
+    private async Task DeleteLinkAsync(PlaylistLink link)
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        await db.PlaylistLinks.Where(l => l.Id == link.Id).ExecuteDeleteAsync();
+        _links!.Remove(link);
+    }
+
+    private Task AddItemAsync(ChecklistItem item) => AddItemsAsync([item.Text]);
+
+    private Task AddWeddingChecklistAsync() => AddItemsAsync(ChecklistTemplates.Wedding);
+
+    private async Task AddItemsAsync(IEnumerable<string> texts)
+    {
+        var nextOrder = _items!.Count == 0 ? 0 : _items.Max(i => i.SortOrder) + 1;
+        var items = texts.Select((text, index) => new ChecklistItem
+        {
+            ShootId = ShootId,
+            Text = text.Trim(),
+            SortOrder = nextOrder + index,
+        }).ToList();
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        db.ChecklistItems.AddRange(items);
+        await db.SaveChangesAsync();
+        _items.AddRange(items);
+        _newItem = new ChecklistItem();
+    }
+
+    private async Task SetDoneAsync(ChecklistItem item, bool done)
+    {
+        item.IsDone = done;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        await db.ChecklistItems.Where(i => i.Id == item.Id).ExecuteUpdateAsync(s => s.SetProperty(i => i.IsDone, done));
+    }
+
+    private async Task DeleteItemAsync(ChecklistItem item)
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        await db.ChecklistItems.Where(i => i.Id == item.Id).ExecuteDeleteAsync();
+        _items!.Remove(item);
+    }
+}

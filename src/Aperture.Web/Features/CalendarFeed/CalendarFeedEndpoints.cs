@@ -7,11 +7,11 @@ namespace Aperture.Web.Features.CalendarFeed;
 
 public static class CalendarFeedEndpoints
 {
-    /// <summary>How far back played gigs stay in the feed.</summary>
+    /// <summary>How far back played shoots stay in the feed.</summary>
     public static readonly TimeSpan History = TimeSpan.FromDays(365);
 
     /// <summary>
-    /// GET /calendar/{token}.ics: the gigs as a calendar subscription, for the phone's calendar app.
+    /// GET /calendar/{token}.ics: the shoots as a calendar subscription, for the phone's calendar app.
     /// Anonymous, since calendar apps can't sign in; the secret token in the URL is the key (see Settings).
     /// Unknown or revoked tokens get a 404, the same as a missing page.
     /// </summary>
@@ -39,30 +39,30 @@ public static class CalendarFeedEndpoints
             .WithMetadata(new SkipStatusCodePagesAttribute());
     }
 
-    /// <summary>Gigs from the last year onwards, without cancelled ones, in date order.</summary>
+    /// <summary>Shoots from the last year onwards, without cancelled ones, in date order.</summary>
     public static async Task<List<FeedEvent>> LoadAsync(ApertureDbContext db, DateTime now)
     {
         var from = now - History;
-        var gigs = await db.Gigs.AsNoTracking()
-            .Where(g => g.Status != GigStatus.Cancelled && g.End >= from)
+        var shoots = await db.Shoots.AsNoTracking()
+            .Where(g => g.Status != ShootStatus.Cancelled && g.End >= from)
             .OrderBy(g => g.Start)
             .Select(g => new
             {
                 g.Id, g.Title, g.Status, g.EventType, g.Start, g.End, g.Notes,
                 ClientName = g.Client.Name, ClientPhone = g.Client.Phone,
-                Venue = g.Venue == null ? null : new { g.Venue.Name, g.Venue.Street, g.Venue.PostalCode, g.Venue.City },
+                Location = g.Location == null ? null : new { g.Location.Name, g.Location.Street, g.Location.PostalCode, g.Location.City },
             })
             .ToListAsync();
 
-        return gigs.Select(g => new FeedEvent(
+        return shoots.Select(g => new FeedEvent(
                 g.Id, g.Title, g.Status, g.EventType, g.Start, g.End, g.ClientName, g.ClientPhone,
-                g.Venue is null ? null : Location(g.Venue.Name, g.Venue.Street, g.Venue.PostalCode, g.Venue.City),
+                g.Location is null ? null : Address(g.Location.Name, g.Location.Street, g.Location.PostalCode, g.Location.City),
                 g.Notes))
             .ToList();
     }
 
     /// <summary>"Schloss Laufen, Schlossweg 1, 8447 Laufen-Uhwiesen": enough for the phone's maps link.</summary>
-    private static string Location(string name, string? street, string? postalCode, string? city)
+    private static string Address(string name, string? street, string? postalCode, string? city)
     {
         var place = string.Join(" ", new[] { postalCode, city }.Where(p => !string.IsNullOrWhiteSpace(p)));
         return string.Join(", ", new[] { name, street, place }.Where(p => !string.IsNullOrWhiteSpace(p)));

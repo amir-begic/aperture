@@ -1,0 +1,182 @@
+@using Aperture.Web.Features.Attachments
+@using Aperture.Web.Features.Invoices
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject DialogService Dialogs
+@inject TimeProvider Time
+
+@if (_expenses is null || _payments is null)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else
+{
+    var financials = Financials;
+
+    <div class="kpi-row rz-mb-6">
+        <KpiTile Label="To bill" Value="@Format(financials.Total)" Note="@TotalNote(financials)" />
+        <KpiTile Label="Costs" Value="@financials.Costs.ToString()" />
+        <KpiTile Label="Margin" Value="@Format(financials.Margin)" Note="@(financials.Margin < Money.Zero ? "loss" : null)" />
+        <KpiTile Label="Received" Value="@financials.Received.ToString()" />
+        <KpiTile Label="Outstanding" Value="@Format(financials.Outstanding)">
+            <PaymentStateBadge State="financials.PaymentState"
+                               IsPastDue="@(_invoice is not null && _invoice.DueDate < Today && financials.Outstanding > Money.Zero)" />
+        </KpiTile>
+    </div>
+
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
+        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Payments received</RadzenText>
+        <RadzenButton Text="Add payment" Icon="add" Size="ButtonSize.Small" Click="@(() => EditPaymentAsync(null))" />
+    </RadzenStack>
+    <RadzenDataGrid TItem="Payment" Data="_payments" class="clickable-rows rz-mb-6" EmptyText="No payments yet."
+                    RowClick="@(args => EditPaymentAsync(args.Data!.Id))">
+        <Columns>
+            <RadzenDataGridColumn Title="Date" Width="8rem">
+                <Template Context="payment">@payment.Date.ToString("dd.MM.yyyy")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Method" Width="9rem">
+                <Template Context="payment">@PaymentDialog.MethodText(payment.Method)</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Property="@nameof(Payment.Note)" Title="Note" />
+            <RadzenDataGridColumn Title="Payslip">
+                <Template Context="payment">
+                    @if (payment.Proof is not null)
+                    {
+                        <span @onclick:stopPropagation="true"><AttachmentLink Attachment="payment.Proof" /></span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Amount" Width="9rem" TextAlign="TextAlign.Right">
+                <Template Context="payment">@payment.Amount</Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
+        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Costs</RadzenText>
+        <RadzenButton Text="Add cost" Icon="add" Size="ButtonSize.Small" Click="@(() => EditExpenseAsync(null))" />
+    </RadzenStack>
+    <RadzenDataGrid TItem="Expense" Data="_expenses" class="clickable-rows" EmptyText="No costs yet."
+                    RowClick="@(args => EditExpenseAsync(args.Data!.Id))">
+        <Columns>
+            <RadzenDataGridColumn Title="Date" Width="8rem">
+                <Template Context="expense">@expense.Date.ToString("dd.MM.yyyy")</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Category" Width="9rem">
+                <Template Context="expense">@expense.Category.Text()</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Description">
+                <Template Context="expense">
+                    <div>@expense.Description</div>
+                    <RadzenText TextStyle="TextStyle.Caption">@expense.Vendor</RadzenText>
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Receipt">
+                <Template Context="expense">
+                    @if (expense.Receipt is not null)
+                    {
+                        <span @onclick:stopPropagation="true"><AttachmentLink Attachment="expense.Receipt" /></span>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Cost" Width="9rem" TextAlign="TextAlign.Right">
+                <Template Context="expense">@expense.Amount</Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn Title="Billed to client" Width="10rem" TextAlign="TextAlign.Right">
+                <Template Context="expense">
+                    @if (expense.BilledToClient is { } billed)
+                    {
+                        @billed
+                    }
+                    else
+                    {
+                        <RadzenText TextStyle="TextStyle.Caption">in quote</RadzenText>
+                    }
+                </Template>
+            </RadzenDataGridColumn>
+        </Columns>
+    </RadzenDataGrid>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int ShootId { get; set; }
+
+    [Parameter]
+    public Money? Quote { get; set; }
+
+    /// <summary>The shoot's date, pre-filled in new entries.</summary>
+    [Parameter]
+    public DateOnly ShootDate { get; set; }
+
+    /// <summary>Raised after a cost or payment was added, changed or deleted.</summary>
+    [Parameter]
+    public EventCallback Changed { get; set; }
+
+    private List<Expense>? _expenses;
+    private List<Payment>? _payments;
+
+    /// <summary>Once issued, the invoice total is what the client owes.</summary>
+    private IssuedInvoice? _invoice;
+
+    private DateOnly Today => DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
+
+    private ShootFinancials Financials => new(
+        Quote,
+        Costs: _expenses!.Sum(e => e.Amount),
+        Received: _payments!.Sum(p => p.Amount),
+        BilledCosts: _expenses!.Where(e => e.BilledToClient is not null).Sum(e => e.BilledToClient!.Value),
+        Invoiced: _invoice?.Total);
+
+    /// <summary>Where the amount comes from: the invoice, or the quote plus costs billed on top.</summary>
+    private string? TotalNote(ShootFinancials financials) =>
+        _invoice is not null ? $"Invoice {_invoice.Number}, due {_invoice.DueDate:dd.MM.yyyy}"
+        : financials.BilledCosts == Money.Zero ? null
+        : $"Quote {Format(financials.Quote)} + billed costs {financials.BilledCosts}";
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _expenses = await db.Expenses.AsNoTracking().Include(e => e.Receipt)
+            .Where(e => e.ShootId == ShootId).OrderBy(e => e.Date).ThenBy(e => e.Id).ToListAsync();
+        _payments = await db.Payments.AsNoTracking().Include(p => p.Proof)
+            .Where(p => p.ShootId == ShootId).OrderBy(p => p.Date).ThenBy(p => p.Id).ToListAsync();
+        _invoice = (await db.IssuedInvoicesAsync([ShootId])).GetValueOrDefault(ShootId);
+    }
+
+    private async Task EditExpenseAsync(int? expenseId)
+    {
+        var changed = await Dialogs.OpenAsync<ExpenseDialog>(
+            expenseId is null ? "Add cost" : "Edit cost",
+            new Dictionary<string, object?> { ["ShootId"] = ShootId, ["ExpenseId"] = expenseId, ["DefaultDate"] = ShootDate },
+            new DialogOptions { Width = "36rem" });
+        await AfterDialogAsync(changed);
+    }
+
+    private async Task EditPaymentAsync(int? paymentId)
+    {
+        var changed = await Dialogs.OpenAsync<PaymentDialog>(
+            paymentId is null ? "Add payment" : "Edit payment",
+            new Dictionary<string, object?>
+            {
+                ["ShootId"] = ShootId,
+                ["PaymentId"] = paymentId,
+                ["DefaultAmount"] = Financials.Outstanding is { } outstanding && outstanding > Money.Zero ? outstanding : null,
+                ["DefaultDate"] = DateOnly.FromDateTime(Time.GetLocalNow().DateTime),
+            },
+            new DialogOptions { Width = "36rem" });
+        await AfterDialogAsync(changed);
+    }
+
+    private async Task AfterDialogAsync(object? changed)
+    {
+        if (changed is true)
+        {
+            await LoadAsync();
+            await Changed.InvokeAsync();
+        }
+    }
+
+    private static string Format(Money? amount) => amount?.ToString() ?? "–";
+}

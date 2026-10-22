@@ -22,7 +22,7 @@ public sealed partial class TaxDocuments
         var documents = new TaxDocuments();
         foreach (var income in statement.Income.Where(i => i.Proof is not null))
         {
-            documents.AddReceipt(income.Proof!, income.Date, $"Payment - {income.GigTitle}");
+            documents.AddReceipt(income.Proof!, income.Date, $"Payment - {income.ShootTitle}");
         }
         foreach (var expense in statement.Expenses.Where(e => e.Receipt is not null))
         {

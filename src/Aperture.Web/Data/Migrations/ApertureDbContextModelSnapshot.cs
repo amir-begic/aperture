@@ -85,7 +85,7 @@ namespace Aperture.Web.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("GigId")
+                    b.Property<int?>("ShootId")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("SizeBytes")
@@ -101,7 +101,7 @@ namespace Aperture.Web.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GigId");
+                    b.HasIndex("ShootId");
 
                     b.ToTable("Attachments");
                 });
@@ -206,10 +206,10 @@ namespace Aperture.Web.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("GigId")
+                    b.Property<bool>("IsDone")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsDone")
+                    b.Property<int>("ShootId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("SortOrder")
@@ -222,7 +222,7 @@ namespace Aperture.Web.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GigId");
+                    b.HasIndex("ShootId");
 
                     b.ToTable("ChecklistItems");
                 });
@@ -302,10 +302,10 @@ namespace Aperture.Web.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("GigId")
+                    b.Property<int?>("ReceiptId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("ReceiptId")
+                    b.Property<int?>("ShootId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Vendor")
@@ -316,65 +316,11 @@ namespace Aperture.Web.Data.Migrations
 
                     b.HasIndex("Date");
 
-                    b.HasIndex("GigId");
-
                     b.HasIndex("ReceiptId");
 
+                    b.HasIndex("ShootId");
+
                     b.ToTable("Expenses");
-                });
-
-            modelBuilder.Entity("Aperture.Web.Data.Entities.Gig", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ClientId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("End")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(4000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<long?>("QuotedPrice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("Start")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("VenueId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClientId");
-
-                    b.HasIndex("Start");
-
-                    b.HasIndex("VenueId");
-
-                    b.ToTable("Gigs");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Invoice", b =>
@@ -391,9 +337,6 @@ namespace Aperture.Web.Data.Migrations
 
                     b.Property<DateOnly>("DueDate")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("GigId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateOnly>("IssueDate")
                         .HasColumnType("TEXT");
@@ -423,6 +366,9 @@ namespace Aperture.Web.Data.Migrations
                     b.Property<string>("SellerVatNumber")
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("ShootId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -496,12 +442,12 @@ namespace Aperture.Web.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GigId");
-
                     b.HasIndex("Number")
                         .IsUnique();
 
                     b.HasIndex("PdfId");
+
+                    b.HasIndex("ShootId");
 
                     b.ToTable("Invoices");
                 });
@@ -536,6 +482,40 @@ namespace Aperture.Web.Data.Migrations
                     b.ToTable("InvoiceLines");
                 });
 
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Location", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Street")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Locations");
+                });
+
             modelBuilder.Entity("Aperture.Web.Data.Entities.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -547,9 +527,6 @@ namespace Aperture.Web.Data.Migrations
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("GigId")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Method")
                         .IsRequired()
@@ -563,13 +540,16 @@ namespace Aperture.Web.Data.Migrations
                     b.Property<int?>("ProofId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("ShootId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Date");
 
-                    b.HasIndex("GigId");
-
                     b.HasIndex("ProofId");
+
+                    b.HasIndex("ShootId");
 
                     b.ToTable("Payments");
                 });
@@ -580,12 +560,12 @@ namespace Aperture.Web.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("GigId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Label")
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("ShootId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Url")
                         .IsRequired()
@@ -594,7 +574,7 @@ namespace Aperture.Web.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GigId");
+                    b.HasIndex("ShootId");
 
                     b.ToTable("PlaylistLinks");
                 });
@@ -653,38 +633,58 @@ namespace Aperture.Web.Data.Migrations
                     b.ToTable("SentNotifications");
                 });
 
-            modelBuilder.Entity("Aperture.Web.Data.Entities.Venue", b =>
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Shoot", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("City")
-                        .HasMaxLength(100)
+                    b.Property<int>("ClientId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
+                    b.Property<DateTime>("End")
                         .HasColumnType("TEXT");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PostalCode")
-                        .HasMaxLength(16)
+                    b.Property<long?>("QuotedPrice")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Start")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Street")
-                        .HasMaxLength(100)
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
+                    b.HasIndex("ClientId");
 
-                    b.ToTable("Venues");
+                    b.HasIndex("LocationId");
+
+                    b.HasIndex("Start");
+
+                    b.ToTable("Shoots");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Asset", b =>
@@ -699,76 +699,58 @@ namespace Aperture.Web.Data.Migrations
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Attachment", b =>
                 {
-                    b.HasOne("Aperture.Web.Data.Entities.Gig", "Gig")
+                    b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
                         .WithMany("Attachments")
-                        .HasForeignKey("GigId")
+                        .HasForeignKey("ShootId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Gig");
+                    b.Navigation("Shoot");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.ChecklistItem", b =>
                 {
-                    b.HasOne("Aperture.Web.Data.Entities.Gig", "Gig")
+                    b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
                         .WithMany("ChecklistItems")
-                        .HasForeignKey("GigId")
+                        .HasForeignKey("ShootId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Gig");
+                    b.Navigation("Shoot");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Expense", b =>
                 {
-                    b.HasOne("Aperture.Web.Data.Entities.Gig", "Gig")
-                        .WithMany("Expenses")
-                        .HasForeignKey("GigId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Aperture.Web.Data.Entities.Attachment", "Receipt")
                         .WithMany()
                         .HasForeignKey("ReceiptId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Gig");
-
-                    b.Navigation("Receipt");
-                });
-
-            modelBuilder.Entity("Aperture.Web.Data.Entities.Gig", b =>
-                {
-                    b.HasOne("Aperture.Web.Data.Entities.Client", "Client")
-                        .WithMany("Gigs")
-                        .HasForeignKey("ClientId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Aperture.Web.Data.Entities.Venue", "Venue")
-                        .WithMany("Gigs")
-                        .HasForeignKey("VenueId")
+                    b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
+                        .WithMany("Expenses")
+                        .HasForeignKey("ShootId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Client");
+                    b.Navigation("Receipt");
 
-                    b.Navigation("Venue");
+                    b.Navigation("Shoot");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Invoice", b =>
                 {
-                    b.HasOne("Aperture.Web.Data.Entities.Gig", "Gig")
-                        .WithMany("Invoices")
-                        .HasForeignKey("GigId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Aperture.Web.Data.Entities.Attachment", "Pdf")
                         .WithMany()
                         .HasForeignKey("PdfId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("Gig");
+                    b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
+                        .WithMany("Invoices")
+                        .HasForeignKey("ShootId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Pdf");
+
+                    b.Navigation("Shoot");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.InvoiceLine", b =>
@@ -784,39 +766,67 @@ namespace Aperture.Web.Data.Migrations
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Payment", b =>
                 {
-                    b.HasOne("Aperture.Web.Data.Entities.Gig", "Gig")
-                        .WithMany("Payments")
-                        .HasForeignKey("GigId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("Aperture.Web.Data.Entities.Attachment", "Proof")
                         .WithMany()
                         .HasForeignKey("ProofId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Gig");
+                    b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
+                        .WithMany("Payments")
+                        .HasForeignKey("ShootId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Proof");
+
+                    b.Navigation("Shoot");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.PlaylistLink", b =>
                 {
-                    b.HasOne("Aperture.Web.Data.Entities.Gig", "Gig")
+                    b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
                         .WithMany("PlaylistLinks")
-                        .HasForeignKey("GigId")
+                        .HasForeignKey("ShootId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Gig");
+                    b.Navigation("Shoot");
+                });
+
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Shoot", b =>
+                {
+                    b.HasOne("Aperture.Web.Data.Entities.Client", "Client")
+                        .WithMany("Shoots")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Aperture.Web.Data.Entities.Location", "Location")
+                        .WithMany("Shoots")
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Client");
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Client", b =>
                 {
-                    b.Navigation("Gigs");
+                    b.Navigation("Shoots");
                 });
 
-            modelBuilder.Entity("Aperture.Web.Data.Entities.Gig", b =>
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Invoice", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Location", b =>
+                {
+                    b.Navigation("Shoots");
+                });
+
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Shoot", b =>
                 {
                     b.Navigation("Attachments");
 
@@ -829,16 +839,6 @@ namespace Aperture.Web.Data.Migrations
                     b.Navigation("Payments");
 
                     b.Navigation("PlaylistLinks");
-                });
-
-            modelBuilder.Entity("Aperture.Web.Data.Entities.Invoice", b =>
-                {
-                    b.Navigation("Lines");
-                });
-
-            modelBuilder.Entity("Aperture.Web.Data.Entities.Venue", b =>
-                {
-                    b.Navigation("Gigs");
                 });
 #pragma warning restore 612, 618
         }

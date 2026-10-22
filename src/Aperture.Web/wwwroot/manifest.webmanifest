@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Aperture",
   "short_name": "Aperture",
-  "description": "DJ office: gigs, calendar, invoices and finances",
+  "description": "DJ office: shoots, calendar, invoices and finances",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -15,7 +15,7 @@
     { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "New gig", "url": "/gigs/new", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "New shoot", "url": "/shoots/new", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
     { "name": "Calendar", "url": "/calendar", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]
 }

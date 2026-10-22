@@ -1,4 +1,4 @@
-@* Edits a client and saves it. Used by the client page and the "new client" dialog on gigs. *@
+@* Edits a client and saves it. Used by the client page and the "new client" dialog on shoots. *@
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 
 <RadzenTemplateForm TItem="Client" Data="Client" Submit="SaveAsync">
@@ -77,7 +77,7 @@
     [Parameter, EditorRequired]
     public Client Client { get; set; } = default!;
 
-    /// <summary>Only name and contact fields, for quick entry from the gig form.</summary>
+    /// <summary>Only name and contact fields, for quick entry from the shoot form.</summary>
     [Parameter]
     public bool Compact { get; set; }
 

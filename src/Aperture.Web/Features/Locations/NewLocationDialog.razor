@@ -1,0 +1,12 @@
+@* Opened from the shoot form; closes with the saved location, or null when cancelled. *@
+@inject DialogService Dialogs
+
+<LocationForm Location="_location" Compact="true" Saved="@(location => Dialogs.Close(location))">
+    <Buttons>
+        <RadzenButton Text="Cancel" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close())" />
+    </Buttons>
+</LocationForm>
+
+@code {
+    private readonly Location _location = new();
+}

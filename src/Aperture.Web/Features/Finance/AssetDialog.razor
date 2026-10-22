@@ -198,7 +198,7 @@
         _error = null;
         try
         {
-            var (added, removed) = await _receipt!.SaveFileAsync(gigId: null);
+            var (added, removed) = await _receipt!.SaveFileAsync(shootId: null);
             await Store.CommitAsync(async () =>
             {
                 await using var db = await DbFactory.CreateDbContextAsync();

@@ -28,7 +28,7 @@ public sealed class AttachmentStore(AperturePaths paths, TimeProvider time)
     private static readonly FileExtensionContentTypeProvider ContentTypes = new();
 
     /// <summary>Writes the file to disk and returns its (unsaved) database row.</summary>
-    public async Task<Attachment> SaveAsync(Stream content, string fileName, int? gigId, CancellationToken cancellationToken = default)
+    public async Task<Attachment> SaveAsync(Stream content, string fileName, int? shootId, CancellationToken cancellationToken = default)
     {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(extension))
@@ -50,7 +50,7 @@ public sealed class AttachmentStore(AperturePaths paths, TimeProvider time)
 
         return new Attachment
         {
-            GigId = gigId,
+            ShootId = shootId,
             FileName = Path.GetFileName(fileName),
             ContentType = ContentTypes.TryGetContentType(extension, out var type) ? type : "application/octet-stream",
             SizeBytes = size,

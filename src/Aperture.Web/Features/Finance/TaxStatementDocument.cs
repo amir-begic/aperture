@@ -115,11 +115,11 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
     private sealed record Column(string Title, float? WidthMm = null, float Share = 1, bool Right = false);
 
     private void ComposeIncome(IContainer container) => Section(container, "Income", "Payments received in the year.",
-        [new("Date", 18), new("Gig", Share: 3), new("Client", Share: 2), new("Invoice", 18), new("Doc.", 12), new("Amount", 24, Right: true)],
+        [new("Date", 18), new("Shoot", Share: 3), new("Client", Share: 2), new("Invoice", 18), new("Doc.", 12), new("Amount", 24, Right: true)],
         Statement.Income.Select(income => new[]
         {
             income.Date.ToString("dd.MM.yyyy"),
-            income.Note is null ? income.GigTitle : $"{income.GigTitle} ({income.Note})",
+            income.Note is null ? income.ShootTitle : $"{income.ShootTitle} ({income.Note})",
             income.ClientName,
             income.InvoiceNumber ?? "",
             data.Documents.NumberOf(income.Proof) ?? "",
@@ -127,14 +127,14 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
         }),
         total: Statement.TotalIncome);
 
-    private void ComposeCosts(IContainer container) => Section(container, "Costs", "Costs paid in the year, including costs of gigs.",
-        [new("Date", 18), new("Category", 30), new("Description", Share: 3), new("Gig", Share: 2), new("Doc.", 12), new("Amount", 24, Right: true)],
+    private void ComposeCosts(IContainer container) => Section(container, "Costs", "Costs paid in the year, including costs of shoots.",
+        [new("Date", 18), new("Category", 30), new("Description", Share: 3), new("Shoot", Share: 2), new("Doc.", 12), new("Amount", 24, Right: true)],
         Statement.Expenses.Select(cost => new[]
         {
             cost.Date.ToString("dd.MM.yyyy"),
             cost.Category.Text(),
             cost.Vendor is null ? cost.Description : $"{cost.Description}, {cost.Vendor}",
-            cost.GigTitle ?? "",
+            cost.ShootTitle ?? "",
             data.Documents.NumberOf(cost.Receipt) ?? "",
             cost.Amount.ToAmountString(),
         }),

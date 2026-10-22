@@ -45,8 +45,8 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         Directory.Delete(_dataDirectory, recursive: true);
     }
 
-    /// <summary>A gig quoted at 1800 with lights billed at 450 on top and a 500 deposit paid.</summary>
-    private async Task<Gig> AddWeddingAsync(bool withAddress = true)
+    /// <summary>A shoot quoted at 1800 with lights billed at 450 on top and a 500 deposit paid.</summary>
+    private async Task<Shoot> AddWeddingAsync(bool withAddress = true)
     {
         await using var db = _database.CreateContext();
         var client = new Client
@@ -56,30 +56,30 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
             PostalCode = withAddress ? "8800" : null,
             City = withAddress ? "Thalwil" : null,
         };
-        var gig = new Gig
+        var shoot = new Shoot
         {
             Title = "Wedding Rossi",
             Client = client,
-            Status = GigStatus.Confirmed,
+            Status = ShootStatus.Confirmed,
             Start = new DateTime(2026, 12, 12, 20, 0, 0),
             End = new DateTime(2026, 12, 13, 2, 0, 0),
             QuotedPrice = Money.FromChf(1800),
         };
-        gig.Expenses.Add(new Expense { Description = "Light set rental", Date = new DateOnly(2026, 12, 12),
+        shoot.Expenses.Add(new Expense { Description = "Light set rental", Date = new DateOnly(2026, 12, 12),
             Amount = Money.FromChf(350), BilledToClient = Money.FromChf(450) });
-        gig.Expenses.Add(new Expense { Description = "PA top-up", Date = new DateOnly(2026, 12, 12), Amount = Money.FromChf(200) });
-        gig.Payments.Add(new Payment { Date = new DateOnly(2026, 9, 1), Amount = Money.FromChf(500), Note = "Deposit" });
-        db.Gigs.Add(gig);
+        shoot.Expenses.Add(new Expense { Description = "PA top-up", Date = new DateOnly(2026, 12, 12), Amount = Money.FromChf(200) });
+        shoot.Payments.Add(new Payment { Date = new DateOnly(2026, 9, 1), Amount = Money.FromChf(500), Note = "Deposit" });
+        db.Shoots.Add(shoot);
         await db.SaveChangesAsync();
-        return gig;
+        return shoot;
     }
 
     [Fact]
     public async Task Draft_is_prefilled_with_the_quote_and_billed_costs()
     {
-        var gig = await AddWeddingAsync();
+        var shoot = await AddWeddingAsync();
 
-        var id = await _invoices.CreateDraftAsync(gig.Id);
+        var id = await _invoices.CreateDraftAsync(shoot.Id);
 
         var (invoice, _) = await _invoices.LoadForDocumentAsync(id);
         Assert.Equal(InvoiceStatus.Draft, invoice.Status);
@@ -91,19 +91,19 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Only_one_active_invoice_per_gig()
+    public async Task Only_one_active_invoice_per_shoot()
     {
-        var gig = await AddWeddingAsync();
-        await _invoices.CreateDraftAsync(gig.Id);
+        var shoot = await AddWeddingAsync();
+        await _invoices.CreateDraftAsync(shoot.Id);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _invoices.CreateDraftAsync(gig.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _invoices.CreateDraftAsync(shoot.Id));
     }
 
     [Fact]
     public async Task Draft_lines_can_be_edited()
     {
-        var gig = await AddWeddingAsync();
-        var id = await _invoices.CreateDraftAsync(gig.Id);
+        var shoot = await AddWeddingAsync();
+        var id = await _invoices.CreateDraftAsync(shoot.Id);
 
         await _invoices.SaveDraftAsync(id, new DateOnly(2026, 10, 6), new DateOnly(2026, 10, 20),
         [
@@ -121,8 +121,8 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     [Fact]
     public async Task Issuing_numbers_freezes_and_archives_the_invoice()
     {
-        var gig = await AddWeddingAsync();
-        var id = await _invoices.CreateDraftAsync(gig.Id);
+        var shoot = await AddWeddingAsync();
+        var id = await _invoices.CreateDraftAsync(shoot.Id);
 
         Assert.Empty(await _invoices.IssueAsync(id));
 
@@ -134,7 +134,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         Assert.Equal("Thalwil", invoice.Client.City);
         Assert.Equal(Money.FromChf(500), invoice.AlreadyPaid);
         Assert.Equal("Invoice 2026-001.pdf", invoice.Pdf!.FileName);
-        Assert.Equal(gig.Id, invoice.Pdf.GigId);
+        Assert.Equal(shoot.Id, invoice.Pdf.ShootId);
         var pdf = await File.ReadAllBytesAsync(_store.GetFullPath(invoice.Pdf));
         Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(pdf, 0, 4));
 
@@ -173,8 +173,8 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     [Fact]
     public async Task Missing_billing_address_blocks_issuing()
     {
-        var gig = await AddWeddingAsync(withAddress: false);
-        var id = await _invoices.CreateDraftAsync(gig.Id);
+        var shoot = await AddWeddingAsync(withAddress: false);
+        var id = await _invoices.CreateDraftAsync(shoot.Id);
 
         var problems = await _invoices.IssueAsync(id);
 
@@ -186,14 +186,14 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     [Fact]
     public async Task Qr_iban_is_rejected_with_an_explanation()
     {
-        var gig = await AddWeddingAsync();
+        var shoot = await AddWeddingAsync();
         await using (var db = _database.CreateContext())
         {
             (await db.BusinessSettings.SingleAsync()).Iban = "CH4431999123000889012"; // QR-IBAN (IID 31999)
             await db.SaveChangesAsync();
         }
 
-        var problems = await _invoices.CheckAsync(await _invoices.CreateDraftAsync(gig.Id));
+        var problems = await _invoices.CheckAsync(await _invoices.CreateDraftAsync(shoot.Id));
 
         Assert.Contains(problems, p => p.Contains("QR-IBAN"));
     }
@@ -201,8 +201,8 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     [Fact]
     public async Task Qr_bill_carries_amount_due_iban_and_rf_reference()
     {
-        var gig = await AddWeddingAsync();
-        var id = await _invoices.CreateDraftAsync(gig.Id);
+        var shoot = await AddWeddingAsync();
+        var id = await _invoices.CreateDraftAsync(shoot.Id);
         await _invoices.IssueAsync(id);
         var (invoice, _) = await _invoices.LoadForDocumentAsync(id);
 
@@ -222,9 +222,9 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     [Fact]
     public async Task Paid_in_full_invoices_render_without_a_qr_bill()
     {
-        var gig = await AddWeddingAsync();
-        await _database.AddPaymentAsync(gig, 1750);
-        var id = await _invoices.CreateDraftAsync(gig.Id);
+        var shoot = await AddWeddingAsync();
+        await _database.AddPaymentAsync(shoot, 1750);
+        var id = await _invoices.CreateDraftAsync(shoot.Id);
         var (invoice, info) = await _invoices.LoadForDocumentAsync(id);
 
         Assert.Equal(Money.Zero, invoice.Totals.AmountDue);

@@ -1,6 +1,6 @@
 @page "/costs"
 @using Aperture.Web.Features.Attachments
-@using Aperture.Web.Features.Gigs.Finances
+@using Aperture.Web.Features.Shoots.Finances
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject DialogService Dialogs
 @inject TimeProvider Time
@@ -12,7 +12,7 @@
     <RadzenButton Text="Add business cost" Icon="add" Click="@(() => EditAsync(null, null))" />
 </RadzenStack>
 <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
-    Business costs like subscriptions, insurance or your phone go here; gig costs are added on the gig's Finances tab.
+    Business costs like subscriptions, insurance or your phone go here; shoot costs are added on the shoot's Finances tab.
     Equipment you'll use for several years belongs under <RadzenLink Path="equipment" Text="Equipment" />.
 </RadzenText>
 
@@ -29,7 +29,7 @@
 
 <RadzenDataGrid TItem="CostRow" Data="Filtered" IsLoading="_loading" AllowSorting="true" AllowPaging="true" PageSize="50"
                 EmptyText="No costs in this year." class="clickable-rows"
-                RowClick="@(args => EditAsync(args.Data!.Id, args.Data.GigId))">
+                RowClick="@(args => EditAsync(args.Data!.Id, args.Data.ShootId))">
     <Columns>
         <RadzenDataGridColumn Property="@nameof(CostRow.Date)" Title="Date" Width="8rem">
             <Template Context="cost">@cost.Date.ToString("dd.MM.yyyy")</Template>
@@ -41,11 +41,11 @@
                 <RadzenText TextStyle="TextStyle.Caption">@cost.Vendor</RadzenText>
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(CostRow.GigTitle)" Title="For">
+        <RadzenDataGridColumn Property="@nameof(CostRow.ShootTitle)" Title="For">
             <Template Context="cost">
-                @if (cost.GigId is { } gigId)
+                @if (cost.ShootId is { } shootId)
                 {
-                    <span @onclick:stopPropagation="true"><RadzenLink Path="@($"gigs/{gigId}?tab=finances")" Text="@cost.GigTitle" /></span>
+                    <span @onclick:stopPropagation="true"><RadzenLink Path="@($"shoots/{shootId}?tab=finances")" Text="@cost.ShootTitle" /></span>
                 }
                 else
                 {
@@ -94,22 +94,22 @@
         var from = new DateOnly(_year, 1, 1);
         var until = from.AddYears(1);
         _costs = (await db.Expenses.AsNoTracking()
-                .Include(e => e.Receipt).Include(e => e.Gig)
+                .Include(e => e.Receipt).Include(e => e.Shoot)
                 .Where(e => e.Date >= from && e.Date < until)
                 .OrderByDescending(e => e.Date).ThenByDescending(e => e.Id)
                 .ToListAsync())
-            .Select(e => new CostRow(e.Id, e.Date, e.Category, e.Description, e.Vendor, e.GigId, e.Gig?.Title, e.Amount, e.Receipt))
+            .Select(e => new CostRow(e.Id, e.Date, e.Category, e.Description, e.Vendor, e.ShootId, e.Shoot?.Title, e.Amount, e.Receipt))
             .ToList();
         _loading = false;
     }
 
-    private async Task EditAsync(int? expenseId, int? gigId)
+    private async Task EditAsync(int? expenseId, int? shootId)
     {
         var changed = await Dialogs.OpenAsync<ExpenseDialog>(
             expenseId is null ? "Add business cost" : "Edit cost",
             new Dictionary<string, object?>
             {
-                ["GigId"] = gigId,
+                ["ShootId"] = shootId,
                 ["ExpenseId"] = expenseId,
                 ["DefaultDate"] = DateOnly.FromDateTime(Time.GetLocalNow().DateTime),
             },
@@ -124,7 +124,7 @@
 
     private sealed record CostRow(
         int Id, DateOnly Date, ExpenseCategory Category, string Description, string? Vendor,
-        int? GigId, string? GigTitle, Money Amount, Attachment? Receipt)
+        int? ShootId, string? ShootTitle, Money Amount, Attachment? Receipt)
     {
         public string CategoryText => Category.Text();
     }
