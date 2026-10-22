@@ -1,4 +1,4 @@
-# Funk
+# Aperture
 
 A small ERP for running a DJ business: gigs, clients, costs, invoices (Swiss QR-bill) and tax exports.
 Single user, CHF, English, self-hosted on a Mac mini and used from any browser at home or through Tailscale.
@@ -27,10 +27,10 @@ Needs the .NET 10 SDK.
 
 ```bash
 # 1. Create your login (prints the commands to store it as user-secrets)
-dotnet run --project src/Funk.Web -- hash-password
+dotnet run --project src/Aperture.Web -- hash-password
 
-# 2. Run the app → http://localhost:5080
-dotnet run --project src/Funk.Web
+# 2. Run the app → http://localhost:5090
+dotnet run --project src/Aperture.Web
 
 # Tests
 dotnet test
@@ -45,27 +45,27 @@ See [docs/deployment.md](docs/deployment.md):
 - `deploy/publish.sh` builds a self-contained release for Apple silicon.
 - `deploy/macos/install.sh` sets it up as a service with nightly backups to your external drives.
 - `deploy/deploy.sh` installs updates and goes back to the previous version if the new one doesn't start.
-- Pushing to `main` on GitHub builds a release (`.github/workflows/release.yml`); Funk offers it under
+- Pushing to `main` on GitHub builds a release (`.github/workflows/release.yml`); Aperture offers it under
   **Settings → Updates** and installs it with the same rollback.
 
 ## Configuration
 
 | Setting | Default | Notes |
 |---|---|---|
-| `Funk:DataDirectory` | `data` (relative to `src/Funk.Web`) | All business data. `~` is expanded; the Mac mini uses `~/Funk/data`. |
+| `Aperture:DataDirectory` | `data` (relative to `src/Aperture.Web`) | All business data. `~` is expanded; the Mac mini uses `~/Aperture/data`. |
 | `Auth:Username` | – | Required. |
 | `Auth:PasswordHash` | – | Required. Generate with `hash-password`; never commit it. |
 | `Updates:Repository` | – | `owner/name` on GitHub; with the token, enables Settings → Updates. |
 | `Updates:GitHubToken` | – | Fine-grained token, *Contents: Read-only* on that repository. |
 
-In production, use environment variables (`Funk__DataDirectory`, `Auth__Username`, `Auth__PasswordHash`,
+In production, use environment variables (`Aperture__DataDirectory`, `Auth__Username`, `Auth__PasswordHash`,
 `Updates__Repository`, `Updates__GitHubToken`).
 The installer puts them in the service definition, which only root can read.
 
 The data directory holds:
 
 ```
-funk.db               the database (SQLite, WAL mode)
+aperture.db               the database (SQLite, WAL mode)
 attachments/YYYY/     receipts, payslips, invoice PDFs, under generated names
 keys/                 keys that sign the login cookie, so a restart doesn't log you out, and the
                       key pair that signs notifications (push-vapid.json)
@@ -76,7 +76,7 @@ backup-status.json    written by the nightly backup, shown under Settings and on
 
 ```bash
 dotnet tool restore
-dotnet ef migrations add <Name> --project src/Funk.Web --output-dir Data/Migrations
+dotnet ef migrations add <Name> --project src/Aperture.Web --output-dir Data/Migrations
 ```
 
 A test fails if the model changes without a migration.
@@ -84,7 +84,7 @@ A test fails if the model changes without a migration.
 ## Project layout
 
 ```
-src/Funk.Web/
+src/Aperture.Web/
   Auth/            single-user cookie login, hash-password command
   Components/      app shell, layouts, routing
   Configuration/   data paths, app version
@@ -94,7 +94,7 @@ src/Funk.Web/
   Features/        one folder per area, pages and their logic together:
                    Gigs, Clients, Venues, Calendar, Attachments, Invoices, Finance, Dashboard, Backup,
                    Notifications, Settings
-tests/Funk.Tests/  xUnit; database tests run against in-memory SQLite
+tests/Aperture.Tests/  xUnit; database tests run against in-memory SQLite
 deploy/            release build, Mac mini install/update/backup scripts and service definitions
 docs/              deployment guide, accounting rules
 ```

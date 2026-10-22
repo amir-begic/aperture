@@ -1,0 +1,68 @@
+@using Aperture.Web.Features.Gigs
+@inject NavigationManager Navigation
+@inject TimeProvider Time
+
+<RadzenDataGrid TItem="GigRow" Data="Gigs" IsLoading="IsLoading" AllowSorting="true"
+                AllowPaging="@(PageSize is not null)" PageSize="@(PageSize ?? 25)"
+                EmptyText="@EmptyText" class="clickable-rows"
+                RowClick="@(args => Navigation.NavigateTo($"gigs/{args.Data!.Id}"))">
+    <Columns>
+        <RadzenDataGridColumn Property="@nameof(GigRow.Start)" Title="Date" Width="11rem">
+            <Template Context="gig">
+                <div>@gig.Start.ToString("ddd dd.MM.yyyy")</div>
+                <RadzenText TextStyle="TextStyle.Caption">@GigSchedule.FormatTimes(gig.Start, gig.End)</RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(GigRow.Title)" Title="Gig">
+            <Template Context="gig">
+                <div>@gig.Title</div>
+                <RadzenText TextStyle="TextStyle.Caption">@gig.EventType</RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        @if (ShowClient)
+        {
+            <RadzenDataGridColumn Property="@nameof(GigRow.ClientName)" Title="Client" />
+        }
+        @if (ShowVenue)
+        {
+            <RadzenDataGridColumn Property="@nameof(GigRow.Venue)" Title="Venue" />
+        }
+        <RadzenDataGridColumn Property="@nameof(GigRow.Status)" Title="Status" Width="8rem">
+            <Template Context="gig"><GigStatusBadge Status="gig.Status" /></Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(GigRow.QuotedPrice)" Title="Quote" Width="9rem" TextAlign="TextAlign.Right">
+            <Template Context="gig">@gig.QuotedPrice</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Property="@nameof(GigRow.PaymentState)" Title="Payment" Width="10.5rem">
+            <Template Context="gig">
+                @if (gig.PaymentState is { } state)
+                {
+                    <PaymentStateBadge State="state" IsPlayed="@(gig.Status == GigStatus.Done)" IsPastDue="@gig.IsPastDue(Today)" />
+                }
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    [Parameter, EditorRequired]
+    public IEnumerable<GigRow>? Gigs { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public bool ShowClient { get; set; } = true;
+
+    [Parameter]
+    public bool ShowVenue { get; set; } = true;
+
+    /// <summary>Rows per page, or null for no paging.</summary>
+    [Parameter]
+    public int? PageSize { get; set; } = 25;
+
+    [Parameter]
+    public string EmptyText { get; set; } = "No gigs.";
+
+    private DateOnly Today => DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
+}

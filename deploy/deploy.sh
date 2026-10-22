@@ -4,7 +4,7 @@
 #   deploy/deploy.sh amir@mac-mini      (or a Host alias from ~/.ssh/config, e.g. deploy/deploy.sh mac)
 #   deploy/deploy.sh mac --install      run the installer again, e.g. to set up something new it brings
 #
-# The first time, when Funk isn't on the Mac yet, it runs the installer (deploy/macos/install.sh), which asks
+# The first time, when Aperture isn't on the Mac yet, it runs the installer (deploy/macos/install.sh), which asks
 # its questions right here in this terminal; with --install it does so on an existing installation too (all data
 # is kept). Otherwise it runs the update.
 set -euo pipefail
@@ -25,8 +25,8 @@ echo "Copying $file to $target"
 scp "$tarball" "$target:/tmp/$file"
 # Runs in the Mac's login shell (zsh), so plain POSIX sh only. ("status" is reserved in zsh, hence "rc".)
 ssh -t "$target" "
-    if [ $install -eq 0 ] && [ -x \"\$HOME/Funk/app/deploy/macos/update.sh\" ]; then
-        \"\$HOME/Funk/app/deploy/macos/update.sh\" /tmp/$file
+    if [ $install -eq 0 ] && [ -x \"\$HOME/Aperture/app/deploy/macos/update.sh\" ]; then
+        \"\$HOME/Aperture/app/deploy/macos/update.sh\" /tmp/$file
         rc=\$?
     else
         echo 'Running the installer (existing data is kept).'

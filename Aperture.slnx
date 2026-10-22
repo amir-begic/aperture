@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Aperture.Web/Aperture.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Aperture.Tests/Aperture.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <base href="/" />
+
+    @* Installable app (Add to Home Screen). Paths without fingerprint: the manifest and icons keep their names. *@
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#505FDE" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Aperture" />
+    @* The blue page runs up behind the iPhone's status bar; brand.css keeps content clear of it. *@
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <ResourcePreloader />
+    <RadzenTheme Theme="standard" @rendermode="PageRenderMode" />
+    <link rel="stylesheet" href="@Assets["brand.css"]" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["Aperture.Web.styles.css"]" />
+    <ImportMap />
+    <HeadOutlet @rendermode="PageRenderMode" />
+</head>
+
+<body>
+    <Routes @rendermode="PageRenderMode" />
+    <ReconnectModal />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["_content/Radzen.Blazor/Radzen.Blazor.js"]"></script>
+    <script src="@Assets["copy.js"]"></script>
+    <script>
+        // Only shows a "no connection" page when Aperture can't be reached (wwwroot/sw.js); Aperture itself needs the server.
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").catch(() => { });
+        }
+    </script>
+</body>
+
+</html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    // Every page is interactive, except pages marked [ExcludeFromInteractiveRouting]
+    // (the login page: setting the auth cookie needs a real HTTP request, not a circuit).
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveServer : null;
+}

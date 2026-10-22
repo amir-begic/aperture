@@ -1,5 +1,5 @@
 # Every push to main: run the tests, build the Mac mini release and publish it as a GitHub release.
-# Funk on the Mac finds it under Settings → Updates (and on the dashboard) and installs it from there.
+# Aperture on the Mac finds it under Settings → Updates (and on the dashboard) and installs it from there.
 #
 # Kept small for the free plan: no workflow artifacts or caches (the package goes to Releases, which don't count
 # towards Actions storage), no run for changes that are only docs, a newer push cancels the older run, and only
@@ -45,7 +45,7 @@ jobs:
         run: |
           tarball="$(deploy/publish.sh)"
           version="$(basename "$tarball" -osx-arm64.tar.gz)"
-          version="${version#funk-}"
+          version="${version#aperture-}"
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
@@ -61,7 +61,7 @@ jobs:
           else
             git log -1 --format='- %s' > notes.md
           fi
-          gh release create "v$VERSION" "$TARBALL" --title "Funk $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
+          gh release create "v$VERSION" "$TARBALL" --title "Aperture $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
 
       - name: Keep the last 5 releases
         env:

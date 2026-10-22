@@ -263,7 +263,7 @@ Generated_Code/
 # to a newer Visual Studio version. Backup files are not needed,
 # because we have git ;-)
 _UpgradeReport_Files/
-# (The template's "Backup*/" is left out: it hid src/Funk.Web/Features/Backup/ from git.)
+# (The template's "Backup*/" is left out: it hid src/Aperture.Web/Features/Backup/ from git.)
 UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/
@@ -482,7 +482,7 @@ $RECYCLE.BIN/
 *.swp
 
 # Local app data (SQLite database, attachments)
-/src/Funk.Web/data/
+/src/Aperture.Web/data/
 
 # Builds for the Mac mini (deploy/publish.sh)
 /artifacts/

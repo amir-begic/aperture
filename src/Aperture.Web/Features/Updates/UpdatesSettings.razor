@@ -1,0 +1,180 @@
+@* Settings section: the running version, checking for a new release and installing it (see UpdateService). *@
+@implements IDisposable
+@inject UpdateService Updates
+@inject Aperture.Web.Configuration.AperturePaths Paths
+@inject DialogService Dialogs
+@inject NotificationService Notifications
+@inject TimeProvider Time
+
+<RadzenFieldset Text="Updates" class="settings-form rz-mt-6" id="updates">
+    <RadzenStack Gap="1rem">
+        <dl class="facts">
+            <dt>Running</dt>
+            <dd>Aperture @UpdateService.Current.Display <span class="version-text">(@UpdateService.Current.Text)</span></dd>
+            @if (Updates.LastCheck is { } checkedAt)
+            {
+                <dt>Last checked</dt>
+                <dd>@checkedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</dd>
+            }
+        </dl>
+
+        @if (!Updates.IsConfigured)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                Updates from GitHub aren't set up on this machine. On the Mac mini, install.sh asks for the repository and a token.
+            </RadzenText>
+        }
+        else
+        {
+            @if (RecentStatus is { Failed: true } failed)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                    The update to @(failed.Version ?? "the new version") didn't work: @failed.Message
+                    Aperture is still running the previous version. Details are in ~/Aperture/logs/update.log on the Mac.
+                </RadzenAlert>
+            }
+            else if (RecentStatus is { Succeeded: true } done && done.Version == UpdateService.Current.Text)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                    Updated to @UpdateService.Current.Display at @done.Time?.ToLocalTime().ToString("HH:mm").
+                </RadzenAlert>
+            }
+
+            @if (Updates.IsDownloading)
+            {
+                <div class="update-progress" role="status">
+                    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                    Downloading @Updates.Available?.Version.Display…
+                </div>
+            }
+            else if (IsInstalling)
+            {
+                <div class="update-progress" role="status">
+                    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+                    Installing. Aperture restarts in a moment; this page reconnects by itself.
+                </div>
+                @if (UpdaterSeemsMissing)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                        The updater hasn't started yet. It's set up by install.sh on the Mac mini; run that again if this stays.
+                    </RadzenAlert>
+                }
+            }
+            else if (Updates.Available is { } release)
+            {
+                <div class="update-card">
+                    <RadzenText TextStyle="TextStyle.Subtitle1" TagName="TagName.H3" class="rz-m-0">
+                        Aperture @release.Version.Display is available
+                    </RadzenText>
+                    @if (!string.IsNullOrWhiteSpace(release.Notes))
+                    {
+                        <div class="update-notes">@release.Notes</div>
+                    }
+                    <div>
+                        <RadzenButton Text="Install update" Icon="system_update_alt" Click="InstallAsync" />
+                    </div>
+                </div>
+            }
+            else if (Updates.Latest is not null)
+            {
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">Aperture is up to date.</RadzenText>
+            }
+
+            @if (Updates.Problem is { } problem)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">@problem</RadzenAlert>
+            }
+
+            @if (!IsInstalling && !Updates.IsDownloading)
+            {
+                <div>
+                    <RadzenButton Text="Check for updates" Icon="refresh" Variant="Variant.Outlined" Click="CheckAsync"
+                                  IsBusy="_checking" BusyText="Checking…" />
+                </div>
+            }
+        }
+
+        <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">Data in @Paths.DataDirectory</RadzenText>
+    </RadzenStack>
+</RadzenFieldset>
+
+@code {
+    private bool _checking;
+    private Timer? _poll;
+    private (bool Pending, string? State, DateTimeOffset? Time) _seen;
+
+    private (bool Pending, string? State, DateTimeOffset? Time) Snapshot() =>
+        (Updates.IsRequestPending, Updates.Status?.State, Updates.Status?.Time);
+
+    /// <summary>The updater's last report, if it's from the last week.</summary>
+    private UpdateStatus? RecentStatus =>
+        Updates.Status is { Time: { } at } status && Time.GetUtcNow() - at < TimeSpan.FromDays(7) ? status : null;
+
+    private bool IsInstalling => Updates.IsRequestPending || Updates.Status is { IsRunning: true };
+
+    private bool UpdaterSeemsMissing =>
+        Updates.IsRequestPending && Time.GetUtcNow() - File.GetLastWriteTimeUtc(Paths.UpdateRequestFile) > TimeSpan.FromMinutes(2);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Updates.Changed += OnChanged;
+        // Every few seconds: redraw when the request or the updater's report changed, so the page follows an update
+        // to the end, even one that fails at once.
+        _seen = Snapshot();
+        _poll = new Timer(_ =>
+        {
+            var now = Snapshot();
+            if (now != _seen)
+            {
+                _seen = now;
+                OnChanged();
+            }
+        }, null, TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+        if (Updates.IsConfigured && Updates.LastCheck is null)
+        {
+            await CheckAsync();
+        }
+    }
+
+    private async Task CheckAsync()
+    {
+        _checking = true;
+        try
+        {
+            await Updates.CheckAsync();
+        }
+        finally
+        {
+            _checking = false;
+        }
+    }
+
+    private async Task InstallAsync()
+    {
+        if (Updates.Available is not { } release
+            || await Dialogs.Confirm(
+                "Aperture stops, saves a copy of the database, starts the new version and checks it. If it doesn't start, the previous version comes back by itself. Takes about a minute.",
+                $"Install {release.Version.Display}?",
+                new ConfirmOptions { OkButtonText = "Install", CancelButtonText = "Cancel" }) != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await Updates.InstallAsync();
+        }
+        catch (Exception e) when (e is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException)
+        {
+            Notifications.Notify(NotificationSeverity.Error, "Download failed", e.Message);
+        }
+    }
+
+    private void OnChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Updates.Changed -= OnChanged;
+        _poll?.Dispose();
+    }
+}

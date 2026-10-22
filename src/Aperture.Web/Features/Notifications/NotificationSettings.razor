@@ -1,0 +1,257 @@
+@* Settings section: notifications on this device and the list of devices that get them (see PushService). *@
+@implements IAsyncDisposable
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject PushService Push
+@inject IJSRuntime JS
+@inject DialogService Dialogs
+@inject NotificationService Notifications
+
+<RadzenFieldset Text="Notifications" class="settings-form rz-mt-6" id="notifications">
+    <RadzenStack Gap="1rem">
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+            Aperture can tell your phone when an invoice becomes overdue, when prep is still open @PrepDays days before a gig,
+            when a backup fails and when a new version is available. Each only once, between
+            @PushReminders.DayStarts.ToString("HH:mm") and @PushReminders.DayEnds.ToString("HH:mm").
+        </RadzenText>
+
+        @if (_device is null)
+        {
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
+        }
+        else if (!HasEmail)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                Add your email under Contact above and save first. Push services (Apple's, for the iPhone) only deliver
+                notifications from senders with a contact address.
+            </RadzenAlert>
+        }
+        else if (!_device.Supported || !_device.Secure)
+        {
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                @if (!_device.Secure)
+                {
+                    <text>Notifications need the Tailscale address (https://….ts.net). Open Aperture through it on this device.</text>
+                }
+                else if (_device.Apple && !_device.Standalone)
+                {
+                    <text>
+                        On the iPhone, notifications work in the Aperture app on the home screen: in Safari, tap
+                        <em>Share → Add to Home Screen</em>, open Aperture from its icon and come back here.
+                    </text>
+                }
+                else
+                {
+                    <text>This browser can't show notifications from Aperture.</text>
+                }
+            </RadzenText>
+        }
+        else if (_device.Permission == "denied")
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                Notifications from Aperture are blocked on this device.
+                @(_device.Apple
+                    ? "Allow them under iPhone Settings → Notifications → Aperture."
+                    : "Allow them in the browser's site settings for this address.")
+            </RadzenAlert>
+        }
+        else if (_thisDevice is { } current)
+        {
+            <div class="push-on">
+                <RadzenIcon Icon="notifications_active" />
+                <span>Notifications are on for this device (@current.Device).</span>
+            </div>
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <RadzenButton Text="Send a test" Icon="send" Variant="Variant.Outlined" Click="SendTestAsync"
+                              IsBusy="_testing" BusyText="Sending…" />
+                <RadzenButton Text="Turn off on this device" Icon="notifications_off" Variant="Variant.Text"
+                              ButtonStyle="ButtonStyle.Danger" Click="TurnOffAsync" />
+            </RadzenStack>
+        }
+        else
+        {
+            <div>
+                @* Handled in the browser (wwwroot/push.js): the permission prompt has to come from the tap itself. *@
+                <RadzenButton Text="Turn on notifications" Icon="notifications" data-push-enable="@Push.PublicKey" />
+            </div>
+        }
+
+        @if (_problem is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">@_problem</RadzenAlert>
+        }
+
+        @if (OtherDevices.Any())
+        {
+            <div>
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3" class="rz-mb-1">Other devices</RadzenText>
+                <ul class="plain-list push-devices">
+                    @foreach (var device in OtherDevices)
+                    {
+                        <li class="list-row">
+                            <RadzenIcon Icon="smartphone" />
+                            <span class="list-row-text">
+                                <span>@device.Device</span>
+                                <span class="push-device-detail">
+                                    Since @device.CreatedAt.ToString("dd.MM.yyyy")@(device.LastDeliveredAt is { } last ? $" · last notification {last:dd.MM.yyyy HH:mm}" : "")
+                                </span>
+                            </span>
+                            <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                                          title="Remove" aria-label="@($"Remove {device.Device}")" Click="@(() => RemoveAsync(device))" />
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </RadzenStack>
+</RadzenFieldset>
+
+@code {
+    /// <summary>Whether Settings has a saved email (see PushService.SubjectAsync).</summary>
+    [Parameter]
+    public bool HasEmail { get; set; }
+
+    private static readonly int PrepDays = (int)PushReminders.PrepHorizon.TotalDays;
+
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<NotificationSettings>? _self;
+    private DeviceState? _device;
+    private List<PushSubscription> _subscriptions = [];
+    private PushSubscription? _thisDevice;
+    private string? _problem;
+    private bool _testing;
+
+    private IEnumerable<PushSubscription> OtherDevices => _subscriptions.Where(s => s.Id != _thisDevice?.Id);
+
+    /// <summary>What wwwroot/push.js reports about this browser.</summary>
+    public sealed record DeviceState(
+        bool Supported, bool Secure, bool Standalone, bool Apple, string Permission, BrowserSubscription? Subscription, string Device);
+
+    protected override Task OnInitializedAsync() => LoadSubscriptionsAsync();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./push.js");
+        _self = DotNetObjectReference.Create(this);
+        await _module.InvokeVoidAsync("connect", _self);
+        await RefreshDeviceAsync();
+        StateHasChanged();
+    }
+
+    private async Task RefreshDeviceAsync()
+    {
+        _device = await _module!.InvokeAsync<DeviceState>("state", Push.PublicKey);
+        // A browser that's subscribed is (again) on the list: also after a restore or a renewed subscription.
+        _thisDevice = _device.Subscription is { } browser && _device.Permission == "granted"
+            ? await Push.SaveAsync(browser, _device.Device)
+            : null;
+        await LoadSubscriptionsAsync();
+    }
+
+    private async Task LoadSubscriptionsAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _subscriptions = await db.PushSubscriptions.AsNoTracking().OrderBy(s => s.CreatedAt).ToListAsync();
+    }
+
+    [JSInvokable]
+    public async Task SubscribedAsync(BrowserSubscription browser, string device)
+    {
+        _problem = null;
+        _thisDevice = await Push.SaveAsync(browser, device);
+        _device = _device! with { Permission = "granted", Subscription = browser };
+        await LoadSubscriptionsAsync();
+        await SendAsync(new PushMessage("Notifications are on", "Aperture will let you know when something needs doing.", "settings#notifications", "test"));
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void PermissionChanged(string permission)
+    {
+        _device = _device! with { Permission = permission };
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void Failed(string message)
+    {
+        _problem = $"Couldn't turn notifications on: {message}";
+        StateHasChanged();
+    }
+
+    private async Task SendTestAsync()
+    {
+        _testing = true;
+        try
+        {
+            await SendAsync(new PushMessage("Test from Aperture", "Notifications work on this device.", "settings#notifications", "test"));
+        }
+        finally
+        {
+            _testing = false;
+        }
+    }
+
+    private async Task SendAsync(PushMessage message)
+    {
+        if (_thisDevice is null)
+        {
+            return;
+        }
+
+        if (await Push.SendAsync(message, _thisDevice.Id) > 0)
+        {
+            Notifications.Notify(NotificationSeverity.Success, "Notification sent", "It should appear in a few seconds.");
+        }
+        else
+        {
+            Notifications.Notify(NotificationSeverity.Warning, "Couldn't send the notification",
+                "The push service didn't take it. Is the Mac online? Details are in the log.");
+        }
+        await RefreshDeviceAsync();
+    }
+
+    private async Task TurnOffAsync()
+    {
+        if (_thisDevice is not { } current)
+        {
+            return;
+        }
+
+        await _module!.InvokeVoidAsync("unsubscribe");
+        await Push.RemoveAsync(current.Id);
+        await RefreshDeviceAsync();
+        Notifications.Notify(NotificationSeverity.Success, "Notifications turned off for this device");
+    }
+
+    private async Task RemoveAsync(PushSubscription device)
+    {
+        if (await Dialogs.Confirm($"{device.Device} stops getting notifications from Aperture.", "Remove this device?",
+                new ConfirmOptions { OkButtonText = "Remove", CancelButtonText = "Cancel" }) == true)
+        {
+            await Push.RemoveAsync(device.Id);
+            await LoadSubscriptionsAsync();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.InvokeVoidAsync("disconnect");
+                await _module.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+                // The tab is gone already.
+            }
+        }
+        _self?.Dispose();
+    }
+}

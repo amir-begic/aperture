@@ -1,21 +1,21 @@
 #!/bin/bash
-# Nightly backup of Funk's data to every connected backup drive (run by launchd, see ch.funk.backup.plist).
+# Nightly backup of Aperture's data to every connected backup drive (run by launchd, see ch.aperture.backup.plist).
 #
-# For each drive listed in ~/Funk/backup.conf that is connected, writes to "<drive>/Funk Backup":
-#   database/funk-YYYY-MM-DD.db   a consistent copy of the database (taken once, checked, then copied)
+# For each drive listed in ~/Aperture/backup.conf that is connected, writes to "<drive>/Aperture Backup":
+#   database/aperture-YYYY-MM-DD.db   a consistent copy of the database (taken once, checked, then copied)
 #   attachments/                  all uploaded files (receipts, payslips, invoices); added, never deleted
 #   keys/                         login cookie keys
 # Database copies older than 90 days are removed, except those from the 1st of a month (kept forever).
-# The result goes to ~/Funk/data/backup-status.json, which the app shows in Settings and on the Dashboard.
+# The result goes to ~/Aperture/data/backup-status.json, which the app shows in Settings and on the Dashboard.
 #
-# Run by hand:  bash ~/Funk/app/deploy/macos/backup.sh
+# Run by hand:  bash ~/Aperture/app/deploy/macos/backup.sh
 set -uo pipefail
 
-FUNK_HOME="${FUNK_HOME:-$HOME/Funk}"
-DATA="$FUNK_HOME/data"
-CONF="$FUNK_HOME/backup.conf"
+APERTURE_HOME="${APERTURE_HOME:-$HOME/Aperture}"
+DATA="$APERTURE_HOME/data"
+CONF="$APERTURE_HOME/backup.conf"
 STATUS="$DATA/backup-status.json"
-KEEP_DAYS="${FUNK_BACKUP_KEEP_DAYS:-90}"
+KEEP_DAYS="${APERTURE_BACKUP_KEEP_DAYS:-90}"
 SQLITE3="${SQLITE3:-sqlite3}"   # /usr/bin/sqlite3 ships with macOS
 
 run_started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -71,7 +71,7 @@ finish() {
 
 log "Backup started"
 
-if [[ ! -f $DATA/funk.db ]]; then
+if [[ ! -f $DATA/aperture.db ]]; then
     problems+=("No database found in $DATA")
     finish
 fi
@@ -84,8 +84,8 @@ fi
 # One consistent snapshot (safe while the app is running), checked before it's copied anywhere.
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-snapshot="$work/funk.db"
-if ! "$SQLITE3" "$DATA/funk.db" ".backup '$snapshot'"; then
+snapshot="$work/aperture.db"
+if ! "$SQLITE3" "$DATA/aperture.db" ".backup '$snapshot'"; then
     problems+=("Could not copy the database")
     finish
 fi
@@ -107,12 +107,12 @@ while IFS= read -r line || [[ -n $line ]]; do
         continue
     fi
 
-    target="$drive/Funk Backup"
+    target="$drive/Aperture Backup"
     if mkdir -p "$target/database" "$target/attachments" "$target/keys" \
-        && cp "$snapshot" "$target/database/funk-$today.db" \
+        && cp "$snapshot" "$target/database/aperture-$today.db" \
         && { [[ ! -d $DATA/attachments ]] || rsync -a "$DATA/attachments/" "$target/attachments/"; } \
         && { [[ ! -d $DATA/keys ]] || rsync -a "$DATA/keys/" "$target/keys/"; }; then
-        find "$target/database" -name 'funk-*.db' ! -name 'funk-*-*-01.db' -mtime "+$KEEP_DAYS" -delete
+        find "$target/database" -name 'aperture-*.db' ! -name 'aperture-*-*-01.db' -mtime "+$KEEP_DAYS" -delete
         destinations+=("$target")
         log "Backed up to $target"
     else

@@ -1,0 +1,115 @@
+@page "/equipment"
+@using Aperture.Web.Features.Attachments
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject DialogService Dialogs
+@inject TimeProvider Time
+
+<PageTitle>Equipment · Aperture</PageTitle>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Equipment</RadzenText>
+    <RadzenButton Text="Add equipment" Icon="add" Click="@(() => EditAsync(null))" />
+</RadzenStack>
+<RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
+    Gear you use for several years. Its price is spread over the years as depreciation instead of counting as a cost when you buy it.
+    Cheap items are often booked directly as a cost; ask your fiduciary where the line is.
+    How the year of purchase is depreciated is set in <RadzenLink Path="settings" Text="Settings" />.
+</RadzenText>
+
+<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" class="rz-mb-4">
+    <RadzenFormField Text="Values for">
+        <RadzenDropDown TValue="int" @bind-Value="_year" Data="_years" />
+    </RadzenFormField>
+    <div class="kpi-row" style="flex: 1; min-width: 18rem">
+        <KpiTile Label="@($"Depreciation {_year}")" Value="@Rows.Sum(r => r.Year?.Depreciation ?? Money.Zero).ToString()" />
+        <KpiTile Label="@($"Book value end of {_year}")" Value="@Rows.Sum(r => r.Year?.Closing ?? Money.Zero).ToString()" />
+    </div>
+</RadzenStack>
+
+<RadzenDataGrid TItem="AssetRow" Data="Rows" IsLoading="_assets is null" AllowSorting="true"
+                EmptyText="No equipment yet." class="clickable-rows"
+                RowClick="@(args => EditAsync(args.Data!.Asset.Id))">
+    <Columns>
+        <RadzenDataGridColumn Title="Equipment" Property="Asset.Name">
+            <Template Context="row">
+                <div>@row.Asset.Name</div>
+                <RadzenText TextStyle="TextStyle.Caption">@row.Asset.Category.Text()</RadzenText>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Bought" Property="Asset.PurchaseDate" Width="8rem">
+            <Template Context="row">@row.Asset.PurchaseDate.ToString("dd.MM.yyyy")</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Price" Width="9rem" TextAlign="TextAlign.Right">
+            <Template Context="row">@row.Asset.Cost</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Rate" Width="5rem" TextAlign="TextAlign.Right">
+            <Template Context="row">@row.Asset.DepreciationRatePercent.ToString("0.#") %</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="@($"Depreciation {_year}")" Width="10rem" TextAlign="TextAlign.Right">
+            <Template Context="row">@row.Year?.Depreciation</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="@($"Value end of {_year}")" Width="10rem" TextAlign="TextAlign.Right">
+            <Template Context="row">
+                @if (row.Year?.DisposalResult is not null)
+                {
+                    <RadzenText TextStyle="TextStyle.Caption">sold @row.Asset.DisposedOn?.ToString("dd.MM.yyyy")</RadzenText>
+                }
+                else
+                {
+                    @row.Year?.Closing
+                }
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="Receipt">
+            <Template Context="row">
+                @if (row.Asset.Receipt is not null)
+                {
+                    <span @onclick:stopPropagation="true"><AttachmentLink Attachment="row.Asset.Receipt" /></span>
+                }
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+    private List<int> _years = [];
+    private int _year;
+    private List<Asset>? _assets;
+    private bool _proRataFirstYear;
+
+    /// <summary>Equipment owned during the selected year, with that year's figures.</summary>
+    private IEnumerable<AssetRow> Rows => (_assets ?? [])
+        .Where(a => a.PurchaseDate.Year <= _year && (a.DisposedOn is null || a.DisposedOn.Value.Year >= _year))
+        .Select(a => new AssetRow(a, a.Schedule(_year, _proRataFirstYear).LastOrDefault(y => y.Year == _year)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        _year = Time.GetLocalNow().Year;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _years = await IncomeStatement.YearsAsync(db, _year);
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _assets = await db.Assets.AsNoTracking().Include(a => a.Receipt).OrderByDescending(a => a.PurchaseDate).ToListAsync();
+        _proRataFirstYear = await db.BusinessSettings.Select(s => s.ProRataFirstYear).SingleAsync();
+    }
+
+    private async Task EditAsync(int? assetId)
+    {
+        var changed = await Dialogs.OpenAsync<AssetDialog>(
+            assetId is null ? "Add equipment" : "Edit equipment",
+            new Dictionary<string, object?> { ["AssetId"] = assetId },
+            new DialogOptions { Width = "40rem" });
+        if (changed is true)
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            _years = await IncomeStatement.YearsAsync(db, Time.GetLocalNow().Year);
+            await LoadAsync();
+        }
+    }
+
+    private sealed record AssetRow(Asset Asset, DepreciationYear? Year);
+}

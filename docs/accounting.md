@@ -1,7 +1,7 @@
-# How Funk calculates
+# How Aperture calculates
 
-How the figures in Funk come about, so you can check them and explain them to a fiduciary or the tax office.
-Funk keeps simplified records for a self-employed sole trader in Switzerland. It doesn't give tax advice;
+How the figures in Aperture come about, so you can check them and explain them to a fiduciary or the tax office.
+Aperture keeps simplified records for a self-employed sole trader in Switzerland. It doesn't give tax advice;
 when in doubt, ask your fiduciary or the cantonal tax office.
 
 All amounts are in CHF, calculated to the Rappen.
@@ -49,7 +49,7 @@ The total is calculated as:
 ```
 
 The **QR-bill** uses an RF creditor reference made from the invoice number. Your bank reports it with the payment,
-so you can see which invoice was paid. Payments still have to be entered in Funk by hand.
+so you can see which invoice was paid. Payments still have to be entered in Aperture by hand.
 
 An invoice is **overdue** when its due date has passed and the gig isn't paid in full. The due date defaults to
 the payment terms in Settings (30 days).
@@ -79,7 +79,7 @@ A gig played in December and paid in January counts as income in January's year.
 Equipment that lasts several years (controllers, speakers, laptop) isn't a cost in the year you buy it.
 It's depreciated: each year a share of its remaining value counts as a cost.
 
-Funk uses the **declining-balance method** (*degressiv, vom Buchwert*): the rate applies to the remaining book value
+Aperture uses the **declining-balance method** (*degressiv, vom Buchwert*): the rate applies to the remaining book value
 each year. The default rates are the maximums from the ESTV's *Merkblatt A 1995*, which the canton of St. Gallen
 also applies (StB 41 Nr. 1):
 
@@ -128,4 +128,4 @@ for good, and never deletes receipts.
 
 Registration for VAT (MWST) is mandatory from CHF 100,000 of yearly turnover. Until then, leave it off in Settings
 and invoices show no VAT. Once registered, enter your VAT number and rate: invoices then show VAT and your number.
-Funk doesn't create VAT returns.
+Aperture doesn't create VAT returns.
