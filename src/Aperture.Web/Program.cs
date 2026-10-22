@@ -9,6 +9,7 @@ using Aperture.Web.Features.Finance;
 using Aperture.Web.Features.Invoices;
 using Aperture.Web.Features.Notifications;
 using Aperture.Web.Features.Updates;
+using Aperture.Web.Installation;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -17,7 +18,31 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 
+// install, update, backup, restore, uninstall: the program installs and maintains itself (see Commands).
+if (await Commands.TryRunAsync(args) is { } exitCode)
+{
+    return exitCode;
+}
+
 var builder = WebApplication.CreateBuilder(args);
+
+// An installed copy reads its settings from its home's aperture.json (written by the install command): port, data
+// folder, update feed. Environment variables and arguments still win. A development copy uses appsettings only.
+var home = ApertureHome.Resolve(ApertureHome.FromArguments(args));
+builder.Services.AddSingleton(home);
+builder.Services.AddSingleton(Platform.Current());
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile(home.SettingsFile, optional: true, reloadOnChange: false);
+    builder.Configuration.AddEnvironmentVariables();
+    builder.Configuration.AddCommandLine(args);
+}
+
+// On Windows Aperture runs without a console window, so it logs to a file (aperture.json's Aperture:LogFile).
+if (builder.Configuration["Aperture:LogFile"] is { Length: > 0 } logFile)
+{
+    builder.Logging.AddProvider(new FileLoggerProvider(logFile));
+}
 
 // Data
 var paths = AperturePaths.From(builder.Configuration, builder.Environment);
@@ -30,14 +55,14 @@ builder.Services.AddSingleton<InvoiceService>();
 builder.Services.AddSingleton<TaxExport>();
 builder.Services.AddSingleton<BackupDownload>();
 
-// Updates (Settings → Updates): from the public release feed install-laptop.sh configures; off without one.
+// Updates (Settings → Updates): from the public release feed the install command configures; off without one.
 var updateOptions = builder.Configuration.GetSection("Updates").Get<UpdateOptions>() ?? new UpdateOptions();
 builder.Services.AddSingleton(updateOptions);
 builder.Services.AddHttpClient(nameof(ReleaseFeed), ReleaseFeed.Configure);
 builder.Services.AddSingleton<UpdateService>();
 builder.Services.AddHostedService<UpdateCheckWorker>();
 
-// Notifications in the browser on this Mac (Settings → Notifications), sent through the browser's push service.
+// Notifications in the browser (Settings → Notifications), sent through the browser's push service.
 builder.Services.AddHttpClient(nameof(PushService), http => http.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddSingleton<PushService>();
 builder.Services.AddSingleton<PushReminders>();
@@ -124,3 +149,4 @@ app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 });
 
 app.Run();
+return 0;

@@ -53,7 +53,9 @@ public sealed class BackupDownloadTests : IDisposable
         }
 
         using var reader = new StreamReader(zip.GetEntry($"{folder}/How to restore.txt")!.Open());
-        Assert.Contains("cp aperture.db ~/Aperture/data/aperture.db", await reader.ReadToEndAsync());
+        var note = await reader.ReadToEndAsync();
+        Assert.Contains("Aperture.Web restore ~/Downloads/\"Aperture backup 2026-10-22.zip\"", note);   // Mac and Linux
+        Assert.Contains(@"Aperture.Web.exe"" restore ""$env:USERPROFILE\Downloads\Aperture backup 2026-10-22.zip""", note); // Windows
         Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
     }
 }

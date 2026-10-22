@@ -21,13 +21,13 @@ public sealed record AperturePaths(string DataDirectory)
     /// <summary>The login created in the browser on a laptop installation (see LoginStore). Delete it to set a new one.</summary>
     public string LoginFile => Path.Combine(KeysDirectory, "login.json");
 
-    /// <summary>Written by the backup script (deploy/macos/backup.sh).</summary>
+    /// <summary>Written by the daily backup ("Aperture.Web backup", see BackupJob).</summary>
     public string BackupStatusFile => Path.Combine(DataDirectory, "backup-status.json");
 
-    /// <summary>Downloaded releases and the hand-over to the updater (deploy/macos/auto-update.sh).</summary>
+    /// <summary>Downloaded releases and the hand-over to the updater ("Aperture.Web update", see Updater).</summary>
     public string UpdatesDirectory => Path.Combine(DataDirectory, "updates");
 
-    /// <summary>Holds the file name of a downloaded release; writing it starts the updater (launchd WatchPaths).</summary>
+    /// <summary>Holds the file name of a downloaded release; writing it starts the updater (see Platform).</summary>
     public string UpdateRequestFile => Path.Combine(UpdatesDirectory, "request");
 
     /// <summary>Written by the updater: running, succeeded or failed.</summary>

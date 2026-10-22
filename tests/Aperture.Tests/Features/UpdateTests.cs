@@ -3,6 +3,7 @@ using System.Text;
 using Aperture.Web.Configuration;
 using Aperture.Web.Features.Dashboard;
 using Aperture.Web.Features.Updates;
+using Aperture.Web.Installation;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Aperture.Tests.Features;
@@ -18,24 +19,30 @@ public class UpdateTests : IAsyncLifetime, IDisposable
 
     public void Dispose() => Directory.Delete(_dataDirectory, recursive: true);
 
-    private const string Package = "aperture-2026.10.20-58-ed1231e-osx-arm64.tar.gz";
+    // The package for the system running the tests, as Aperture there would look for it.
+    private static readonly string Runtime = Platform.RuntimeIdentifier;
+    private static readonly string Package = $"aperture-2026.10.20-58-ed1231e-{Runtime}.tar.gz";
     private static readonly byte[] PackageBytes = Encoding.UTF8.GetBytes("pretend this is a tarball");
 
     // The feed: latest.json of the latest release (.github/workflows/release.yml attaches it, promote.yml promotes it).
     private const string FeedUrl = "https://github.example.test/me/aperture/releases/latest/download/latest.json";
-    private const string DownloadUrl = "https://github.example.test/me/aperture/releases/download/v2026.10.20-58-ed1231e/" + Package;
+    private static readonly string DownloadUrl = "https://github.example.test/me/aperture/releases/download/v2026.10.20-58-ed1231e/" + Package;
     private static readonly string PackageSha256 = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(PackageBytes));
 
-    private static string FeedJson(string? sha256 = null, string download = DownloadUrl, string file = Package, long? size = null) => $$"""
+    private static string FeedJson(string? sha256 = null, string? download = null, string? file = null, long? size = null) => $$"""
         {
           "version": "2026.10.20-58-ed1231e",
           "published": "2026-10-20T08:00:00Z",
           "notes": "- Add the laptop installer",
           "page": "https://github.example.test/me/aperture/releases/tag/v2026.10.20-58-ed1231e",
-          "file": "{{file}}",
-          "size": {{size ?? PackageBytes.Length}},
-          "sha256": "{{sha256 ?? PackageSha256}}",
-          "download": "{{download}}"
+          "packages": {
+            "{{Runtime}}": {
+              "file": "{{file ?? Package}}",
+              "size": {{size ?? PackageBytes.Length}},
+              "sha256": "{{sha256 ?? PackageSha256}}",
+              "download": "{{download ?? DownloadUrl}}"
+            }
+          }
         }
         """;
 
@@ -64,12 +71,9 @@ public class UpdateTests : IAsyncLifetime, IDisposable
     private static HttpResponseMessage Json(string json) => new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
 
     private static Func<HttpRequestMessage, HttpResponseMessage> FeedLike(string json) => request =>
-        request.RequestUri!.ToString() switch
-        {
-            FeedUrl => Json(json),
-            DownloadUrl => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(PackageBytes) },
-            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
-        };
+        request.RequestUri!.ToString() == FeedUrl ? Json(json)
+        : request.RequestUri!.ToString() == DownloadUrl ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(PackageBytes) }
+        : new HttpResponseMessage(HttpStatusCode.NotFound);
 
     private (UpdateService Service, FakeFeed Feed, AperturePaths Paths) Create(
         Func<HttpRequestMessage, HttpResponseMessage> respond, string? feedUrl = FeedUrl)
@@ -77,8 +81,8 @@ public class UpdateTests : IAsyncLifetime, IDisposable
         var options = new UpdateOptions { FeedUrl = feedUrl };
         var feed = new FakeFeed(respond);
         var paths = new AperturePaths(_dataDirectory);
-        var service = new UpdateService(new Factory(feed), options, paths,
-            new FixedTimeProvider(new DateTime(2026, 10, 20, 12, 0, 0)), NullLogger<UpdateService>.Instance);
+        var service = new UpdateService(new Factory(feed), options, paths, new ApertureHome(_dataDirectory),
+            new LinuxPlatform(new NoCommands()), new FixedTimeProvider(new DateTime(2026, 10, 20, 12, 0, 0)), NullLogger<UpdateService>.Instance);
         return (service, feed, paths);
     }
 
@@ -205,12 +209,21 @@ public class UpdateTests : IAsyncLifetime, IDisposable
     }
 
     [Theory]
-    [InlineData("not-a-hash", DownloadUrl, Package)]
-    [InlineData(null, "http://github.example.test/" + Package, Package)]
-    [InlineData(null, DownloadUrl, "aperture-../../x-osx-arm64.tar.gz")]
-    [InlineData(null, DownloadUrl, "something-else.zip")]
-    public async Task Feed_entry_that_isnt_safe_to_install_is_ignored(string? sha256, string download, string file)
+    [InlineData("bad hash")]
+    [InlineData("plain http")]
+    [InlineData("path in the name")]
+    [InlineData("not a package")]
+    [InlineData("another system's package")]
+    public async Task Feed_entry_that_isnt_safe_to_install_is_ignored(string problem)
     {
+        var (sha256, download, file) = problem switch
+        {
+            "bad hash" => ("not-a-hash", DownloadUrl, Package),
+            "plain http" => (null, "http://github.example.test/" + Package, Package),
+            "path in the name" => (null, DownloadUrl, $"aperture-../../x-{Runtime}.tar.gz"),
+            "not a package" => (null, DownloadUrl, "something-else.zip"),
+            _ => (null, DownloadUrl, Package.Replace(Runtime, Runtime == "win-x64" ? "linux-x64" : "win-x64")),
+        };
         var (updates, _, paths) = Create(FeedLike(FeedJson(sha256, download, file)));
         await updates.CheckAsync();
         await updates.InstallAsync();
@@ -238,7 +251,7 @@ public class UpdateTests : IAsyncLifetime, IDisposable
     [Fact]
     public async Task Dashboard_mentions_an_available_update_last()
     {
-        var release = ReleaseFeed.ToRelease(System.Text.Json.JsonSerializer.Deserialize<ReleaseFeed.FeedJson>(FeedJson())!)!;
+        var release = ReleaseFeed.ToRelease(System.Text.Json.JsonSerializer.Deserialize<ReleaseFeed.FeedJson>(FeedJson())!, Runtime)!;
         await using var db = _db.CreateContext();
 
         var items = await Attention.ItemsAsync(db, new DateTime(2026, 10, 20, 12, 0, 0), update: release);
@@ -247,5 +260,45 @@ public class UpdateTests : IAsyncLifetime, IDisposable
         Assert.Equal(AttentionLevel.Info, item.Level);
         Assert.Equal("Aperture build 58 · 20.10.2026 is available", item.Text);
         Assert.Equal("settings#updates", item.Link);
+    }
+
+    [Fact]
+    public void Each_system_gets_its_own_package()
+    {
+        var json = System.Text.Json.JsonSerializer.Deserialize<ReleaseFeed.FeedJson>("""
+            {
+              "version": "2026.10.20-58-ed1231e",
+              "packages": {
+                "osx-arm64": { "file": "aperture-2026.10.20-58-ed1231e-osx-arm64.tar.gz", "size": 3, "sha256": "{{SHA}}", "download": "https://example.test/aperture-2026.10.20-58-ed1231e-osx-arm64.tar.gz" },
+                "win-x64": { "file": "aperture-2026.10.20-58-ed1231e-win-x64.tar.gz", "size": 4, "sha256": "{{SHA}}", "download": "https://example.test/aperture-2026.10.20-58-ed1231e-win-x64.tar.gz" }
+              }
+            }
+            """.Replace("{{SHA}}", PackageSha256))!;
+
+        Assert.Equal("aperture-2026.10.20-58-ed1231e-win-x64.tar.gz", ReleaseFeed.ToRelease(json, "win-x64")!.AssetName);
+        Assert.Equal("aperture-2026.10.20-58-ed1231e-osx-arm64.tar.gz", ReleaseFeed.ToRelease(json, "osx-arm64")!.AssetName);
+        Assert.Null(ReleaseFeed.ToRelease(json, "linux-x64")); // none built for it
+    }
+
+    [Theory]
+    [InlineData("aperture-2026.10.20-58-ed1231e-win-x64.tar.gz", "win-x64", true)]
+    [InlineData("aperture-2026.10.20-58-ed1231e-win-x64.tar.gz", "linux-x64", false)]
+    [InlineData("aperture-2026.10.20-58-ed1231e-dirty-linux-arm64.tar.gz", "linux-arm64", true)]
+    [InlineData("aperture-2026.10.20-58-ed1231e-osx-arm64.zip", "osx-arm64", false)]
+    public void Package_names_say_which_system_they_are_for(string name, string runtime, bool matches)
+    {
+        Assert.Equal(matches, ReleaseFeed.IsPackageFor(name, runtime));
+    }
+
+    [Fact]
+    public void Version_comes_from_the_package_name()
+    {
+        Assert.Equal("2026.10.20-58-ed1231e-dirty", ReleaseVersion.Parse(ReleaseFeed.VersionOf("aperture-2026.10.20-58-ed1231e-dirty-win-x64.tar.gz")).Text);
+    }
+
+    /// <summary>The platform's system tools aren't run in these tests.</summary>
+    private sealed class NoCommands : ICommandRunner
+    {
+        public Task<CommandResult> RunAsync(string file, params string[] args) => Task.FromResult(new CommandResult(0, ""));
     }
 }

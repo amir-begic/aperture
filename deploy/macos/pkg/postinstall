@@ -1,7 +1,7 @@
 #!/bin/bash
-# Runs as root when the person clicks Install in Aperture-Installer.pkg (built by build-pkg.sh, which fills in
-# __FEED_URL__). Everything else happens as the person logged in: download the newest release from the feed, check it
-# against the feed's SHA-256, and run its install-laptop.sh. Output goes to /var/log/install.log.
+# Runs as root when the person clicks Install in Aperture-Installer.pkg (built by build-pkg.sh, which puts the release
+# next to this script and fills in __FEED_URL__). Everything else happens as the person logged in: unpack the release
+# and run its install.sh, with the feed for updates. Output goes to /var/log/install.log.
 set -euo pipefail
 FEED_URL="__FEED_URL__"
 PACKAGE_PATTERN='^aperture-[0-9A-Za-z.-]+-osx-arm64\.tar\.gz$'
@@ -16,19 +16,16 @@ uid="$(id -u "$user")"
 # In the person's login session (for launchctl and opening the browser), as them.
 as_user() { launchctl asuser "$uid" sudo -u "$user" -H "$@"; }
 
+here="$(cd "$(dirname "$0")" && pwd)"
+release="$(cd "$here" && ls aperture-*-osx-arm64.tar.gz 2>/dev/null | head -n 1)"
+[[ $release =~ $PACKAGE_PATTERN ]] || fail "The installer doesn't contain a release. Download it again."
+
+# The installer's own folder may not be readable for the person; their copy is.
 work="$(as_user mktemp -d /tmp/aperture-install.XXXXXX)"
 trap 'rm -rf "$work"' EXIT
+cp "$here/$release" "$work/$release"
+chown "$user" "$work/$release"
 
-echo "Aperture: reading $FEED_URL"
-as_user curl -fsSL --retry 3 -o "$work/latest.json" "$FEED_URL" || fail "Couldn't reach the release feed. Is this Mac online?"
-field() { plutil -extract "$1" raw -o - "$work/latest.json"; }
-file="$(field file)"
-download="$(field download)"
-sha256="$(field sha256)"
-[[ $file =~ $PACKAGE_PATTERN && $download == https://* ]] || fail "The release feed doesn't name a Mac package."
-
-echo "Aperture: downloading $file"
-as_user curl -fsSL --retry 3 -o "$work/$file" "$download" || fail "The download failed."
-echo "$sha256  $work/$file" | shasum -a 256 -c - >/dev/null || fail "The download doesn't match the release."
-as_user tar -xzf "$work/$file" -C "$work"
-as_user /bin/bash "$work/${file%-osx-arm64.tar.gz}/deploy/macos/install-laptop.sh" "$work/$file" "$FEED_URL"
+echo "Aperture: installing $release for $user"
+as_user tar -xzf "$work/$release" -C "$work"
+as_user /bin/bash "$work/${release%-osx-arm64.tar.gz}/deploy/macos/install.sh" "$work/$release" "$FEED_URL"

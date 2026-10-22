@@ -10,6 +10,7 @@
 @using Microsoft.AspNetCore.Authentication.Cookies
 @inject LoginStore Logins
 @inject NavigationManager Navigation
+@inject Aperture.Web.Installation.Platform Platform
 
 @* First start: there's no login yet, so the first visit creates it. *@
 
@@ -23,7 +24,7 @@
 <RadzenCard class="login-card">
     <RadzenStack Gap="1rem">
         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-            Welcome. Choose the username and password you'll sign in with. They stay on this Mac.
+            Welcome. Choose the username and password you'll sign in with. They stay on @Platform.ThisComputer.
         </RadzenText>
 
         @if (_error is not null)

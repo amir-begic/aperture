@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The installer window: title, welcome, license and closing page, and which Macs it installs on (Apple silicon,
+     macOS 15 or newer, as .NET 10 requires). build-pkg.sh fills in __VERSION__. -->
+<installer-gui-script minSpecVersion="2">
+    <title>Aperture</title>
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <license file="LICENSE.txt" mime-type="text/plain"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+    <options customize="never" require-scripts="false" hostArchitectures="arm64"/>
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="15.0"/>
+        </allowed-os-versions>
+    </volume-check>
+    <choices-outline>
+        <line choice="ch.aperture.installer"/>
+    </choices-outline>
+    <choice id="ch.aperture.installer" visible="false" title="Aperture">
+        <pkg-ref id="ch.aperture.installer"/>
+    </choice>
+    <pkg-ref id="ch.aperture.installer" version="__VERSION__" onConclusion="none">Aperture.pkg</pkg-ref>
+</installer-gui-script>

@@ -35,8 +35,14 @@ jobs:
             tag="$(gh release list --limit 1 --json tagName -q '.[0].tagName')"
           fi
           [ -n "$tag" ] || { echo "::error::There's no release yet. Push to main first."; exit 1; }
-          gh release view "$tag" --json assets -q '.assets[].name' | grep -qx latest.json \
+          assets="$(gh release view "$tag" --json assets -q '.assets[].name')"
+          grep -qx latest.json <<< "$assets" \
             || { echo "::error::$tag has no latest.json; it was built before releases carried one."; exit 1; }
+          # New computers install from the latest release's installers; without them, the download links would break.
+          for installer in Aperture-Installer.pkg Aperture-Setup.exe; do
+            grep -qx "$installer" <<< "$assets" \
+              || { echo "::error::$tag has no $installer yet. Wait for its Release run to finish, or run it again."; exit 1; }
+          done
 
           gh release edit "$tag" --prerelease=false --latest
 

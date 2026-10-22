@@ -2,19 +2,20 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Aperture.Web.Configuration;
+using Aperture.Web.Installation;
 
 namespace Aperture.Web.Features.Updates;
 
-/// <summary>What the updater on the Mac (deploy/macos/auto-update.sh) reports about the last update.</summary>
+/// <summary>What the updater ("Aperture.Web update", see Updater) reports about the last update.</summary>
 public sealed record UpdateStatus(
     [property: JsonPropertyName("state")] string State,
     [property: JsonPropertyName("version")] string? Version,
     [property: JsonPropertyName("message")] string? Message,
     [property: JsonPropertyName("time")] DateTimeOffset? Time)
 {
-    public bool IsRunning => State == "running";
-    public bool Succeeded => State == "succeeded";
-    public bool Failed => State == "failed";
+    [JsonIgnore] public bool IsRunning => State == "running";
+    [JsonIgnore] public bool Succeeded => State == "succeeded";
+    [JsonIgnore] public bool Failed => State == "failed";
 
     public static UpdateStatus? Read(AperturePaths paths)
     {
@@ -32,12 +33,13 @@ public sealed record UpdateStatus(
 
 /// <summary>
 /// Looks for new releases in the public feed (see ReleaseFeed) and hands one over to the updater. Aperture can't replace itself while it runs:
-/// it downloads the release into data/updates and writes its name to the request file; launchd sees the file
-/// and starts deploy/macos/auto-update.sh, which runs update.sh (stop, copy the database, switch, check, roll back
-/// if needed). Singleton: the dashboard and Settings share one state.
+/// it downloads the release into data/updates and writes its name to the request file, and the platform starts the
+/// updater (Updater: stop, copy the database, switch, check, roll back if needed). launchd and systemd watch for the
+/// file; on Windows Aperture starts the updater's task itself. Singleton: the dashboard and Settings share one state.
 /// </summary>
 public sealed class UpdateService(
-    IHttpClientFactory httpFactory, UpdateOptions options, AperturePaths paths, TimeProvider time, ILogger<UpdateService> logger)
+    IHttpClientFactory httpFactory, UpdateOptions options, AperturePaths paths, ApertureHome home, Platform platform,
+    TimeProvider time, ILogger<UpdateService> logger)
 {
     private readonly SemaphoreSlim _lock = new(1, 1);
 
@@ -77,7 +79,7 @@ public sealed class UpdateService(
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
         {
-            Problem = "Couldn't reach the update server. Is this Mac online?";
+            Problem = $"Couldn't reach the update server. Is {platform.ThisComputer} online?";
             logger.LogWarning(e, "Update check failed");
         }
         finally
@@ -92,7 +94,7 @@ public sealed class UpdateService(
     /// <summary>Downloads the available release and starts the updater. Aperture restarts shortly after.</summary>
     public async Task InstallAsync(CancellationToken cancellationToken = default)
     {
-        if (Available is not { } release || !ReleaseFeed.PackageName().IsMatch(release.AssetName))
+        if (Available is not { } release || !ReleaseFeed.IsPackageFor(release.AssetName, Platform.RuntimeIdentifier))
         {
             return;
         }
@@ -130,6 +132,7 @@ public sealed class UpdateService(
             var request = paths.UpdateRequestFile + ".tmp";
             await File.WriteAllTextAsync(request, release.AssetName + "\n", cancellationToken);
             File.Move(request, paths.UpdateRequestFile, overwrite: true);
+            await platform.StartUpdaterAsync(home);
             logger.LogInformation("Update to {Version} handed to the updater", release.Version.Text);
         }
         finally

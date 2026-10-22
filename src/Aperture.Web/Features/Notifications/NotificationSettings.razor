@@ -5,15 +5,17 @@
 @inject IJSRuntime JS
 @inject DialogService Dialogs
 @inject NotificationService Notifications
+@inject NavigationManager Navigation
+@inject Aperture.Web.Installation.Platform Platform
 
 <RadzenFieldset Text="Notifications" class="settings-form rz-mt-6" id="notifications">
     <RadzenStack Gap="1rem">
         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-            Aperture can let you know on this Mac when an invoice becomes overdue, when a delivery is due within a week or
+            Aperture can let you know on @Platform.ThisComputer when an invoice becomes overdue, when a delivery is due within a week or
             overdue, when an inquiry has waited @InquiryDays days for an answer, when prep is still open @PrepDays days
             before a shoot, when a backup fails and when a new version is available. Each only once, between
-            @PushReminders.DayStarts.ToString("HH:mm") and @PushReminders.DayEnds.ToString("HH:mm"), and only while this
-            Mac is awake: Aperture sends them itself.
+            @PushReminders.DayStarts.ToString("HH:mm") and @PushReminders.DayEnds.ToString("HH:mm"), and only while
+            @Platform.ThisComputer is awake: Aperture sends them itself.
         </RadzenText>
 
         @if (_device is null)
@@ -32,7 +34,7 @@
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                 @if (!_device.Secure)
                 {
-                    <text>Notifications need Aperture's own address on this Mac. Open it at http://localhost:5090.</text>
+                    <text>Notifications need Aperture's own address on @Platform.ThisComputer. Open it at http://localhost:@(new Uri(Navigation.BaseUri).Port).</text>
                 }
                 else
                 {
@@ -44,7 +46,7 @@
         {
             <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
                 Notifications from Aperture are blocked in this browser. Allow them in its settings for this address (Safari:
-                Settings → Websites → Notifications).
+                Settings → Websites → Notifications; Chrome and Edge: the icon left of the address).
             </RadzenAlert>
         }
         else if (_thisDevice is { } current)
@@ -204,7 +206,7 @@
         else
         {
             Notifications.Notify(NotificationSeverity.Warning, "Couldn't send the notification",
-                "The push service didn't take it. Is this Mac online? Details are in the log.");
+                $"The push service didn't take it. Is {Platform.ThisComputer} online? Details are in the log.");
         }
         await RefreshDeviceAsync();
     }

@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject UpdateService Updates
 @inject Aperture.Web.Configuration.AperturePaths Paths
+@inject Aperture.Web.Installation.ApertureHome Home
 @inject DialogService Dialogs
 @inject NotificationService Notifications
 @inject TimeProvider Time
@@ -30,7 +31,7 @@
             {
                 <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
                     The update to @(failed.Version ?? "the new version") didn't work: @failed.Message
-                    Aperture is still running the previous version. Details are in ~/Aperture/logs/update.log on the Mac.
+                    Aperture is still running the previous version. Details are in @Home.Log("update").
                 </RadzenAlert>
             }
             else if (RecentStatus is { Succeeded: true } done && done.Version == UpdateService.Current.Text)
@@ -164,7 +165,8 @@
         {
             await Updates.InstallAsync();
         }
-        catch (Exception e) when (e is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException)
+        catch (Exception e) when (e is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException
+            or Aperture.Web.Installation.InstallationException)
         {
             Notifications.Notify(NotificationSeverity.Error, "Download failed", e.Message);
         }

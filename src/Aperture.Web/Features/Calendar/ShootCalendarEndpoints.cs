@@ -8,8 +8,8 @@ namespace Aperture.Web.Features.Calendar;
 public static class ShootCalendarEndpoints
 {
     /// <summary>
-    /// GET /shoots/{id}.ics: one shoot to open in a calendar app (Add to calendar on the shoot). It goes into Calendar on
-    /// this Mac, and through iCloud onto the phone. Requires sign-in like every other page.
+    /// GET /shoots/{id}.ics: one shoot to open in a calendar app (Add to calendar on the shoot). With a synced calendar it
+    /// reaches the phone too. Requires sign-in like every other page.
     /// </summary>
     public static void MapShootCalendarEndpoints(this IEndpointRouteBuilder app)
     {

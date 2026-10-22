@@ -5,7 +5,7 @@ using Aperture.Web.Configuration;
 namespace Aperture.Web.Features.Backup;
 
 /// <summary>
-/// The result of the last daily backup, as written by deploy/macos/backup.sh.
+/// The result of the last daily backup, as written by "Aperture.Web backup" (see BackupJob).
 /// The app only reads it: backups run outside the app, so they still happen when the app itself is broken.
 /// </summary>
 public sealed record BackupStatus(

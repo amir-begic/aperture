@@ -1,6 +1,9 @@
-# Every push to main: run the tests, build the release and publish it as a pre-release of this repository, with
-# latest.json, the feed entry Aperture reads (Updates:FeedUrl). Macs don't see it yet: they read the latest release,
-# and pre-releases never are. promote.yml makes one the latest once you've tried it.
+# Every push to main: run the tests, build a package per system (macOS, Windows, Linux) and publish them as a
+# pre-release of this repository, with latest.json, the feed entry Aperture reads (Updates:FeedUrl). Installed copies
+# don't see it yet: they read the latest release, and pre-releases never are. promote.yml makes one the latest once
+# you've tried it. Two more jobs build the installers around the packages and attach them, so the latest ones are
+# always at …/releases/latest/download/Aperture-Installer.pkg (macOS) and …/Aperture-Setup.exe (Windows). On Linux,
+# the package is the installer (install.sh inside).
 #
 # Kept small for the free plan: no workflow artifacts or caches (the package goes to Releases, which don't count
 # towards Actions storage), no run for changes that are only docs, a newer push cancels the older run, and only
@@ -29,6 +32,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 15   # a hung run would otherwise burn minutes up to the 6-hour default
+    outputs:
+      version: ${{ steps.build.outputs.version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,20 +46,22 @@ jobs:
       - name: Test
         run: dotnet test --nologo
 
-      - name: Build the release
+      - name: Build the releases
         id: build
+        env:
+          # Each release remembers its feed (feed.url), so the Windows and Linux installers needn't know it.
+          APERTURE_FEED_URL: https://github.com/${{ github.repository }}/releases/latest/download/latest.json
         run: |
-          tarball="$(deploy/publish.sh)"
-          version="$(basename "$tarball" -osx-arm64.tar.gz)"
-          version="${version#aperture-}"
-          echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+          for runtime in osx-arm64 win-x64 linux-x64; do
+            deploy/publish.sh "$runtime"
+          done
+          version="$(basename artifacts/aperture-*-osx-arm64.tar.gz -osx-arm64.tar.gz)"
+          echo "version=${version#aperture-}" >> "$GITHUB_OUTPUT"
 
       - name: Publish as a pre-release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.build.outputs.version }}
-          TARBALL: ${{ steps.build.outputs.tarball }}
         run: |
           previous="$(git describe --tags --abbrev=0 2>/dev/null || true)"
           if [ -n "$previous" ]; then
@@ -63,23 +70,33 @@ jobs:
             git log -1 --format='- %s' > notes.md
           fi
 
-          # The feed entry: what the release is, where its package is and the package's SHA-256 (ReleaseFeed.cs).
+          # The feed entry: what the release is, and per system where its package is and the package's SHA-256
+          # (ReleaseFeed.cs).
           tag="v$VERSION"
-          file="$(basename "$TARBALL")"
+          packages='{}'
+          for tarball in artifacts/aperture-*.tar.gz; do
+            file="$(basename "$tarball")"
+            runtime="${file#aperture-$VERSION-}"
+            runtime="${runtime%.tar.gz}"
+            packages="$(jq -c \
+              --arg runtime "$runtime" \
+              --arg file "$file" \
+              --argjson size "$(stat -c %s "$tarball")" \
+              --arg sha256 "$(sha256sum "$tarball" | cut -d ' ' -f 1)" \
+              --arg download "https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/$file" \
+              '. + {($runtime): {file: $file, size: $size, sha256: $sha256, download: $download}}' <<< "$packages")"
+          done
           jq -n \
             --arg version "$VERSION" \
             --arg published "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             --rawfile notes notes.md \
             --arg page "https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag" \
-            --arg file "$file" \
-            --argjson size "$(stat -c %s "$TARBALL")" \
-            --arg sha256 "$(sha256sum "$TARBALL" | cut -d ' ' -f 1)" \
-            --arg download "https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/$file" \
-            '{version: $version, published: $published, notes: $notes, page: $page, file: $file, size: $size, sha256: $sha256, download: $download}' \
+            --argjson packages "$packages" \
+            '{version: $version, published: $published, notes: $notes, page: $page, packages: $packages}' \
             > latest.json
           cat latest.json
 
-          gh release create "$tag" "$TARBALL" latest.json --prerelease --latest=false \
+          gh release create "$tag" artifacts/aperture-*.tar.gz latest.json --prerelease --latest=false \
             --title "Aperture $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
 
       # Never the latest release: that's the one the Macs and the installer package download.
@@ -90,3 +107,47 @@ jobs:
           gh release list --limit 100 --json tagName,createdAt,isLatest \
             | jq -r 'map(select(.isLatest | not)) | sort_by(.createdAt) | reverse | .[5:] | .[].tagName' \
             | while read -r tag; do gh release delete "$tag" --yes --cleanup-tag; done
+
+  # The installers are built around the release's packages, on the systems whose tools they need. The packages come
+  # from the release itself, not as workflow artifacts, so nothing counts towards Actions storage.
+  mac-installer:
+    needs: release
+    runs-on: macos-latest   # pkgbuild and productbuild only exist on macOS
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the installer and attach it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ needs.release.outputs.version }}
+        run: |
+          gh release download "$TAG" --pattern 'aperture-*-osx-arm64.tar.gz' --dir artifacts
+          deploy/macos/pkg/build-pkg.sh artifacts/aperture-*-osx-arm64.tar.gz \
+            "https://github.com/$GITHUB_REPOSITORY/releases/latest/download/latest.json"
+          gh release upload "$TAG" artifacts/Aperture-Installer.pkg
+
+  windows-installer:
+    needs: release
+    runs-on: windows-latest   # Inno Setup only runs on Windows
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the setup and attach it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          gh release download "v$VERSION" --pattern 'aperture-*-win-x64.tar.gz' --dir artifacts
+          tar -xzf artifacts/aperture-*-win-x64.tar.gz -C artifacts
+          iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          [ -f "$iscc" ] || choco install innosetup --yes --no-progress
+          # 2026.10.20-58-ed1231e → 2026.10.20.58: Windows wants a numeric version; the build number only grows.
+          numeric="$(sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-.*/\1.\2/' <<< "$VERSION")"
+          "$iscc" /Qp "/DReleaseDir=$(cygpath -w "$PWD/artifacts/aperture-$VERSION")" "/DVersion=$numeric" \
+            "/DOutputDir=$(cygpath -w "$PWD/artifacts")" deploy/windows/aperture.iss
+          gh release upload "v$VERSION" artifacts/Aperture-Setup.exe

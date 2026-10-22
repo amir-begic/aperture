@@ -9,6 +9,12 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win'))">
+    <!-- No console window: scheduled tasks start Aperture at logon, and a window would stay open. It logs to a file
+         instead (Aperture:LogFile, set by the install command). -->
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.1" />
     <PackageReference Include="Codecrete.SwissQRBill.Generator" Version="3.5.1" />

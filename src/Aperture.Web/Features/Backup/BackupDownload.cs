@@ -78,24 +78,28 @@ public sealed class BackupDownload(AperturePaths paths, TimeProvider time)
         await source.CopyToAsync(target, cancellationToken);
     }
 
+    // A backup can be restored on another system than the one it was made on, so the note covers all three.
     private static string RestoreNote(string folder) => $"""
         Aperture backup: the database (aperture.db) and all uploaded files (attachments).
 
-        To restore it, e.g. on a new Mac:
+        To restore it, e.g. on a new computer:
 
-        1. Install Aperture with its installer and create a login (any; the backup has none).
-        2. Double-click this ZIP in Downloads, so the folder "{folder}" is next to it.
-        3. In Terminal, run these lines one by one. They stop Aperture, put the backup in place and start it again.
-           Your data in Aperture is replaced by the backup's.
+        1. Install Aperture and create a login (any; the backup has none).
+        2. Run Aperture's restore command with this ZIP, as it lies in Downloads. It keeps the current database in
+           Aperture's backups/before-restore, puts the backup in place and restarts Aperture. Your data in Aperture is
+           replaced by the backup's.
 
-           launchctl bootout gui/$UID/ch.aperture.web
-           cd ~/Downloads/"{folder}"
-           cp aperture.db ~/Aperture/data/aperture.db
-           rm -f ~/Aperture/data/aperture.db-wal ~/Aperture/data/aperture.db-shm
-           mkdir -p ~/Aperture/data/attachments && rsync -a attachments/ ~/Aperture/data/attachments/
-           launchctl bootstrap gui/$UID ~/Library/LaunchAgents/ch.aperture.web.plist
+           Mac, in Terminal:
+             ~/Aperture/app/Aperture.Web restore ~/Downloads/"{folder}.zip"
 
-        4. Open http://localhost:5090 and sign in. Turn notifications on again under Settings if you use them.
+           Windows, in PowerShell:
+             & "$env:LOCALAPPDATA\Aperture\app\Aperture.Web.exe" restore "$env:USERPROFILE\Downloads\{folder}.zip"
+
+           Linux, in a terminal:
+             ~/.local/share/aperture/app/Aperture.Web restore ~/Downloads/"{folder}.zip"
+
+        3. Open http://localhost:5090 and sign in with the login from step 1. Turn notifications on again under
+           Settings if you use them.
 
         """;
 }
