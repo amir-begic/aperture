@@ -37,11 +37,21 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
         {
             throw new InstallationException($"The update feed must be an https address: {feed}");
         }
-        var settings = new HomeSettings(port ?? existing?.Port ?? ApertureHome.DefaultPort, feed);
-        settings.Write(home);
 
         log.Write("Starting Aperture");
+        // Stopped first, so the port it listens on counts as free.
         await platform.StopWebAsync(home);
+        HomeSettings settings;
+        try
+        {
+            settings = new HomeSettings(Ports.Choose(port, existing?.Port, log), feed);
+        }
+        catch (InstallationException) when (existing is not null)
+        {
+            await platform.StartWebAsync(home); // unchanged, as it was
+            throw;
+        }
+        settings.Write(home);
         await platform.LinkAppAsync(home, release);
         await platform.RegisterAsync(home);
         await platform.StartWebAsync(home);

@@ -59,6 +59,44 @@ public sealed class InstallationTests : IDisposable
     }
 
     [Fact]
+    public void A_first_installation_takes_the_first_free_port()
+    {
+        Assert.Equal(5090, Ports.Choose(null, null, new CommandLog(null), isFree: _ => true));
+        Assert.Equal(5092, Ports.Choose(null, null, new CommandLog(null), isFree: p => p > 5091));
+        Assert.Throws<InstallationException>(() => Ports.Choose(null, null, new CommandLog(null), isFree: _ => false));
+    }
+
+    [Fact]
+    public void An_installation_keeps_its_port_or_the_one_asked_for_and_never_moves_on()
+    {
+        var free = (int p) => p != 5091 && p != 6000;
+
+        Assert.Equal(6001, Ports.Choose(6001, 5091, new CommandLog(null), free));
+        Assert.Equal(5095, Ports.Choose(null, 5095, new CommandLog(null), free));
+        Assert.Throws<InstallationException>(() => Ports.Choose(null, 5091, new CommandLog(null), free));
+        Assert.Throws<InstallationException>(() => Ports.Choose(6000, null, new CommandLog(null), free));
+        Assert.Throws<InstallationException>(() => Ports.Choose(70000, null, new CommandLog(null), _ => true));
+    }
+
+    [Fact]
+    public void A_port_another_program_listens_on_isnt_free()
+    {
+        var other = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        other.Start();
+        var port = ((System.Net.IPEndPoint)other.LocalEndpoint).Port;
+        try
+        {
+            Assert.False(Ports.IsFree(port));
+        }
+        finally
+        {
+            other.Stop();
+        }
+
+        Assert.True(Ports.IsFree(port));
+    }
+
+    [Fact]
     public void Home_comes_from_the_argument_first()
     {
         Assert.Equal(Path.GetFullPath(_root), ApertureHome.Resolve(_root).Root);

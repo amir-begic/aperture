@@ -206,7 +206,7 @@ e.g. to repair an installation or to restore a backup. The program is `app/Apert
 |---|---|---|
 | `--home <folder>` | all | The install folder, if it's not the usual one (see the table at the top). `APERTURE_HOME` does the same. |
 | `--feed <url>` | `install` | Where to look for updates: the `latest.json` of the latest release. Default: the installation's current one, else the one the release was built with. |
-| `--port <port>` | `install` | The port Aperture listens on, on this computer only. Default: the installation's current one, else 5090. |
+| `--port <port>` | `install` | The port Aperture listens on, on this computer only. Default: the installation's current one, else the first free one from 5090. An installation never moves to another port by itself: its login, notifications, shortcuts and calendar feeds belong to that address. |
 | `--no-open` | `install` | Don't open the browser afterwards. `APERTURE_NO_OPEN=1` does the same. |
 | `--remove-data` | `uninstall` | Also delete the data, uploaded files, login, backups, logs and settings in the install folder. It can't be undone. Only what Aperture created there is deleted, and only in a folder that is an Aperture installation; backups in other folders listed in `backup.conf` stay. On Windows, the uninstaller in *Settings → Apps* asks instead. |
 
@@ -218,6 +218,7 @@ On Windows the program has no console window, so it writes what it does to `logs
 |---|---|
 | The installer failed | macOS: *Console → Log Reports → install.log*, search for `Aperture`. Windows: `%LOCALAPPDATA%\Aperture\logs\install.log`. Linux: the terminal shows it. |
 | Aperture isn't reachable | `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
+| "Port … is in use by another program" | Another program listens on Aperture's port. Close it and install again, or install again with `--port <port>` to move Aperture: then log in again, turn notifications on again and add the calendar feed again. |
 | Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open `http://localhost:5090` and create a new login. All data stays. |
 | Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. Backups in other folders listed in `backup.conf` stay. |
 | Restoring a backup | See [Restoring](#restoring). |
