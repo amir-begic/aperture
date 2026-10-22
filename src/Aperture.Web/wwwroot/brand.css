@@ -5,6 +5,15 @@
    Contrast (WCAG): black on white 21:1, black on gray 15:1, white on black 21:1, gray on black 14:1,
    dark gray on white 13.6:1. Red stays only for danger/overdue, amber for warnings. */
 
+/* The brand typeface: a licensed copy, one weight only. */
+@font-face {
+    font-family: "Brand";
+    src: url("fonts/brand-font.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     color-scheme: light;
 
@@ -20,10 +29,8 @@
     --ss-rule: 1px solid var(--ss-black);
     --ss-rule-dark: 1px solid var(--ss-dark-gray);
     --ss-rule-light: 1px solid var(--ss-gray);
-    /* The site sets the brand typeface, a commercial face that isn't licensed for Aperture. Its own fallback
-       carries the look: it rests on the uppercase, the single weight and the rules. With a license, add the
-       @font-face and put "Brand" first. */
-    --ss-font: Arial, Helvetica, sans-serif;
+    /* The site's own fallback after it, while the font loads. */
+    --ss-font: "Brand", Arial, Helvetica, sans-serif;
     /* The site's type is 13px (0.8125rem) for everything that isn't a big title. */
     --ss-size: 0.8125rem;
     --ss-size-data: 0.875rem;
@@ -75,6 +82,10 @@
     --rz-text-overline-font-size: var(--ss-size);
     --rz-text-overline-font-weight: 400;
     --rz-text-overline-letter-spacing: 0;
+    /* The font's own spacing, as on the site: Radzen tracks captions out and body text in. */
+    --rz-text-caption-letter-spacing: 0;
+    --rz-text-body1-letter-spacing: 0;
+    --rz-text-body2-letter-spacing: 0;
 
     /* Radzen: shapes */
     --rz-border-radius: 0;
@@ -126,8 +137,10 @@ body {
     accent-color: var(--ss-black);
     background: var(--ss-black);
     color: var(--ss-black);
-    font-variant-numeric: tabular-nums;
 }
+
+/* No tabular figures (font-variant-numeric: tabular-nums): the font's widen the space, full stop and colon to a
+   digit's width too, so "10.10.2026 · 10:00" falls apart. The site uses proportional figures as well. */
 
 /* Type: chrome (titles, labels, navigation, buttons, tags) is uppercase like the site. What people typed —
    names, emails, addresses, notes — keeps its own case, so it reads back exactly as entered. */

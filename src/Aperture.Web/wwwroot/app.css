@@ -59,7 +59,6 @@ h1:focus {
     font-size: clamp(1.25rem, 2vw, 2rem);
     line-height: 1.1;
     white-space: nowrap;
-    font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 600px) {
@@ -114,10 +113,6 @@ h1:focus {
     display: inline-block;
     width: 1.75rem;
     height: 1rem;
-}
-
-.shoot-time {
-    font-variant-numeric: tabular-nums;
 }
 
 /* Same fills as the status tags: inquiry white and dashed, booked black, shot white, delivered gray,
@@ -265,7 +260,6 @@ h1:focus {
 
 .num {
     text-align: right;
-    font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 

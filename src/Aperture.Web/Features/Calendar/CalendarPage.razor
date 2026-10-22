@@ -34,7 +34,7 @@
                  AppointmentMouseEnter="ShowCard" AppointmentMouseLeave="HideCard"
                  TodayText="Today">
     <Template Context="item">
-        <span class="shoot-time">@item.Shoot.Start.ToString("HH:mm")</span> @item.Shoot.Title
+        @item.Shoot.Start.ToString("HH:mm") @item.Shoot.Title
     </Template>
     <ChildContent>
         <RadzenMonthView Text="Month" MaxAppointmentsInSlot="3" MoreText="+{0} more" />

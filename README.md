@@ -109,8 +109,7 @@ A few conventions:
   corners, one weight, the ring as logo, light only. Labels, navigation, buttons and tags are uppercase; what people
   typed keeps its case. No accent color: red only for danger and overdue, amber for warnings. The tokens (`--ss-*`)
   and Radzen overrides live in `wwwroot/brand.css` on top of Radzen's *standard* theme; `app.css` holds the app's
-  own components. The site's typeface is commercial and not included: Aperture uses its fallback,
-  Arial / Helvetica (see the note at `--ss-font`).
+  own components. The typeface is the brand typeface, self-hosted in `wwwroot/fonts`.
 
 ## Third-party components
 
@@ -121,3 +120,4 @@ A few conventions:
 | Codecrete.SwissQRBill.Generator | QR-bill | MIT |
 | ClosedXML | Excel export | MIT |
 | Liberation Sans | font embedded in PDFs | SIL Open Font License |
+| Brand typeface | app font, self-hosted in `wwwroot/fonts` | Commercial license (paid); keep the repository private |
