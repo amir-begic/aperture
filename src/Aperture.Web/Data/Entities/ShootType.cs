@@ -1,11 +1,12 @@
 namespace Aperture.Web.Data.Entities;
 
-public enum EventType
+public enum ShootType
 {
     Wedding,
-    Birthday,
+    Portrait,
+    Family,
+    Event,
     Corporate,
-    Club,
-    Private,
+    Commercial,
     Other,
 }

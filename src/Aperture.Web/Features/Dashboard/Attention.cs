@@ -26,8 +26,12 @@ public static class Attention
     /// <summary>How far ahead open prep tasks are flagged.</summary>
     public static readonly TimeSpan PrepHorizon = TimeSpan.FromDays(14);
 
+    /// <summary>How far ahead a delivery date is flagged.</summary>
+    public const int DeliveryHorizonDays = 7;
+
     /// <summary>
-    /// Most urgent first: backups, overdue invoices, shoots to invoice, shoots to close, open prep, a new version of Aperture.
+    /// Most urgent first: backups, overdue invoices, overdue deliveries, deliveries due soon, shoots to invoice,
+    /// shoots to mark as shot, open prep, a new version of Aperture.
     /// Backups are only checked where they're expected (the Mac mini, not a development machine).
     /// Open prep is flagged for shoots within <paramref name="prepHorizon"/> (default <see cref="PrepHorizon"/>).
     /// </summary>
@@ -60,10 +64,10 @@ public static class Attention
             }
         }
 
-        // Booked shoots that were played or are coming up within the prep horizon, plus every shoot with an issued
-        // invoice: invoices sent before the event (deposits, advance payment) can be overdue too.
+        // Booked shoots that were shot or are coming up within the prep horizon, plus every shoot with an issued
+        // invoice: invoices sent before the shoot (deposits, advance payment) can be overdue too.
         var shoots = await db.Shoots
-            .Where(g => g.Status == ShootStatus.Confirmed || g.Status == ShootStatus.Done)
+            .Where(g => g.Status == ShootStatus.Booked || g.Status == ShootStatus.Shot || g.Status == ShootStatus.Delivered)
             .Where(g => g.End <= now || g.Start <= now + horizon || g.Invoices.Any(i => i.Status == InvoiceStatus.Issued))
             .OrderBy(g => g.Start)
             .ToRowsAsync(db);
@@ -78,20 +82,37 @@ public static class Attention
                 $"shoots/{shoot.Id}?tab=invoice", $"invoice-overdue:{invoice.Id}"));
         }
 
+        foreach (var shoot in shoots.Where(g => g.IsDeliveryOverdue(today)))
+        {
+            items.Add(new(AttentionLevel.Urgent, "photo_library",
+                $"Delivery for {shoot.Title} is overdue",
+                $"Due {shoot.DeliveryDue:ddd dd.MM.yyyy} · {shoot.ClientName}",
+                $"shoots/{shoot.Id}", $"delivery-overdue:{shoot.Id}:{shoot.DeliveryDue:yyyy-MM-dd}"));
+        }
+
+        foreach (var shoot in shoots.Where(g => g.Status.AwaitsDelivery() && g.DeliveryDue is { } due
+                     && due >= today && due <= today.AddDays(DeliveryHorizonDays)))
+        {
+            items.Add(new(AttentionLevel.Warning, "photo_library",
+                $"Deliver {shoot.Title} by {shoot.DeliveryDue:ddd dd.MM.}",
+                $"Shoot on {shoot.Start:ddd dd.MM.yyyy} · {shoot.ClientName}",
+                $"shoots/{shoot.Id}", $"delivery-due:{shoot.Id}:{shoot.DeliveryDue:yyyy-MM-dd}"));
+        }
+
         foreach (var shoot in shoots.Where(g => g.End <= now && !withInvoice.Contains(g.Id)
                      && g.PaymentState is PaymentState.Unpaid or PaymentState.PartiallyPaid))
         {
             items.Add(new(AttentionLevel.Warning, "request_quote",
                 $"{shoot.Title} has no invoice yet",
-                $"Played {shoot.Start:ddd dd.MM.yyyy} · {shoot.Financials.Outstanding} open",
+                $"Shot {shoot.Start:ddd dd.MM.yyyy} · {shoot.Financials.Outstanding} open",
                 $"shoots/{shoot.Id}?tab=invoice"));
         }
 
-        foreach (var shoot in shoots.Where(g => g.End <= now && g.Status == ShootStatus.Confirmed))
+        foreach (var shoot in shoots.Where(g => g.End <= now && g.Status == ShootStatus.Booked))
         {
             items.Add(new(AttentionLevel.Info, "task_alt",
-                $"Mark {shoot.Title} as done",
-                $"Played {shoot.Start:ddd dd.MM.yyyy}, still marked Confirmed",
+                $"Mark {shoot.Title} as shot",
+                $"Took place {shoot.Start:ddd dd.MM.yyyy}, still marked Booked",
                 $"shoots/{shoot.Id}"));
         }
 

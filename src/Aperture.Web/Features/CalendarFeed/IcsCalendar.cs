@@ -9,7 +9,7 @@ public sealed record FeedEvent(
     int ShootId,
     string Title,
     ShootStatus Status,
-    EventType EventType,
+    ShootType ShootType,
     DateTime Start,
     DateTime End,
     string ClientName,
@@ -56,7 +56,7 @@ public static class IcsCalendar
 
         Line("BEGIN:VCALENDAR");
         Line("VERSION:2.0");
-        Line("PRODID:-//Aperture//DJ office//EN");
+        Line("PRODID:-//Aperture//Photo office//EN");
         Line("CALSCALE:GREGORIAN");
         Line("METHOD:PUBLISH");
         Line("X-WR-CALNAME:Aperture shoots");
@@ -99,7 +99,7 @@ public static class IcsCalendar
     {
         var lines = new List<string>
         {
-            e.EventType == EventType.Other ? $"{e.Status}" : $"{e.Status} · {e.EventType}",
+            e.ShootType == ShootType.Other ? $"{e.Status}" : $"{e.Status} · {e.ShootType}",
             string.IsNullOrWhiteSpace(e.ClientPhone) ? e.ClientName : $"{e.ClientName} · {e.ClientPhone}",
         };
         if (!string.IsNullOrWhiteSpace(e.Notes))

@@ -4,7 +4,7 @@ using Aperture.Web.Domain;
 namespace Aperture.Web.Data.Entities;
 
 /// <summary>
-/// Equipment bought for the business and used over several years (controllers, speakers, lights, laptop).
+/// Equipment bought for the business and used over several years (cameras, lenses, lights, laptop).
 /// Its cost is spread over the years as depreciation instead of being a cost in the year of purchase.
 /// </summary>
 public class Asset
@@ -14,7 +14,7 @@ public class Asset
     [Required, MaxLength(150)]
     public string Name { get; set; } = "";
 
-    public AssetCategory Category { get; set; } = AssetCategory.AudioEquipment;
+    public AssetCategory Category { get; set; } = AssetCategory.Camera;
 
     public DateOnly PurchaseDate { get; set; }
 

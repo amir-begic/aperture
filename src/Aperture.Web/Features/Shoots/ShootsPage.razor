@@ -28,7 +28,7 @@
 
 @code {
     private ShootPeriod _period = ShootPeriod.Upcoming;
-    private IEnumerable<ShootStatus> _statuses = [ShootStatus.Inquiry, ShootStatus.Confirmed, ShootStatus.Done];
+    private IEnumerable<ShootStatus> _statuses = [ShootStatus.Inquiry, ShootStatus.Booked, ShootStatus.Shot, ShootStatus.Delivered];
     private string? _search;
     private List<ShootRow> _shoots = [];
     private bool _loading = true;

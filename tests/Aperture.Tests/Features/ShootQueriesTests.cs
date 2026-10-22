@@ -23,7 +23,7 @@ public sealed class ShootQueriesTests : IAsyncLifetime
         var client = await _database.AddClientAsync();
         var wedding = await _database.AddShootAsync(client, At(12, 12, 20), At(12, 13, 2), title: "Wedding");
 
-        // Late club set starting at 01:00 the next day
+        // Late reception coverage starting at 01:00 the next day
         var overlaps = await OverlapsAsync(At(12, 13, 1), At(12, 13, 5));
 
         Assert.Equal([wedding.Id], overlaps);
@@ -134,7 +134,7 @@ public sealed class ShootQueriesTests : IAsyncLifetime
         var inquiry = await _database.AddShootAsync(client, At(11, 1, 20), At(11, 2, 2), ShootStatus.Inquiry);
         await _database.AddShootAsync(client, At(11, 8, 20), At(11, 9, 2), ShootStatus.Cancelled);
 
-        Assert.Equal([inquiry.Id], await FilterAsync(ShootPeriod.All, [ShootStatus.Inquiry, ShootStatus.Confirmed]));
+        Assert.Equal([inquiry.Id], await FilterAsync(ShootPeriod.All, [ShootStatus.Inquiry, ShootStatus.Booked]));
     }
 
     [Theory]

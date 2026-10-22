@@ -7,24 +7,24 @@ public class CredentialValidatorTests
 {
     private readonly CredentialValidator _validator = new(Options.Create(new AuthOptions
     {
-        Username = "dj",
+        Username = "studio",
         PasswordHash = CredentialValidator.HashPassword("correct horse"),
     }));
 
     [Theory]
-    [InlineData("dj")]
-    [InlineData("DJ")]
-    [InlineData(" dj ")]
+    [InlineData("studio")]
+    [InlineData("STUDIO")]
+    [InlineData(" studio ")]
     public void Accepts_correct_credentials(string username)
     {
         Assert.True(_validator.IsValid(username, "correct horse"));
     }
 
     [Theory]
-    [InlineData("dj", "wrong")]
-    [InlineData("dj", "Correct horse")]
-    [InlineData("dj", "")]
-    [InlineData("dj", null)]
+    [InlineData("studio", "wrong")]
+    [InlineData("studio", "Correct horse")]
+    [InlineData("studio", "")]
+    [InlineData("studio", null)]
     [InlineData("someone", "correct horse")]
     [InlineData(null, "correct horse")]
     public void Rejects_wrong_credentials(string? username, string? password)

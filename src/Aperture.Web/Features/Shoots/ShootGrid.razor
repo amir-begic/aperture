@@ -16,7 +16,7 @@
         <RadzenDataGridColumn Property="@nameof(ShootRow.Title)" Title="Shoot">
             <Template Context="shoot">
                 <div>@shoot.Title</div>
-                <RadzenText TextStyle="TextStyle.Caption">@shoot.EventType</RadzenText>
+                <RadzenText TextStyle="TextStyle.Caption">@shoot.ShootType</RadzenText>
             </Template>
         </RadzenDataGridColumn>
         @if (ShowClient)
@@ -27,8 +27,17 @@
         {
             <RadzenDataGridColumn Property="@nameof(ShootRow.Location)" Title="Location" />
         }
-        <RadzenDataGridColumn Property="@nameof(ShootRow.Status)" Title="Status" Width="8rem">
-            <Template Context="shoot"><ShootStatusBadge Status="shoot.Status" /></Template>
+        <RadzenDataGridColumn Property="@nameof(ShootRow.Status)" Title="Status" Width="9rem">
+            <Template Context="shoot">
+                <ShootStatusBadge Status="shoot.Status" />
+                @if (shoot.Status.AwaitsDelivery() && shoot.DeliveryDue is { } due)
+                {
+                    var overdue = shoot.IsDeliveryOverdue(Today);
+                    <RadzenText TextStyle="TextStyle.Caption" class="@(overdue ? "delivery-overdue" : null)">
+                        @(overdue ? "Delivery overdue" : $"Delivery {due:dd.MM.}")
+                    </RadzenText>
+                }
+            </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Property="@nameof(ShootRow.QuotedPrice)" Title="Quote" Width="9rem" TextAlign="TextAlign.Right">
             <Template Context="shoot">@shoot.QuotedPrice</Template>
@@ -37,7 +46,7 @@
             <Template Context="shoot">
                 @if (shoot.PaymentState is { } state)
                 {
-                    <PaymentStateBadge State="state" IsPlayed="@(shoot.Status == ShootStatus.Done)" IsPastDue="@shoot.IsPastDue(Today)" />
+                    <PaymentStateBadge State="state" IsShot="@shoot.Status.HasTakenPlace()" IsPastDue="@shoot.IsPastDue(Today)" />
                 }
             </Template>
         </RadzenDataGridColumn>

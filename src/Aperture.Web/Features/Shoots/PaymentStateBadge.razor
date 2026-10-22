@@ -8,9 +8,9 @@
     [Parameter, EditorRequired]
     public PaymentState State { get; set; }
 
-    /// <summary>The shoot has been played: unpaid becomes alarming.</summary>
+    /// <summary>The shoot has taken place: unpaid becomes alarming.</summary>
     [Parameter]
-    public bool IsPlayed { get; set; }
+    public bool IsShot { get; set; }
 
     /// <summary>An issued invoice's due date has passed.</summary>
     [Parameter]
@@ -31,7 +31,7 @@
         PaymentState.Paid => BadgeStyle.Success,
         _ when IsPastDue && IsOpen => BadgeStyle.Danger,
         PaymentState.PartiallyPaid => BadgeStyle.Secondary,
-        _ when IsPlayed => BadgeStyle.Danger,
+        _ when IsShot => BadgeStyle.Danger,
         _ => BadgeStyle.Base,
     };
 }

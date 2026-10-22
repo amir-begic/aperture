@@ -14,7 +14,7 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
     public DbSet<Shoot> Shoots => Set<Shoot>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<Payment> Payments => Set<Payment>();
-    public DbSet<PlaylistLink> PlaylistLinks => Set<PlaylistLink>();
+    public DbSet<ReferenceLink> ReferenceLinks => Set<ReferenceLink>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
@@ -60,7 +60,7 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
 
         // Enums as text: readable in the database and safe to reorder.
         configurationBuilder.Properties<ShootStatus>().HaveConversion<string>().HaveMaxLength(20);
-        configurationBuilder.Properties<EventType>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<ShootType>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<ExpenseCategory>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<PaymentMethod>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<InvoiceStatus>().HaveConversion<string>().HaveMaxLength(20);
@@ -88,7 +88,7 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
             shoot.HasMany(g => g.Expenses).WithOne(e => e.Shoot).OnDelete(DeleteBehavior.Restrict);
             shoot.HasMany(g => g.Payments).WithOne(p => p.Shoot).OnDelete(DeleteBehavior.Restrict);
             shoot.HasMany(g => g.Invoices).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Restrict);
-            shoot.HasMany(g => g.PlaylistLinks).WithOne(l => l.Shoot).OnDelete(DeleteBehavior.Cascade);
+            shoot.HasMany(g => g.ReferenceLinks).WithOne(l => l.Shoot).OnDelete(DeleteBehavior.Cascade);
             shoot.HasMany(g => g.ChecklistItems).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Cascade);
             shoot.HasMany(g => g.Attachments).WithOne(a => a.Shoot).OnDelete(DeleteBehavior.Cascade);
         });

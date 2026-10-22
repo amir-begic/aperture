@@ -7,7 +7,7 @@ namespace Aperture.Web.Features.CalendarFeed;
 
 public static class CalendarFeedEndpoints
 {
-    /// <summary>How far back played shoots stay in the feed.</summary>
+    /// <summary>How far back past shoots stay in the feed.</summary>
     public static readonly TimeSpan History = TimeSpan.FromDays(365);
 
     /// <summary>
@@ -48,14 +48,14 @@ public static class CalendarFeedEndpoints
             .OrderBy(g => g.Start)
             .Select(g => new
             {
-                g.Id, g.Title, g.Status, g.EventType, g.Start, g.End, g.Notes,
+                g.Id, g.Title, g.Status, g.ShootType, g.Start, g.End, g.Notes,
                 ClientName = g.Client.Name, ClientPhone = g.Client.Phone,
                 Location = g.Location == null ? null : new { g.Location.Name, g.Location.Street, g.Location.PostalCode, g.Location.City },
             })
             .ToListAsync();
 
         return shoots.Select(g => new FeedEvent(
-                g.Id, g.Title, g.Status, g.EventType, g.Start, g.End, g.ClientName, g.ClientPhone,
+                g.Id, g.Title, g.Status, g.ShootType, g.Start, g.End, g.ClientName, g.ClientPhone,
                 g.Location is null ? null : Address(g.Location.Name, g.Location.Street, g.Location.PostalCode, g.Location.City),
                 g.Notes))
             .ToList();

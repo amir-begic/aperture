@@ -39,8 +39,8 @@ public sealed class ShootDeletionTests : IAsyncLifetime
         await using (var db = _database.CreateContext())
         {
             db.Attachments.Add(file);
-            db.PlaylistLinks.Add(new PlaylistLink { ShootId = shoot.Id, Url = "https://open.spotify.com/playlist/1" });
-            db.ChecklistItems.Add(new ChecklistItem { ShootId = shoot.Id, Text = "First dance" });
+            db.ReferenceLinks.Add(new ReferenceLink { ShootId = shoot.Id, Url = "https://www.pinterest.com/anna/wedding/" });
+            db.ChecklistItems.Add(new ChecklistItem { ShootId = shoot.Id, Text = "Family group list" });
             await db.SaveChangesAsync();
         }
 
@@ -53,7 +53,7 @@ public sealed class ShootDeletionTests : IAsyncLifetime
         await using (var db = _database.CreateContext())
         {
             Assert.Empty(await db.Shoots.ToListAsync());
-            Assert.Empty(await db.PlaylistLinks.ToListAsync());
+            Assert.Empty(await db.ReferenceLinks.ToListAsync());
             Assert.Empty(await db.ChecklistItems.ToListAsync());
             Assert.Empty(await db.Attachments.ToListAsync());
         }

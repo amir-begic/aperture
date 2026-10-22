@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Aperture.Web.Data.Migrations
 {
     [DbContext(typeof(ApertureDbContext))]
-    [Migration("20261022162838_InitialCreate")]
+    [Migration("20261022163402_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -133,6 +133,9 @@ namespace Aperture.Web.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("DeliveryDays")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Email")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -192,6 +195,7 @@ namespace Aperture.Web.Data.Migrations
                             BusinessName = "",
                             City = "",
                             CountryCode = "CH",
+                            DeliveryDays = 28,
                             Iban = "",
                             IsVatRegistered = false,
                             OwnerName = "",
@@ -557,31 +561,6 @@ namespace Aperture.Web.Data.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("Aperture.Web.Data.Entities.PlaylistLink", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Label")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ShootId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ShootId");
-
-                    b.ToTable("PlaylistLinks");
-                });
-
             modelBuilder.Entity("Aperture.Web.Data.Entities.PushSubscription", b =>
                 {
                     b.Property<int>("Id")
@@ -622,6 +601,31 @@ namespace Aperture.Web.Data.Migrations
                     b.ToTable("PushSubscriptions");
                 });
 
+            modelBuilder.Entity("Aperture.Web.Data.Entities.ReferenceLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Label")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ShootId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShootId");
+
+                    b.ToTable("ReferenceLinks");
+                });
+
             modelBuilder.Entity("Aperture.Web.Data.Entities.SentNotification", b =>
                 {
                     b.Property<string>("Key")
@@ -648,12 +652,14 @@ namespace Aperture.Web.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateOnly?>("DeliveryDue")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("End")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasMaxLength(20)
+                    b.Property<string>("GalleryUrl")
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("LocationId")
@@ -665,6 +671,11 @@ namespace Aperture.Web.Data.Migrations
 
                     b.Property<long?>("QuotedPrice")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("ShootType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Start")
                         .HasColumnType("TEXT");
@@ -785,10 +796,10 @@ namespace Aperture.Web.Data.Migrations
                     b.Navigation("Shoot");
                 });
 
-            modelBuilder.Entity("Aperture.Web.Data.Entities.PlaylistLink", b =>
+            modelBuilder.Entity("Aperture.Web.Data.Entities.ReferenceLink", b =>
                 {
                     b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
-                        .WithMany("PlaylistLinks")
+                        .WithMany("ReferenceLinks")
                         .HasForeignKey("ShootId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -841,7 +852,7 @@ namespace Aperture.Web.Data.Migrations
 
                     b.Navigation("Payments");
 
-                    b.Navigation("PlaylistLinks");
+                    b.Navigation("ReferenceLinks");
                 });
 #pragma warning restore 612, 618
         }

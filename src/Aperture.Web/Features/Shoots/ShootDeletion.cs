@@ -10,7 +10,7 @@ public static class ShootDeletion
     public static Task<bool> HasFinancialRecordsAsync(this ApertureDbContext db, int shootId) =>
         db.Shoots.Where(g => g.Id == shootId).AnyAsync(g => g.Expenses.Any() || g.Payments.Any() || g.Invoices.Any());
 
-    /// <summary>Deletes a shoot with its playlists, checklist and files (rows cascade; files are removed here).</summary>
+    /// <summary>Deletes a shoot with its reference links, checklist and files (rows cascade; files are removed here).</summary>
     public static async Task DeleteShootAsync(this ApertureDbContext db, int shootId, AttachmentStore store)
     {
         var attachments = await db.Attachments.AsNoTracking().Where(a => a.ShootId == shootId).ToListAsync();

@@ -7,10 +7,10 @@ public static class ExpenseCategories
 {
     public static readonly IReadOnlyList<(ExpenseCategory Value, string Text)> All =
     [
-        (ExpenseCategory.GearRental, "Gear rental"),
+        (ExpenseCategory.GearRental, "Gear & studio rental"),
         (ExpenseCategory.Travel, "Travel & transport"),
-        (ExpenseCategory.Staff, "Staff & helpers"),
-        (ExpenseCategory.Music, "Music & DJ pools"),
+        (ExpenseCategory.Staff, "Second shooters & assistants"),
+        (ExpenseCategory.Prints, "Prints, albums & lab"),
         (ExpenseCategory.SmallEquipment, "Small equipment & repairs"),
         (ExpenseCategory.Software, "Software & subscriptions"),
         (ExpenseCategory.Marketing, "Marketing & website"),

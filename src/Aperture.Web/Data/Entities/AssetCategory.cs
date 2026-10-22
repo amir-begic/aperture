@@ -2,7 +2,7 @@ namespace Aperture.Web.Data.Entities;
 
 public enum AssetCategory
 {
-    AudioEquipment,
+    Camera,
     Lighting,
     Computer,
     Vehicle,

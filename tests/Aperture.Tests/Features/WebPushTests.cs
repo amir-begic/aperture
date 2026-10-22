@@ -82,7 +82,7 @@ public class WebPushTests : IDisposable
         var keys = VapidKeys.New();
         var now = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero);
 
-        var header = keys.AuthorizationHeader(new Uri("https://web.push.apple.com/QGuQyavXutnMH"), "mailto:dj@example.ch", now);
+        var header = keys.AuthorizationHeader(new Uri("https://web.push.apple.com/QGuQyavXutnMH"), "mailto:studio@example.ch", now);
 
         var parts = header.Split(", ");
         Assert.StartsWith("vapid t=", parts[0]);
@@ -93,7 +93,7 @@ public class WebPushTests : IDisposable
         using var claims = JsonDocument.Parse(B64(jwt[1]));
         Assert.Equal("https://web.push.apple.com", claims.RootElement.GetProperty("aud").GetString());
         Assert.Equal((now + VapidKeys.TokenLifetime).ToUnixTimeSeconds(), claims.RootElement.GetProperty("exp").GetInt64());
-        Assert.Equal("mailto:dj@example.ch", claims.RootElement.GetProperty("sub").GetString());
+        Assert.Equal("mailto:studio@example.ch", claims.RootElement.GetProperty("sub").GetString());
 
         using var verifier = ECDsa.Create(WebPushEncryption.Parameters(B64(keys.PublicKey)));
         Assert.True(verifier.VerifyData(Encoding.ASCII.GetBytes($"{jwt[0]}.{jwt[1]}"), B64(jwt[2]), HashAlgorithmName.SHA256));

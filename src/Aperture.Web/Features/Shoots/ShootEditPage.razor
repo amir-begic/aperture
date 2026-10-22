@@ -44,7 +44,7 @@ else
                 <ShootStatusBadge Status="_summary.Status" />
                 @if (_summary.PaymentState is { } paymentState)
                 {
-                    <PaymentStateBadge State="paymentState" IsPlayed="@(_summary.Status == ShootStatus.Done)"
+                    <PaymentStateBadge State="paymentState" IsShot="@_summary.Status.HasTakenPlace()"
                                        IsPastDue="@_summary.IsPastDue(DateOnly.FromDateTime(Time.GetLocalNow().DateTime))" />
                 }
                 <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
@@ -54,6 +54,10 @@ else
                         <span> · @_summary.Location</span>
                     }
                 </RadzenText>
+                @if (_summary.GalleryUrl is not null)
+                {
+                    <RadzenLink Path="@_summary.GalleryUrl" Target="_blank" Icon="photo_library" Text="Gallery" />
+                }
             </RadzenStack>
         }
 
@@ -68,7 +72,7 @@ else
                 <RadzenTabsItem Text="Invoice" Icon="request_quote">
                     <ShootInvoiceTab ShootId="Id!.Value" Changed="LoadSummaryAsync" />
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Music & prep" Icon="queue_music">
+                <RadzenTabsItem Text="Moodboard & prep" Icon="palette">
                     <ShootPrepTab ShootId="Id!.Value" />
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Files" Icon="folder">
@@ -97,8 +101,8 @@ else
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Event type" class="w-full">
-                        <RadzenDropDown TValue="EventType" Name="EventType" @bind-Value="Form.EventType" Data="Enum.GetValues<EventType>()" />
+                    <RadzenFormField Text="Shoot type" class="w-full">
+                        <RadzenDropDown TValue="ShootType" Name="ShootType" @bind-Value="Form.ShootType" Data="Enum.GetValues<ShootType>()" />
                     </RadzenFormField>
                 </RadzenColumn>
 
@@ -127,7 +131,7 @@ else
                 <RadzenColumn Size="12" SizeMD="4">
                     <RadzenFormField Text="Date" class="w-full">
                         <ChildContent>
-                            <RadzenDatePicker TValue="DateOnly?" Name="Date" @bind-Value="Form.Date" @bind-Value:after="CheckOverlapsAsync"
+                            <RadzenDatePicker TValue="DateOnly?" Name="Date" @bind-Value="Form.Date" @bind-Value:after="OnDateChangedAsync"
                                               DateFormat="ddd dd.MM.yyyy" />
                         </ChildContent>
                         <Helper><RadzenDataAnnotationValidator Component="Date" /></Helper>
@@ -190,6 +194,24 @@ else
                 </End>
             </RadzenFormField>
 
+            <RadzenRow>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Delivery due" class="w-full">
+                        <ChildContent>
+                            <RadzenDatePicker TValue="DateOnly?" Name="DeliveryDue" @bind-Value="Form.DeliveryDue" DateFormat="ddd dd.MM.yyyy"
+                                              AllowClear="true" />
+                        </ChildContent>
+                        <Helper><RadzenText TextStyle="TextStyle.Caption">@_deliveryDays days after the shoot unless you change it</RadzenText></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="8">
+                    <RadzenFormField Text="Gallery link (optional)" class="w-full">
+                        <ChildContent><RadzenTextBox Name="GalleryUrl" @bind-Value="Form.GalleryUrl" Placeholder="https://…" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="GalleryUrl" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
             <RadzenFormField Text="Notes" class="w-full">
                 <ChildContent><RadzenTextArea Name="Notes" @bind-Value="Form.Notes" Rows="5" /></ChildContent>
                 <Helper><RadzenDataAnnotationValidator Component="Notes" /></Helper>
@@ -222,7 +244,7 @@ else
     [SupplyParameterFromQuery(Name = "start")]
     private TimeOnly? InitialStart { get; set; }
 
-    private static readonly TimeSpan TypicalShootLength = TimeSpan.FromHours(5);
+    private static readonly TimeSpan TypicalShootLength = TimeSpan.FromHours(4);
 
     /// <summary>Opens a tab directly, e.g. ?tab=finances.</summary>
     [SupplyParameterFromQuery(Name = "tab")]
@@ -238,6 +260,8 @@ else
     private List<LookupItem> _clients = [];
     private List<LookupItem> _locations = [];
     private List<ShootRow> _overlaps = [];
+    private int _deliveryDays;
+    private DateOnly? _lastDate;
     private bool _notFound;
     private bool _saving;
 
@@ -255,6 +279,8 @@ else
         if (IsNew)
         {
             _form = new ShootForm { ClientId = InitialClientId, LocationId = InitialLocationId, Date = InitialDate };
+            _form.SuggestDeliveryDue(previousDate: null, _deliveryDays);
+            _lastDate = _form.Date;
             if (InitialStart is { } start)
             {
                 _form.StartTime = start;
@@ -268,6 +294,7 @@ else
             _notFound = shoot is null;
             _form = shoot is null ? null : ShootForm.From(shoot);
             _title = shoot?.Title ?? "";
+            _lastDate = _form?.Date;
             _tabIndex = Math.Max(0, Array.IndexOf(TabNames, InitialTab?.ToLowerInvariant()));
             await LoadSummaryAsync();
         }
@@ -293,6 +320,14 @@ else
             .OrderBy(v => v.Name)
             .Select(v => new LookupItem(v.Id, v.City == null ? v.Name : v.Name + ", " + v.City))
             .ToListAsync();
+        _deliveryDays = await db.BusinessSettings.Select(s => s.DeliveryDays).SingleAsync();
+    }
+
+    private async Task OnDateChangedAsync()
+    {
+        _form!.SuggestDeliveryDue(_lastDate, _deliveryDays);
+        _lastDate = _form.Date;
+        await CheckOverlapsAsync();
     }
 
     private async Task CheckOverlapsAsync()

@@ -39,7 +39,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         };
         invoice.Lines.Add(new InvoiceLine
         {
-            Description = $"DJ performance: {shoot.Title}",
+            Description = $"Photography: {shoot.Title}",
             UnitPrice = shoot.QuotedPrice ?? Money.Zero,
         });
         invoice.Lines.AddRange(billedCosts.Select(cost => new InvoiceLine

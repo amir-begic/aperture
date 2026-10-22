@@ -20,7 +20,7 @@ public sealed class IncomeStatementTests : IAsyncLifetime
         var client = new Client { Name = "Anna & Marco Rossi" };
         var wedding = new Shoot
         {
-            Title = "Wedding Rossi", Client = client, Status = ShootStatus.Done, QuotedPrice = Chf(1800),
+            Title = "Wedding Rossi", Client = client, Status = ShootStatus.Shot, QuotedPrice = Chf(1800),
             Start = new DateTime(2026, 6, 13, 20, 0, 0), End = new DateTime(2026, 6, 14, 2, 0, 0),
         };
         wedding.Expenses.Add(new Expense { Date = new DateOnly(2026, 6, 13), Category = ExpenseCategory.GearRental,
@@ -31,7 +31,7 @@ public sealed class IncomeStatementTests : IAsyncLifetime
 
         db.Shoots.Add(new Shoot
         {
-            Title = "Cancelled party", Client = client, Status = ShootStatus.Cancelled,
+            Title = "Cancelled portrait", Client = client, Status = ShootStatus.Cancelled,
             Start = new DateTime(2026, 7, 1, 20, 0, 0), End = new DateTime(2026, 7, 1, 23, 0, 0),
         });
 
@@ -42,9 +42,9 @@ public sealed class IncomeStatementTests : IAsyncLifetime
         db.Expenses.Add(new Expense { Date = new DateOnly(2025, 12, 31), Category = ExpenseCategory.Software,
             Description = "Previous year", Amount = Chf(999) });
 
-        db.Assets.Add(new Asset { Name = "Controller", Category = AssetCategory.AudioEquipment,
+        db.Assets.Add(new Asset { Name = "Camera", Category = AssetCategory.Camera,
             PurchaseDate = new DateOnly(2026, 1, 10), Cost = Chf(2000), DepreciationRatePercent = 30 });
-        db.Assets.Add(new Asset { Name = "Old speakers", Category = AssetCategory.AudioEquipment,
+        db.Assets.Add(new Asset { Name = "Old lens", Category = AssetCategory.Camera,
             PurchaseDate = new DateOnly(2024, 1, 1), Cost = Chf(1000), DepreciationRatePercent = 30,
             DisposedOn = new DateOnly(2026, 7, 1), SaleProceeds = Chf(500) });
         db.Assets.Add(new Asset { Name = "Sold long ago", Category = AssetCategory.Lighting,
@@ -68,9 +68,9 @@ public sealed class IncomeStatementTests : IAsyncLifetime
             [(ExpenseCategory.GearRental, Chf(350)), (ExpenseCategory.Software, Chf(120)), (ExpenseCategory.Insurance, Chf(230))],
             statement.CostsByCategory);
 
-        // Depreciation: controller 2000 * 30% = 600; old speakers: book value 490 at start of 2026
+        // Depreciation: camera 2000 * 30% = 600; old lens: book value 490 at start of 2026
         // (1000 -> 700 -> 490), 6 months (Jan–Jun) = 73.50, then sold for 500 vs 416.50 left = +83.50.
-        Assert.Equal(["Old speakers", "Controller"], statement.Assets.Select(a => a.Asset.Name)); // by purchase date
+        Assert.Equal(["Old lens", "Camera"], statement.Assets.Select(a => a.Asset.Name)); // by purchase date
         Assert.Equal(Chf(673.50m), statement.TotalDepreciation);
         Assert.Equal(Chf(83.50m), statement.DisposalResult);
         Assert.Equal(Chf(1750 - 700 - 673.50m + 83.50m), statement.Result);
@@ -81,7 +81,7 @@ public sealed class IncomeStatementTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Shoot_results_show_played_shoots_with_billed_costs_and_all_payments()
+    public async Task Shoot_results_show_past_shoots_with_billed_costs_and_all_payments()
     {
         await SeedAsync();
         await using var db = _database.CreateContext();

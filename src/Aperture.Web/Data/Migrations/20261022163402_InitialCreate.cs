@@ -28,6 +28,7 @@ namespace Aperture.Web.Data.Migrations
                     Website = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     Iban = table.Column<string>(type: "TEXT", maxLength: 34, nullable: false),
                     PaymentTermsDays = table.Column<int>(type: "INTEGER", nullable: false),
+                    DeliveryDays = table.Column<int>(type: "INTEGER", nullable: false),
                     IsVatRegistered = table.Column<bool>(type: "INTEGER", nullable: false),
                     VatNumber = table.Column<string>(type: "TEXT", maxLength: 32, nullable: true),
                     VatRatePercent = table.Column<decimal>(type: "TEXT", nullable: false),
@@ -115,13 +116,15 @@ namespace Aperture.Web.Data.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     Title = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
                     Status = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    EventType = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    ShootType = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
                     Start = table.Column<DateTime>(type: "TEXT", nullable: false),
                     End = table.Column<DateTime>(type: "TEXT", nullable: false),
                     QuotedPrice = table.Column<long>(type: "INTEGER", nullable: true),
                     ClientId = table.Column<int>(type: "INTEGER", nullable: false),
                     LocationId = table.Column<int>(type: "INTEGER", nullable: true),
                     Notes = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
+                    DeliveryDue = table.Column<DateOnly>(type: "TEXT", nullable: true),
+                    GalleryUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
@@ -188,7 +191,7 @@ namespace Aperture.Web.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PlaylistLinks",
+                name: "ReferenceLinks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -199,9 +202,9 @@ namespace Aperture.Web.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PlaylistLinks", x => x.Id);
+                    table.PrimaryKey("PK_ReferenceLinks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PlaylistLinks_Shoots_ShootId",
+                        name: "FK_ReferenceLinks_Shoots_ShootId",
                         column: x => x.ShootId,
                         principalTable: "Shoots",
                         principalColumn: "Id",
@@ -373,8 +376,8 @@ namespace Aperture.Web.Data.Migrations
 
             migrationBuilder.InsertData(
                 table: "BusinessSettings",
-                columns: new[] { "Id", "BusinessName", "CalendarFeedToken", "City", "CountryCode", "Email", "Iban", "IsVatRegistered", "OwnerName", "PaymentTermsDays", "Phone", "PostalCode", "ProRataFirstYear", "Street", "VatNumber", "VatRatePercent", "Website" },
-                values: new object[] { 1, "", null, "", "CH", null, "", false, "", 30, null, "", false, "", null, 8.1m, null });
+                columns: new[] { "Id", "BusinessName", "CalendarFeedToken", "City", "CountryCode", "DeliveryDays", "Email", "Iban", "IsVatRegistered", "OwnerName", "PaymentTermsDays", "Phone", "PostalCode", "ProRataFirstYear", "Street", "VatNumber", "VatRatePercent", "Website" },
+                values: new object[] { 1, "", null, "", "CH", 28, null, "", false, "", 30, null, "", false, "", null, 8.1m, null });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Assets_PurchaseDate",
@@ -458,15 +461,15 @@ namespace Aperture.Web.Data.Migrations
                 column: "ShootId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PlaylistLinks_ShootId",
-                table: "PlaylistLinks",
-                column: "ShootId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PushSubscriptions_Endpoint",
                 table: "PushSubscriptions",
                 column: "Endpoint",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReferenceLinks_ShootId",
+                table: "ReferenceLinks",
+                column: "ShootId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Shoots_ClientId",
@@ -506,10 +509,10 @@ namespace Aperture.Web.Data.Migrations
                 name: "Payments");
 
             migrationBuilder.DropTable(
-                name: "PlaylistLinks");
+                name: "PushSubscriptions");
 
             migrationBuilder.DropTable(
-                name: "PushSubscriptions");
+                name: "ReferenceLinks");
 
             migrationBuilder.DropTable(
                 name: "SentNotifications");

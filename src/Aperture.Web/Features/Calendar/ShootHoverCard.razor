@@ -7,7 +7,7 @@
         <ShootStatusBadge Status="Shoot.Status" />
         @if (Shoot.PaymentState is { } paymentState)
         {
-            <PaymentStateBadge State="paymentState" IsPlayed="@(Shoot.Status == ShootStatus.Done)" IsPastDue="@Shoot.IsPastDue(Today)" />
+            <PaymentStateBadge State="paymentState" IsShot="@Shoot.Status.HasTakenPlace()" IsPastDue="@Shoot.IsPastDue(Today)" />
         }
     </div>
 
@@ -22,7 +22,7 @@
                 }
             </span>
         </li>
-        <li><RadzenIcon Icon="celebration" /><span>@Shoot.EventType</span></li>
+        <li><RadzenIcon Icon="photo_camera" /><span>@Shoot.ShootType</span></li>
         <li>
             <RadzenIcon Icon="person" />
             <span>
@@ -46,6 +46,19 @@
                     @if (Financials.Outstanding is { } outstanding && outstanding > Money.Zero && Shoot.Status != ShootStatus.Inquiry)
                     {
                         <span class="shoot-card-muted"> · @outstanding outstanding</span>
+                    }
+                </span>
+            </li>
+        }
+        @if (Shoot.Status.AwaitsDelivery() && Shoot.DeliveryDue is { } due)
+        {
+            <li>
+                <RadzenIcon Icon="photo_library" />
+                <span>
+                    Delivery due @due.ToString("ddd dd.MM.yyyy")
+                    @if (Shoot.IsDeliveryOverdue(Today))
+                    {
+                        <span class="delivery-overdue"> · overdue</span>
                     }
                 </span>
             </li>

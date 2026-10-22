@@ -11,8 +11,9 @@ All amounts are in CHF, calculated to the Rappen.
 | Status | Meaning |
 |---|---|
 | **Inquiry** | A client asked; the date is held. Time and location may still be unknown. |
-| **Confirmed** | Booked. |
-| **Done** | Played. |
+| **Booked** | Confirmed by the client. |
+| **Shot** | Photographed; the images are still being edited. |
+| **Delivered** | The client has the final images. |
 | **Cancelled** | Kept for the records; it no longer blocks the date. |
 
 ### Money per shoot
@@ -60,8 +61,8 @@ the payment terms in Settings (30 days).
 
 | | Counted in the year when… |
 |---|---|
-| **Income** | the money arrived (the payment date), not when the shoot was played or invoiced. |
-| **Costs** | you paid them. These are shoot costs plus business costs that don't belong to a shoot (DJ pools, software, phone, …). |
+| **Income** | the money arrived (the payment date), not when the shoot took place or was invoiced. |
+| **Costs** | you paid them. These are shoot costs plus business costs that don't belong to a shoot (software, phone, website, …). |
 | **Depreciation** | see below. |
 
 ```
@@ -72,11 +73,11 @@ the payment terms in Settings (30 days).
 = profit or loss
 ```
 
-A shoot played in December and paid in January counts as income in January's year.
+A shoot in December paid in January counts as income in January's year.
 
 ## Equipment and depreciation
 
-Equipment that lasts several years (controllers, speakers, laptop) isn't a cost in the year you buy it.
+Equipment that lasts several years (cameras, lenses, laptop) isn't a cost in the year you buy it.
 It's depreciated: each year a share of its remaining value counts as a cost.
 
 Aperture uses the **declining-balance method** (*degressiv, vom Buchwert*): the rate applies to the remaining book value
@@ -85,11 +86,11 @@ also applies (StB 41 Nr. 1):
 
 | Category | Rate | ESTV class |
 |---|---|---|
-| DJ & audio equipment | 30% | Apparate und Maschinen |
-| Lighting & effects | 30% | Apparate und Maschinen |
+| Cameras & lenses | 30% | Apparate und Maschinen |
+| Lighting & studio | 30% | Apparate und Maschinen |
 | Computer & software | 40% | Datenverarbeitungsanlagen |
 | Vehicle | 40% | Motorfahrzeuge |
-| Furniture & cases | 25% | Geschäftsmobiliar |
+| Furniture, bags & cases | 25% | Geschäftsmobiliar |
 | Other | 30% | Apparate und Maschinen |
 
 Each item keeps its own rate; a lower rate is always allowed.
@@ -103,7 +104,7 @@ Each item keeps its own rate; a lower rate is always allowed.
 - **Bought and sold in the same year:** only the months actually held.
 - **Small remainders:** below CHF 1, the rest is written off.
 
-Example: speakers for CHF 2,000 at 30%, bought in March 2026:
+Example: a lens for CHF 2,000 at 30%, bought in March 2026:
 
 | Year | Book value at start | Depreciation | Book value at end |
 |---|---|---|---|

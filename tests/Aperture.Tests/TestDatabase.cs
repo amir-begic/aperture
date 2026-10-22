@@ -53,7 +53,7 @@ public sealed class TestDatabase : IAsyncLifetime
 
     public async Task<Shoot> AddShootAsync(
         Client client, DateTime start, DateTime end,
-        ShootStatus status = ShootStatus.Confirmed, Location? location = null, string title = "Wedding")
+        ShootStatus status = ShootStatus.Booked, Location? location = null, string title = "Wedding")
     {
         await using var db = CreateContext();
         var shoot = new Shoot

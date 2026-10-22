@@ -25,7 +25,7 @@ else
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenFormField Text="DJ / business name (optional)" class="w-full">
+                        <RadzenFormField Text="Studio / business name (optional)" class="w-full">
                             <ChildContent><RadzenTextBox Name="BusinessName" @bind-Value="_settings.BusinessName" /></ChildContent>
                             <Helper><RadzenDataAnnotationValidator Component="BusinessName" /></Helper>
                         </RadzenFormField>
@@ -98,6 +98,22 @@ else
                             <ChildContent><RadzenNumeric TValue="int" Name="PaymentTermsDays" @bind-Value="_settings.PaymentTermsDays" Min="0" Max="365" /></ChildContent>
                             <Helper><RadzenDataAnnotationValidator Component="PaymentTermsDays" /></Helper>
                         </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenFieldset>
+
+            <RadzenFieldset Text="Delivery">
+                <RadzenRow>
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenFormField Text="Usual delivery time (days)" class="w-full">
+                            <ChildContent><RadzenNumeric TValue="int" Name="DeliveryDays" @bind-Value="_settings.DeliveryDays" Min="0" Max="365" /></ChildContent>
+                            <Helper><RadzenDataAnnotationValidator Component="DeliveryDays" /></Helper>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenText TextStyle="TextStyle.Caption">
+                            New shoots suggest a delivery date this many days after the shoot. You can change it per shoot.
+                        </RadzenText>
                     </RadzenColumn>
                 </RadzenRow>
             </RadzenFieldset>

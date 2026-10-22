@@ -10,11 +10,11 @@ public static class AssetCategories
 {
     public static readonly IReadOnlyList<(AssetCategory Value, string Text, decimal DefaultRatePercent, string EstvClass)> All =
     [
-        (AssetCategory.AudioEquipment, "DJ & audio equipment", 30, "Apparate und Maschinen"),
-        (AssetCategory.Lighting, "Lighting & effects", 30, "Apparate und Maschinen"),
+        (AssetCategory.Camera, "Cameras & lenses", 30, "Apparate und Maschinen"),
+        (AssetCategory.Lighting, "Lighting & studio", 30, "Apparate und Maschinen"),
         (AssetCategory.Computer, "Computer & software", 40, "Datenverarbeitungsanlagen (Hardware und Software)"),
         (AssetCategory.Vehicle, "Vehicle", 40, "Motorfahrzeuge aller Art"),
-        (AssetCategory.Furniture, "Furniture & cases", 25, "Geschäftsmobiliar"),
+        (AssetCategory.Furniture, "Furniture, bags & cases", 25, "Geschäftsmobiliar"),
         (AssetCategory.Other, "Other", 30, "Apparate und Maschinen"),
     ];
 

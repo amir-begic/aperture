@@ -1,6 +1,6 @@
 # Aperture
 
-A small ERP for running a DJ business: shoots, clients, costs, invoices (Swiss QR-bill) and tax exports.
+A small ERP for running a photography business: shoots, clients, deliveries, costs, invoices (Swiss QR-bill) and tax exports.
 Single user, CHF, English, self-hosted on a Mac mini and used from any browser at home or through Tailscale.
 
 **Stack:** .NET 10 · Blazor Web App (Interactive Server) · Radzen.Blazor · EF Core + SQLite
@@ -9,15 +9,16 @@ Single user, CHF, English, self-hosted on a Mac mini and used from any browser a
 
 | Area | |
 |---|---|
-| **Shoots** | Client, location, date and time (several shoots per day, shoots past midnight), status *Inquiry → Confirmed → Done* or *Cancelled*, quote. |
+| **Shoots** | Client, location, date and time (several shoots per day, shoots past midnight), status *Inquiry → Booked → Shot → Delivered* or *Cancelled*, shoot type, quote. |
 | **Shoot finances** | Costs such as gear rental, either covered by the quote or billed on top (at cost or with your margin). Payments received, with the payslip attached. Margin and what's still open. |
-| **Prep** | Spotify/Tidal playlist links, notes, a checklist (wedding template included), files. |
+| **Delivery** | A delivery date per shoot, suggested from your usual delivery time (Settings), and a link to the client gallery. |
+| **Prep** | Moodboard and reference links (Pinterest, Google Drive, …), notes, a checklist (wedding, portrait and commercial templates included), files. |
 | **Calendar** | Month, week and year view. Hovering over a shoot shows a card with the details. A private link (Settings) puts your shoots in the iPhone's calendar. |
 | **Invoices** | Created from a shoot: quote plus billed costs, optional VAT, rounded to 5 Rappen, Swiss QR-bill. Numbered `2026-001` once issued, then frozen and archived as PDF. |
 | **Finance** | Income statement per year on a cash basis, business costs that don't belong to a shoot, equipment with depreciation. |
 | **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |
-| **Dashboard** | Year figures and a to-do list: overdue invoices, shoots without an invoice, open prep, backup problems. |
-| **On the go** | Installable on the phone's home screen (PWA), with a full-screen menu on small screens. Notifications on the phone for overdue invoices, open prep three days before a shoot, backup problems and new versions. |
+| **Dashboard** | Year figures and a to-do list: overdue invoices, deliveries due or overdue, shoots without an invoice, open prep, backup problems. |
+| **On the go** | Installable on the phone's home screen (PWA), with a full-screen menu on small screens. Notifications on the phone for overdue invoices, deliveries due within a week or overdue, open prep three days before a shoot, backup problems and new versions. |
 
 How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
 

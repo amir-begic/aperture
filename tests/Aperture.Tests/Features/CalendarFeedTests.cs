@@ -16,8 +16,8 @@ public class CalendarFeedTests : IAsyncLifetime
     private static readonly DateTime Now = new(2026, 10, 20, 12, 0, 0);
 
     private static FeedEvent Event(
-        ShootStatus status = ShootStatus.Confirmed, string title = "Wedding Rossi", string? notes = null,
-        EventType type = EventType.Wedding, string? location = "Schloss Laufen, 8447 Laufen-Uhwiesen") =>
+        ShootStatus status = ShootStatus.Booked, string title = "Wedding Rossi", string? notes = null,
+        ShootType type = ShootType.Wedding, string? location = "Schloss Laufen, 8447 Laufen-Uhwiesen") =>
         new(7, title, status, type, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0),
             "Anna & Marco Rossi", "+41 79 123 45 67", location, notes);
 
@@ -57,18 +57,18 @@ public class CalendarFeedTests : IAsyncLifetime
     [Fact]
     public void Description_has_status_client_phone_and_notes()
     {
-        var description = Unfolded(Write(Event(notes: "Ceremony 14:00; first dance: \"Perfect\"")))
+        var description = Unfolded(Write(Event(notes: "Ceremony 14:00; couple shoot at \"the old bridge\"")))
             .Single(l => l.StartsWith("DESCRIPTION:"));
 
         Assert.Equal(
-            "DESCRIPTION:Confirmed · Wedding\\nAnna & Marco Rossi · +41 79 123 45 67\\n\\nCeremony 14:00\\; first dance: \"Perfect\"\\n\\nhttps://mini.example.ts.net/shoots/7",
+            "DESCRIPTION:Booked · Wedding\\nAnna & Marco Rossi · +41 79 123 45 67\\n\\nCeremony 14:00\\; couple shoot at \"the old bridge\"\\n\\nhttps://mini.example.ts.net/shoots/7",
             description);
     }
 
     [Fact]
     public void Inquiries_are_tentative_and_marked_in_the_title()
     {
-        var lines = Unfolded(Write(Event(ShootStatus.Inquiry, type: EventType.Other)));
+        var lines = Unfolded(Write(Event(ShootStatus.Inquiry, type: ShootType.Other)));
 
         Assert.Contains("STATUS:TENTATIVE", lines);
         Assert.Contains("SUMMARY:Wedding Rossi (inquiry)", lines);
@@ -127,8 +127,8 @@ public class CalendarFeedTests : IAsyncLifetime
     {
         var client = await _db.AddClientAsync();
         var location = await _db.AddLocationAsync();
-        await _db.AddShootAsync(client, Now.AddDays(-400), Now.AddDays(-400).AddHours(5), ShootStatus.Done, title: "Too old");
-        await _db.AddShootAsync(client, Now.AddDays(-30), Now.AddDays(-30).AddHours(5), ShootStatus.Done, title: "Played");
+        await _db.AddShootAsync(client, Now.AddDays(-400), Now.AddDays(-400).AddHours(5), ShootStatus.Shot, title: "Too old");
+        await _db.AddShootAsync(client, Now.AddDays(-30), Now.AddDays(-30).AddHours(5), ShootStatus.Shot, title: "Shot");
         await _db.AddShootAsync(client, Now.AddDays(10), Now.AddDays(10).AddHours(5), ShootStatus.Cancelled, title: "Cancelled");
         await _db.AddShootAsync(client, Now.AddDays(20), Now.AddDays(20).AddHours(5), ShootStatus.Inquiry, title: "Asked");
         await _db.AddShootAsync(client, Now.AddDays(5), Now.AddDays(5).AddHours(5), location: location, title: "Booked");
@@ -136,11 +136,11 @@ public class CalendarFeedTests : IAsyncLifetime
         await using var db = _db.CreateContext();
         var events = await CalendarFeedEndpoints.LoadAsync(db, Now);
 
-        Assert.Equal(["Played", "Booked", "Asked"], events.Select(e => e.Title));
+        Assert.Equal(["Shot", "Booked", "Asked"], events.Select(e => e.Title));
         var booked = events.Single(e => e.Title == "Booked");
         Assert.Equal("Schloss Laufen, Laufen-Uhwiesen", booked.Location);
         Assert.Equal("Anna & Marco Rossi", booked.ClientName);
-        Assert.Null(events.Single(e => e.Title == "Played").Location);
+        Assert.Null(events.Single(e => e.Title == "Shot").Location);
     }
 
     [Fact]

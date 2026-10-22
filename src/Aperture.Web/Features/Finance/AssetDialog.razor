@@ -13,7 +13,7 @@
             <RadzenRow>
                 <RadzenColumn Size="12" SizeMD="7">
                     <RadzenFormField Text="Name" class="w-full">
-                        <ChildContent><RadzenTextBox Name="Name" @bind-Value="_form.Name" Placeholder="Pioneer DDJ-FLX10" /></ChildContent>
+                        <ChildContent><RadzenTextBox Name="Name" @bind-Value="_form.Name" Placeholder="Sony A7 IV" /></ChildContent>
                         <Helper><RadzenDataAnnotationValidator Component="Name" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
@@ -264,7 +264,7 @@
         [Required, MaxLength(150)]
         public string Name { get; set; } = "";
 
-        public AssetCategory Category { get; set; } = AssetCategory.AudioEquipment;
+        public AssetCategory Category { get; set; } = AssetCategory.Camera;
 
         [Required(ErrorMessage = "Enter the purchase date.")]
         public DateOnly? PurchaseDate { get; set; }

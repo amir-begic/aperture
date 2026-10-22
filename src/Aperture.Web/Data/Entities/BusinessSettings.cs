@@ -10,7 +10,7 @@ public class BusinessSettings
 
     public int Id { get; set; } = SingletonId;
 
-    /// <summary>Optional stage or company name, e.g. "DJ Aperture".</summary>
+    /// <summary>Optional studio or company name, e.g. "Studio Aperture".</summary>
     [MaxLength(100)]
     public string BusinessName { get; set; } = "";
 
@@ -45,6 +45,10 @@ public class BusinessSettings
 
     [Range(0, 365)]
     public int PaymentTermsDays { get; set; } = 30;
+
+    /// <summary>How long after a shoot the images are usually delivered; suggests each shoot's delivery date.</summary>
+    [Range(0, 365)]
+    public int DeliveryDays { get; set; } = 28;
 
     /// <summary>MWST registration is mandatory from CHF 100'000 yearly turnover.</summary>
     public bool IsVatRegistered { get; set; }

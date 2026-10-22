@@ -6,7 +6,7 @@ public enum ExpenseCategory
     GearRental,
     Travel,
     Staff,
-    Music,
+    Prints,
     SmallEquipment,
     Software,
     Marketing,

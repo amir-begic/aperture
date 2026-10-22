@@ -100,7 +100,7 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
                 }
             }
 
-            Line("Income from DJ services", Statement.TotalIncome, bold: true);
+            Line("Income from photography services", Statement.TotalIncome, bold: true);
             foreach (var (category, amount) in Statement.CostsByCategory)
             {
                 Line(category.Text(), -amount, indent: true);

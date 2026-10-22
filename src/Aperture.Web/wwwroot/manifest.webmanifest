@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Aperture",
   "short_name": "Aperture",
-  "description": "DJ office: shoots, calendar, invoices and finances",
+  "description": "Photo office: shoots, calendar, invoices and finances",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

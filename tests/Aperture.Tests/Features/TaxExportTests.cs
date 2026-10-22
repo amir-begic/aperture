@@ -32,12 +32,12 @@ public sealed class TaxExportTests : IAsyncLifetime
         await using var db = _database.CreateContext();
         var settings = await db.BusinessSettings.SingleAsync();
         (settings.OwnerName, settings.BusinessName, settings.Street, settings.PostalCode, settings.City, settings.Iban) =
-            ("Max Muster", "DJ Aperture", "Musterstrasse 1", "8000", "Zürich", "CH9300762011623852957");
+            ("Max Muster", "Studio Aperture", "Musterstrasse 1", "8000", "Zürich", "CH9300762011623852957");
 
         var client = new Client { Name = "Anna & Marco Rossi", Street = "Seestrasse 5", PostalCode = "8800", City = "Thalwil" };
         var shoot = new Shoot
         {
-            Title = "Wedding Rossi", Client = client, Status = ShootStatus.Done, QuotedPrice = Money.FromChf(1800),
+            Title = "Wedding Rossi", Client = client, Status = ShootStatus.Shot, QuotedPrice = Money.FromChf(1800),
             Start = new DateTime(2026, 6, 13, 20, 0, 0), End = new DateTime(2026, 6, 14, 2, 0, 0),
         };
         shoot.Payments.Add(new Payment { Date = new DateOnly(2026, 6, 20), Amount = Money.FromChf(1800), Proof = await FileAsync("twint.png") });
@@ -46,8 +46,8 @@ public sealed class TaxExportTests : IAsyncLifetime
         db.Shoots.Add(shoot);
         db.Expenses.Add(new Expense { Date = new DateOnly(2026, 1, 5), Category = ExpenseCategory.Software,
             Description = "Rekordbox", Amount = Money.FromChf(120) });
-        db.Assets.Add(new Asset { Name = "Controller", PurchaseDate = new DateOnly(2026, 1, 10), Cost = Money.FromChf(2000),
-            DepreciationRatePercent = 30, Receipt = await FileAsync("controller.pdf") });
+        db.Assets.Add(new Asset { Name = "Camera", PurchaseDate = new DateOnly(2026, 1, 10), Cost = Money.FromChf(2000),
+            DepreciationRatePercent = 30, Receipt = await FileAsync("camera.pdf") });
         await db.SaveChangesAsync();
 
         var invoices = new InvoiceService(factory, _store, time);
@@ -73,7 +73,7 @@ public sealed class TaxExportTests : IAsyncLifetime
         [
             "Receipts/R001 2026-06-20 Payment - Wedding Rossi.png",
             "Receipts/R002 2026-06-13 Cost - Light set rental.pdf",   // "/" removed from the name
-            "Receipts/R003 2026-01-10 Equipment - Controller.pdf",
+            "Receipts/R003 2026-01-10 Equipment - Camera.pdf",
             "Invoices/Invoice 2026-001.pdf",
         ], data.Documents.All.Select(d => d.ZipPath));
         Assert.Equal("R002", data.Documents.NumberOf(data.Statement.Expenses.Single(e => e.Receipt is not null).Receipt));
@@ -92,7 +92,7 @@ public sealed class TaxExportTests : IAsyncLifetime
             "Aperture 2026/Invoices/Invoice 2026-001.pdf",
             "Aperture 2026/Receipts/R001 2026-06-20 Payment - Wedding Rossi.png",
             "Aperture 2026/Receipts/R002 2026-06-13 Cost - Light set rental.pdf",
-            "Aperture 2026/Receipts/R003 2026-01-10 Equipment - Controller.pdf",
+            "Aperture 2026/Receipts/R003 2026-01-10 Equipment - Camera.pdf",
         ], zip.Entries.Select(e => e.FullName).Order());
 
         using var reader = new StreamReader(zip.GetEntry("Aperture 2026/Receipts/R002 2026-06-13 Cost - Light set rental.pdf")!.Open());

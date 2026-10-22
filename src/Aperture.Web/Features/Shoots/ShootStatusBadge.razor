@@ -1,4 +1,4 @@
-@* Same fills as the calendar: inquiry pink and dashed (tentative), confirmed blue, done white, cancelled crossed out. *@
+@* Same fills as the calendar: inquiry pink and dashed (tentative), booked blue, shot white, delivered green, cancelled crossed out. *@
 <RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Status.ToString()"
              class="@(Status == ShootStatus.Cancelled ? "badge-cancelled" : null)" />
 
@@ -9,7 +9,8 @@
     private BadgeStyle Style => Status switch
     {
         ShootStatus.Inquiry => BadgeStyle.Warning,
-        ShootStatus.Confirmed => BadgeStyle.Info,
+        ShootStatus.Booked => BadgeStyle.Info,
+        ShootStatus.Delivered => BadgeStyle.Success,
         _ => BadgeStyle.Base,
     };
 }

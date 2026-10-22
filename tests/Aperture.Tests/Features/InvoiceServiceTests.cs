@@ -30,7 +30,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         await using var db = _database.CreateContext();
         var settings = await db.BusinessSettings.SingleAsync();
         settings.OwnerName = "Max Muster";
-        settings.BusinessName = "DJ Aperture";
+        settings.BusinessName = "Studio Aperture";
         settings.Street = "Musterstrasse 1";
         settings.PostalCode = "8000";
         settings.City = "Zürich";
@@ -60,7 +60,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         {
             Title = "Wedding Rossi",
             Client = client,
-            Status = ShootStatus.Confirmed,
+            Status = ShootStatus.Booked,
             Start = new DateTime(2026, 12, 12, 20, 0, 0),
             End = new DateTime(2026, 12, 13, 2, 0, 0),
             QuotedPrice = Money.FromChf(1800),
@@ -84,7 +84,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         var (invoice, _) = await _invoices.LoadForDocumentAsync(id);
         Assert.Equal(InvoiceStatus.Draft, invoice.Status);
         Assert.Null(invoice.Number);
-        Assert.Equal(["DJ performance: Wedding Rossi", "Light set rental"], invoice.Lines.OrderBy(l => l.SortOrder).Select(l => l.Description));
+        Assert.Equal(["Photography: Wedding Rossi", "Light set rental"], invoice.Lines.OrderBy(l => l.SortOrder).Select(l => l.Description));
         Assert.Equal(new DateOnly(2026, 11, 5), invoice.DueDate);   // 30 days payment terms
         Assert.Equal(Money.FromChf(2250), invoice.Totals.Total);
         Assert.Equal(Money.FromChf(1750), invoice.Totals.AmountDue); // deposit already paid
@@ -107,7 +107,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
 
         await _invoices.SaveDraftAsync(id, new DateOnly(2026, 10, 6), new DateOnly(2026, 10, 20),
         [
-            new("DJ performance, 20:00–02:00", 1, Money.FromChf(1800)),
+            new("Photography, 14:00–22:00", 1, Money.FromChf(1800)),
             new("Lighting", 1, Money.FromChf(450)),
             new("Extra hour", 1.5m, Money.FromChf(150)),
         ]);
@@ -130,7 +130,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         var invoice = await db.Invoices.Include(i => i.Pdf).Include(i => i.Lines).SingleAsync(i => i.Id == id);
         Assert.Equal(InvoiceStatus.Issued, invoice.Status);
         Assert.Equal("2026-001", invoice.Number);
-        Assert.Equal("DJ Aperture", invoice.Seller.Company);
+        Assert.Equal("Studio Aperture", invoice.Seller.Company);
         Assert.Equal("Thalwil", invoice.Client.City);
         Assert.Equal(Money.FromChf(500), invoice.AlreadyPaid);
         Assert.Equal("Invoice 2026-001.pdf", invoice.Pdf!.FileName);

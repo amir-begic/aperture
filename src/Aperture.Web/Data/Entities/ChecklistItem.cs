@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Aperture.Web.Data.Entities;
 
-/// <summary>A preparation task for a shoot, e.g. "First dance song confirmed".</summary>
+/// <summary>A preparation task for a shoot, e.g. "Family group list received".</summary>
 public class ChecklistItem
 {
     public int Id { get; set; }

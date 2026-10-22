@@ -13,12 +13,14 @@ public sealed record ShootRow(
     DateTime Start,
     DateTime End,
     ShootStatus Status,
-    EventType EventType,
+    ShootType ShootType,
     string ClientName,
     string? ClientPhone,
     string? LocationName,
     string? LocationCity,
-    Money? QuotedPrice)
+    Money? QuotedPrice,
+    DateOnly? DeliveryDue,
+    string? GalleryUrl)
 {
     public string Location => LocationCity is null ? LocationName ?? "" : $"{LocationName}, {LocationCity}";
 
@@ -33,10 +35,14 @@ public sealed record ShootRow(
 
     public ShootFinancials Financials => new(QuotedPrice, Money.Zero, Received, BilledCosts, Invoice?.Total);
 
-    /// <summary>Only meaningful for shoots that are booked or played.</summary>
-    public PaymentState? PaymentState => Status is ShootStatus.Confirmed or ShootStatus.Done
+    /// <summary>Only meaningful for shoots that are booked, shot or delivered.</summary>
+    public PaymentState? PaymentState => Status is ShootStatus.Booked or ShootStatus.Shot or ShootStatus.Delivered
         ? Financials.PaymentState
         : null;
+
+    /// <summary>The delivery date has passed and the images aren't marked as delivered.</summary>
+    public bool IsDeliveryOverdue(DateOnly today) =>
+        Status.AwaitsDelivery() && DeliveryDue is { } due && due < today;
 
     /// <summary>The invoice's due date has passed and it isn't fully paid.</summary>
     public bool IsPastDue(DateOnly today) =>
@@ -52,12 +58,14 @@ public static class ShootRowQueries
             g.Start,
             g.End,
             g.Status,
-            g.EventType,
+            g.ShootType,
             g.Client.Name,
             g.Client.Phone,
             g.Location == null ? null : g.Location.Name,
             g.Location == null ? null : g.Location.City,
-            g.QuotedPrice));
+            g.QuotedPrice,
+            g.DeliveryDue,
+            g.GalleryUrl));
 
     /// <summary>
     /// Loads rows including what was received and billed on top per shoot (summed in C#, see <see cref="Money"/>),

@@ -16,7 +16,7 @@ public sealed record ExpenseEntry(
 
 public sealed record AssetEntry(Asset Asset, DepreciationYear Year);
 
-/// <summary>A shoot played in the year: what it brings in against what it cost.</summary>
+/// <summary>A shoot that took place in the year: what it brings in against what it cost.</summary>
 public sealed record ShootResult(int ShootId, string Title, DateTime Start, string ClientName, Money? ToBill, Money Costs, Money Received)
 {
     public Money? Margin => ToBill - Costs;

@@ -122,7 +122,7 @@ h1:focus {
     font-variant-numeric: tabular-nums;
 }
 
-/* Same fills as the status tags: inquiry pink and dashed, confirmed blue, done white, cancelled grey. */
+/* Same fills as the status tags: inquiry pink and dashed, booked blue, shot white, delivered green, cancelled grey. */
 .shoot-event, .shoot-swatch {
     border: 2px solid var(--ba-ink);
 }
@@ -137,13 +137,18 @@ h1:focus {
     border-style: dashed;
 }
 
-.shoot-event.shoot-confirmed, .shoot-swatch.shoot-confirmed {
+.shoot-event.shoot-booked, .shoot-swatch.shoot-booked {
     background: var(--ba-blue);
     color: var(--ba-white);
 }
 
-.shoot-event.shoot-done, .shoot-swatch.shoot-done {
+.shoot-event.shoot-shot, .shoot-swatch.shoot-shot {
     background: var(--ba-white);
+    color: var(--ba-ink);
+}
+
+.shoot-event.shoot-delivered, .shoot-swatch.shoot-delivered {
+    background: var(--ba-good);
     color: var(--ba-ink);
 }
 
@@ -216,6 +221,12 @@ h1:focus {
 
 .shoot-card-muted {
     color: var(--rz-text-secondary-color);
+}
+
+/* A delivery date that has passed. Always said in words too; color only reinforces it. */
+.delivery-overdue {
+    color: var(--ba-bad);
+    font-weight: 700;
 }
 
 /* Invoices */
@@ -447,7 +458,7 @@ h1:focus {
     cursor: pointer;
 }
 
-/* Simple lists (playlists, checklist) */
+/* Simple lists (reference links, checklist) */
 .plain-list {
     list-style: none;
     margin: 0;

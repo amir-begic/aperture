@@ -38,14 +38,14 @@
     </Template>
     <ChildContent>
         <RadzenMonthView Text="Month" MaxAppointmentsInSlot="3" MoreText="+{0} more" />
-        @* The whole day in hour rows: nights and after-midnight club shoots stay visible without scrolling. *@
+        @* The whole day in hour rows: early starts and late wedding receptions stay visible without scrolling. *@
         <RadzenWeekView Text="Week" TimeFormat="HH:mm" MinutesPerSlot="60" StartTime="TimeSpan.Zero" EndTime="@TimeSpan.FromHours(24)" />
         <RadzenYearPlannerView Text="Year" />
     </ChildContent>
 </RadzenScheduler>
 
 @code {
-    private static readonly ShootStatus[] LegendStatuses = [ShootStatus.Inquiry, ShootStatus.Confirmed, ShootStatus.Done, ShootStatus.Cancelled];
+    private static readonly ShootStatus[] LegendStatuses = [ShootStatus.Inquiry, ShootStatus.Booked, ShootStatus.Shot, ShootStatus.Delivered, ShootStatus.Cancelled];
 
     private RadzenScheduler<CalendarItem>? _scheduler;
     private List<CalendarItem> _items = [];

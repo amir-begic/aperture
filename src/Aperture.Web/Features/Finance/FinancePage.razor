@@ -131,7 +131,7 @@ else
 
     <RadzenRow class="rz-mt-6">
         <RadzenColumn Size="12">
-            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Shoots played in @s.Year</RadzenText>
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Shoots in @s.Year</RadzenText>
             <RadzenDataGrid TItem="ShootResult" Data="s.Shoots" AllowSorting="true" EmptyText="No shoots in this year." class="clickable-rows"
                             RowClick="@(args => Navigation.NavigateTo($"shoots/{args.Data!.ShootId}?tab=finances"))">
                 <Columns>

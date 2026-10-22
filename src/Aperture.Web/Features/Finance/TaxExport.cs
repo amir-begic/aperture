@@ -45,7 +45,7 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
         var summary = workbook.Worksheets.Add("Summary");
         summary.Cell(1, 1).Value = $"Income statement {statement.Year} (cash basis, CHF)";
         summary.Cell(1, 1).Style.Font.Bold = true;
-        var summaryRows = new List<(string Label, Money Amount, bool Bold)> { ("Income from DJ services", statement.TotalIncome, true) };
+        var summaryRows = new List<(string Label, Money Amount, bool Bold)> { ("Income from photography services", statement.TotalIncome, true) };
         summaryRows.AddRange(statement.CostsByCategory.Select(c => (c.Category.Text(), -c.Amount, false)));
         if (statement.TotalDepreciation != Money.Zero) summaryRows.Add(("Depreciation of equipment", -statement.TotalDepreciation, false));
         if (statement.DisposalResult != Money.Zero) summaryRows.Add(("Result from sale of equipment", statement.DisposalResult, false));

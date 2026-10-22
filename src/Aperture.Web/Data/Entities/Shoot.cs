@@ -12,7 +12,7 @@ public class Shoot
 
     public ShootStatus Status { get; set; } = ShootStatus.Inquiry;
 
-    public EventType EventType { get; set; } = EventType.Other;
+    public ShootType ShootType { get; set; } = ShootType.Other;
 
     /// <summary>Local Swiss time, like everything else in the app.</summary>
     public DateTime Start { get; set; }
@@ -33,11 +33,19 @@ public class Shoot
     [MaxLength(4000)]
     public string? Notes { get; set; }
 
+    /// <summary>When the client should have the final images; suggested from <see cref="BusinessSettings.DeliveryDays"/>.</summary>
+    public DateOnly? DeliveryDue { get; set; }
+
+    /// <summary>Where the client sees the images (Pixieset, Pic-Time, Dropbox, …).</summary>
+    [MaxLength(500)]
+    [RegularExpression(@"^https?://\S+$", ErrorMessage = "Paste a full link starting with https://")]
+    public string? GalleryUrl { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public List<Expense> Expenses { get; set; } = [];
     public List<Payment> Payments { get; set; } = [];
-    public List<PlaylistLink> PlaylistLinks { get; set; } = [];
+    public List<ReferenceLink> ReferenceLinks { get; set; } = [];
     public List<ChecklistItem> ChecklistItems { get; set; } = [];
     public List<Attachment> Attachments { get; set; } = [];
     public List<Invoice> Invoices { get; set; } = [];

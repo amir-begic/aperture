@@ -20,20 +20,26 @@ public sealed class ShootForm
 
     public ShootStatus Status { get; set; } = ShootStatus.Inquiry;
 
-    public EventType EventType { get; set; } = EventType.Other;
+    public ShootType ShootType { get; set; } = ShootType.Other;
 
     [Required(ErrorMessage = "Choose a date.")]
     public DateOnly? Date { get; set; }
 
-    public TimeOnly StartTime { get; set; } = new(20, 0);
+    public TimeOnly StartTime { get; set; } = new(10, 0);
 
-    public TimeOnly EndTime { get; set; } = new(2, 0);
+    public TimeOnly EndTime { get; set; } = new(14, 0);
 
     [Range(typeof(decimal), "0", "1000000", ParseLimitsInInvariantCulture = true)]
     public decimal? QuotedPriceChf { get; set; }
 
     [MaxLength(4000)]
     public string? Notes { get; set; }
+
+    public DateOnly? DeliveryDue { get; set; }
+
+    [MaxLength(500)]
+    [RegularExpression(@"^https?://\S+$", ErrorMessage = "Paste a full link starting with https://")]
+    public string? GalleryUrl { get; set; }
 
     public bool EndsNextDay => ShootSchedule.EndsNextDay(StartTime, EndTime);
 
@@ -47,13 +53,27 @@ public sealed class ShootForm
         ClientId = shoot.ClientId,
         LocationId = shoot.LocationId,
         Status = shoot.Status,
-        EventType = shoot.EventType,
+        ShootType = shoot.ShootType,
         Date = DateOnly.FromDateTime(shoot.Start),
         StartTime = TimeOnly.FromDateTime(shoot.Start),
         EndTime = TimeOnly.FromDateTime(shoot.End),
         QuotedPriceChf = shoot.QuotedPrice?.Chf,
         Notes = shoot.Notes,
+        DeliveryDue = shoot.DeliveryDue,
+        GalleryUrl = shoot.GalleryUrl,
     };
+
+    /// <summary>
+    /// Sets the delivery date <paramref name="deliveryDays"/> after the shoot. Called when the date changes: a delivery
+    /// date that's empty or was suggested for <paramref name="previousDate"/> moves along, one set by hand stays.
+    /// </summary>
+    public void SuggestDeliveryDue(DateOnly? previousDate, int deliveryDays)
+    {
+        if (DeliveryDue is null || DeliveryDue == previousDate?.AddDays(deliveryDays))
+        {
+            DeliveryDue = Date?.AddDays(deliveryDays);
+        }
+    }
 
     public void ApplyTo(Shoot shoot)
     {
@@ -63,10 +83,12 @@ public sealed class ShootForm
         shoot.ClientId = ClientId ?? throw new InvalidOperationException("A shoot needs a client.");
         shoot.LocationId = LocationId;
         shoot.Status = Status;
-        shoot.EventType = EventType;
+        shoot.ShootType = ShootType;
         shoot.Start = start;
         shoot.End = end;
         shoot.QuotedPrice = QuotedPriceChf is { } chf ? Money.FromChf(chf) : null;
         shoot.Notes = string.IsNullOrWhiteSpace(Notes) ? null : Notes.Trim();
+        shoot.DeliveryDue = DeliveryDue;
+        shoot.GalleryUrl = string.IsNullOrWhiteSpace(GalleryUrl) ? null : GalleryUrl.Trim();
     }
 }

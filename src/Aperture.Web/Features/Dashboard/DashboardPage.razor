@@ -83,7 +83,7 @@
         _settingsComplete = settings.IsComplete;
 
         _upcoming = await db.Shoots
-            .Filter(ShootPeriod.Upcoming, [ShootStatus.Inquiry, ShootStatus.Confirmed], search: null, now)
+            .Filter(ShootPeriod.Upcoming, [ShootStatus.Inquiry, ShootStatus.Booked], search: null, now)
             .Take(UpcomingCount)
             .ToRowsAsync(db);
 

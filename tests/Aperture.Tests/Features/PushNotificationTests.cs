@@ -25,7 +25,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
     {
         await _database.InitializeAsync();
         await using var db = _database.CreateContext();
-        await db.BusinessSettings.ExecuteUpdateAsync(s => s.SetProperty(x => x.Email, "dj@example.ch"));
+        await db.BusinessSettings.ExecuteUpdateAsync(s => s.SetProperty(x => x.Email, "studio@example.ch"));
     }
 
     public Task DisposeAsync() => _database.DisposeAsync();
@@ -69,7 +69,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
         await using var db = _database.CreateContext();
         db.Shoots.Add(new Shoot
         {
-            Title = title, Client = new Client { Name = $"Client of {title}" }, Status = ShootStatus.Done,
+            Title = title, Client = new Client { Name = $"Client of {title}" }, Status = ShootStatus.Shot,
             Start = new DateTime(2026, 8, 1, 18, 0, 0), End = new DateTime(2026, 8, 1, 23, 0, 0),
             QuotedPrice = Money.FromChf(1000),
             Invoices =
@@ -78,7 +78,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
                 {
                     Number = number, Status = InvoiceStatus.Issued,
                     IssueDate = new DateOnly(2026, 8, 5), DueDate = new DateOnly(2026, 9, 4),
-                    Lines = [new InvoiceLine { Description = "DJ", Quantity = 1, UnitPrice = Money.FromChf(1000) }],
+                    Lines = [new InvoiceLine { Description = "Photography", Quantity = 1, UnitPrice = Money.FromChf(1000) }],
                 },
             ],
         });
@@ -238,12 +238,12 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
         await Push().SaveAsync(_iPhone.Subscription(AppleEndpoint), "iPhone");
         var client = await _database.AddClientAsync();
         var shoot = await _database.AddShootAsync(client, new DateTime(2026, 10, 23, 18, 0, 0), new DateTime(2026, 10, 23, 23, 0, 0));
-        var later = await _database.AddShootAsync(client, new DateTime(2026, 10, 30, 18, 0, 0), new DateTime(2026, 10, 30, 23, 0, 0), title: "Birthday");
+        var later = await _database.AddShootAsync(client, new DateTime(2026, 10, 30, 18, 0, 0), new DateTime(2026, 10, 30, 23, 0, 0), title: "Portrait");
         await using (var db = _database.CreateContext())
         {
             db.ChecklistItems.AddRange(
-                new ChecklistItem { ShootId = shoot.Id, Text = "First dance song" },
-                new ChecklistItem { ShootId = later.Id, Text = "Playlist" });
+                new ChecklistItem { ShootId = shoot.Id, Text = "Family group list" },
+                new ChecklistItem { ShootId = later.Id, Text = "Moodboard" });
             await db.SaveChangesAsync();
         }
 
@@ -270,7 +270,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
     }
 
     [Fact]
-    public async Task Shoots_to_invoice_or_close_stay_on_the_dashboard()
+    public async Task Shoots_to_invoice_or_mark_as_shot_stay_on_the_dashboard()
     {
         await Push().SaveAsync(_iPhone.Subscription(AppleEndpoint), "iPhone");
         var client = await _database.AddClientAsync();
@@ -279,7 +279,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
         await Reminders().SendDueAsync(Now, null, expectBackups: false, update: null);
 
         await using var db = _database.CreateContext();
-        Assert.Contains("Mark Wedding as done", (await Aperture.Web.Features.Dashboard.Attention.ItemsAsync(db, Now)).Select(i => i.Text));
+        Assert.Contains("Mark Wedding as shot", (await Aperture.Web.Features.Dashboard.Attention.ItemsAsync(db, Now)).Select(i => i.Text));
         Assert.Empty(_pushService.Received);
     }
 }
