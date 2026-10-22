@@ -148,6 +148,7 @@ jobs:
           [ -f "$iscc" ] || choco install innosetup --yes --no-progress
           # 2026.10.20-58-ed1231e → 2026.10.20.58: Windows wants a numeric version; the build number only grows.
           numeric="$(sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)-.*/\1.\2/' <<< "$VERSION")"
-          "$iscc" /Qp "/DReleaseDir=$(cygpath -w "$PWD/artifacts/aperture-$VERSION")" "/DVersion=$numeric" \
+          # Git Bash turns arguments starting with / into paths; Inno Setup's switches must reach it as they are.
+          MSYS_NO_PATHCONV=1 "$iscc" /Qp "/DReleaseDir=$(cygpath -w "$PWD/artifacts/aperture-$VERSION")" "/DVersion=$numeric" \
             "/DOutputDir=$(cygpath -w "$PWD/artifacts")" deploy/windows/aperture.iss
           gh release upload "v$VERSION" artifacts/Aperture-Setup.exe
