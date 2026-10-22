@@ -46,19 +46,18 @@ h1:focus {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    padding: 1.125rem 1.25rem;
-    background: var(--ba-pink);
+    padding: 1rem 1.25rem;
+    background: var(--ss-gray);
 }
 
 .kpi-label {
-    color: var(--ba-ink);
+    color: var(--ss-black);
     margin: 0;
 }
 
 .kpi-value {
-    font-size: clamp(1.125rem, 1.5vw, 1.5rem);
-    font-weight: 800;
-    letter-spacing: -0.01em;
+    font-size: clamp(1.25rem, 2vw, 2rem);
+    line-height: 1.1;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
@@ -77,7 +76,7 @@ h1:focus {
     }
 }
 
-/* Tab pills wrap onto a second line on narrow screens, so every tab stays visible and tappable. */
+/* Tabs wrap onto a second line on narrow screens, so every tab stays visible and tappable. */
 .rz-tabview-nav {
     flex-wrap: wrap;
     overflow: visible;
@@ -101,7 +100,8 @@ h1:focus {
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: 0.875rem;
+    font-size: var(--ss-size);
+    text-transform: uppercase;
 }
 
 .calendar-legend li {
@@ -114,49 +114,53 @@ h1:focus {
     display: inline-block;
     width: 1.75rem;
     height: 1rem;
-    border-radius: 999px;
 }
 
 .shoot-time {
-    font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
 
-/* Same fills as the status tags: inquiry pink and dashed, booked blue, shot white, delivered green, cancelled grey. */
+/* Same fills as the status tags: inquiry white and dashed, booked black, shot white, delivered gray,
+   cancelled struck through. */
 .shoot-event, .shoot-swatch {
-    border: 2px solid var(--ba-ink);
+    border: var(--ss-rule);
 }
 
 .rz-event.shoot-event, .rz-event .shoot-event {
-    border-radius: 8px;
+    border-radius: 0;
 }
 
 .shoot-event.shoot-inquiry, .shoot-swatch.shoot-inquiry {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
+    background: var(--ss-white);
+    color: var(--ss-black);
     border-style: dashed;
 }
 
 .shoot-event.shoot-booked, .shoot-swatch.shoot-booked {
-    background: var(--ba-blue);
-    color: var(--ba-white);
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
 .shoot-event.shoot-shot, .shoot-swatch.shoot-shot {
-    background: var(--ba-white);
-    color: var(--ba-ink);
+    background: var(--ss-white);
+    color: var(--ss-black);
 }
 
 .shoot-event.shoot-delivered, .shoot-swatch.shoot-delivered {
-    background: var(--ba-good);
-    color: var(--ba-ink);
+    background: var(--ss-gray);
+    color: var(--ss-black);
 }
 
 .shoot-event.shoot-cancelled, .shoot-swatch.shoot-cancelled {
-    background: #E4E4E1;
-    color: var(--ba-ink-soft);
-    border-color: var(--ba-ink-soft);
+    background: var(--ss-white);
+    color: var(--ss-dark-gray);
+    border-color: var(--ss-dark-gray);
     text-decoration: line-through;
+}
+
+/* The swatch has no text to strike through, so it's crossed out. */
+.shoot-swatch.shoot-cancelled {
+    background: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--ss-dark-gray) 50%, transparent calc(50% + 0.5px));
 }
 
 /* Hover card on calendar shoots: Radzen's tooltip restyled as a card in the theme's surface colors.
@@ -169,10 +173,10 @@ h1:focus {
 .rz-tooltip.shoot-tooltip .rz-tooltip-content {
     max-width: 22rem;
     padding: 0;
-    background: var(--ba-white);
-    color: var(--ba-ink);
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-md);
+    background: var(--ss-white);
+    color: var(--ss-black);
+    border: var(--ss-rule);
+    border-radius: 0;
     box-shadow: none;
 }
 
@@ -181,16 +185,14 @@ h1:focus {
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.875rem 1rem;
-    font-size: 0.875rem;
+    font-size: var(--ss-size-data);
     line-height: 1.4;
 }
 
 .shoot-card-title {
-    font-size: 1.0625rem;
-    font-weight: 900;
-    font-stretch: 112%;
+    font-size: var(--ss-size);
     text-transform: uppercase;
-    line-height: 1.1;
+    line-height: 1.2;
 }
 
 .shoot-card-badges {
@@ -225,8 +227,7 @@ h1:focus {
 
 /* A delivery date that has passed. Always said in words too; color only reinforces it. */
 .delivery-overdue {
-    color: var(--ba-bad);
-    font-weight: 700;
+    color: var(--ss-bad);
 }
 
 /* Invoices */
@@ -241,17 +242,16 @@ h1:focus {
 
 .invoice-lines th {
     text-align: left;
-    font-weight: 800;
-    font-size: 0.75rem;
+    font-weight: 400;
+    font-size: var(--ss-size);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
     padding: 0.375rem 0.5rem;
-    border-bottom: 2.5px solid var(--ba-ink);
+    border-bottom: var(--ss-rule);
 }
 
 .invoice-lines td {
     padding: 0.25rem 0.5rem;
-    border-bottom: 1px solid var(--ba-hairline);
+    border-bottom: var(--ss-rule-light);
     vertical-align: middle;
 }
 
@@ -288,9 +288,13 @@ h1:focus {
     text-align: right;
 }
 
+.invoice-totals th {
+    font-weight: 400;
+}
+
 .invoice-totals tr.sum th {
-    border-top: 2.5px solid var(--ba-ink);
-    font-weight: 900;
+    border-top: var(--ss-rule);
+    text-transform: uppercase;
 }
 
 .facts {
@@ -309,36 +313,36 @@ h1:focus {
 }
 
 /* Finance */
-/* A table straight on the page is a white card of its own. */
+/* Like the data grids: a black header bar, light rules between rows, a black rule above the total. */
 .finance-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    background: var(--ba-white);
-    color: var(--ba-ink);
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-lg);
+    background: var(--ss-white);
+    color: var(--ss-black);
+    border: var(--ss-rule);
     overflow: hidden;
 }
 
 .finance-table td, .finance-table th {
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid var(--ba-hairline);
+    padding: 0.5rem 1.25rem;
+    border-bottom: var(--ss-rule-light);
+    font-weight: 400;
     text-align: left;
 }
 
 .finance-table thead th {
-    font-weight: 800;
-    font-size: 0.75rem;
+    background: var(--ss-black);
+    color: var(--ss-white);
+    font-size: var(--ss-size);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 2.5px solid var(--ba-ink);
+    border-bottom: none;
 }
 
 .finance-table tfoot th {
-    border-top: 2.5px solid var(--ba-ink);
+    border-top: var(--ss-rule);
     border-bottom: none;
-    font-weight: 900;
+    text-transform: uppercase;
 }
 
 .finance-table tbody tr:last-child td {
@@ -346,13 +350,13 @@ h1:focus {
 }
 
 .finance-table .rz-link {
-    color: var(--ba-blue-deep);
+    color: var(--ss-black);
     text-decoration: underline;
 }
 
 .finance-table .share {
     width: 4rem;
-    color: var(--ba-ink-soft);
+    color: var(--ss-dark-gray);
 }
 
 .export-button, .export-link {
@@ -361,21 +365,25 @@ h1:focus {
     gap: 0.375rem;
 }
 
-/* Dashboard: a white card; level is shown by icon color and a colored edge, the text says what's wrong. */
+/* Dashboard: numbered-list rows like the site's; level is shown by icon color and a colored edge, the text says
+   what's wrong. Hovering a row inverts it. */
 .plain-list.attention-list {
     max-width: 48rem;
-    background: var(--ba-white);
-    color: var(--ba-ink);
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-lg);
-    padding: 0.5rem 1.25rem;
+    background: var(--ss-white);
+    color: var(--ss-black);
+    border: var(--ss-rule);
 }
 
 .attention-list .list-row {
     align-items: flex-start;
-    padding: 0.625rem 0 0.625rem 0.75rem;
-    border-left: 5px solid transparent;
-    border-bottom-color: var(--ba-hairline);
+    padding: 0.625rem 1.25rem 0.625rem 1rem;
+    border-left: 4px solid transparent;
+    border-bottom: var(--ss-rule-light);
+    transition: background-color var(--ss-speed) ease;
+}
+
+.attention-list .list-row:hover {
+    background: var(--ss-gray);
 }
 
 .attention-list .list-row:last-child {
@@ -386,40 +394,36 @@ h1:focus {
     display: flex;
     flex-direction: column;
     text-decoration: none;
-    color: var(--ba-ink);
+    color: var(--ss-black);
 }
 
 .attention-list a:hover .attention-text {
     text-decoration: underline;
 }
 
-.attention-text {
-    font-weight: 800;
-}
-
 .attention-detail {
-    font-size: 0.8125rem;
-    color: var(--ba-ink-soft);
+    font-size: var(--ss-size);
+    color: var(--ss-dark-gray);
 }
 
 .attention-urgent {
-    border-left-color: var(--rz-danger) !important;
+    border-left-color: var(--ss-bad) !important;
 }
 
 .attention-urgent .rzi {
-    color: var(--rz-danger);
+    color: var(--ss-bad);
 }
 
 .attention-warning {
-    border-left-color: var(--ba-warn) !important;
+    border-left-color: var(--ss-warn) !important;
 }
 
 .attention-warning .rzi {
-    color: var(--ba-warn);
+    color: var(--ss-warn);
 }
 
 .attention-info .rzi {
-    color: var(--ba-blue-deep);
+    color: var(--ss-black);
 }
 
 /* Files */
@@ -470,21 +474,19 @@ h1:focus {
     align-items: center;
     gap: 0.5rem;
     padding: 0.375rem 0;
-    border-bottom: 1px solid var(--ba-hairline);
+    border-bottom: var(--ss-rule-light);
 }
 
+/* Same shape as the status tags, filled gray like the site's panels. */
 .provider-tag {
     flex: none;
-    padding: 0 0.625rem;
-    border: 2px solid var(--ba-ink);
-    border-radius: 999px;
-    background: var(--ba-pink);
+    padding: 0.1875rem 0.375rem 0.0625rem;
+    border: var(--ss-rule);
+    background: var(--ss-gray);
     font-size: 0.6875rem;
-    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    line-height: 1.375rem;
-    color: var(--ba-ink);
+    line-height: 1.2;
+    color: var(--ss-black);
 }
 
 .list-row-text {
@@ -513,15 +515,16 @@ h1:focus {
     height: 2.25rem;
     margin-inline-end: 0.25rem;
     border: none;
-    border-radius: 999px;
+    border-radius: 0;
     background: transparent;
-    color: var(--ba-blue-deep);
+    color: var(--ss-black);
     cursor: pointer;
+    transition: background-color var(--ss-speed) ease, color var(--ss-speed) ease;
 }
 
 .copy-button:hover, .copy-button:focus-visible {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
 .copy-button .copied-icon, .copy-button.copied .copy-icon {
@@ -535,9 +538,9 @@ h1:focus {
 .copy-status {
     min-height: 1.25rem;
     margin-top: -0.75rem;
-    font-size: 0.8125rem;
-    font-weight: 700;
-    color: var(--ba-ink);
+    font-size: var(--ss-size);
+    text-transform: uppercase;
+    color: var(--ss-black);
 }
 
 .copy-status:empty {
@@ -558,7 +561,8 @@ h1:focus {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-weight: 700;
+    font-size: var(--ss-size);
+    text-transform: uppercase;
 }
 
 .push-devices .list-row-text {
@@ -567,8 +571,8 @@ h1:focus {
 }
 
 .push-device-detail {
-    font-size: 0.8125rem;
-    color: var(--ba-ink-soft);
+    font-size: var(--ss-size);
+    color: var(--ss-dark-gray);
 }
 
 /* Updates (Settings) */
@@ -577,9 +581,8 @@ h1:focus {
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    background: var(--ba-pink);
-    border: var(--ba-outline-thin);
-    border-radius: var(--ba-radius-md);
+    background: var(--ss-gray);
+    border: var(--ss-rule);
 }
 
 .update-notes {
@@ -591,33 +594,27 @@ h1:focus {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-weight: 700;
+    font-size: var(--ss-size);
+    text-transform: uppercase;
 }
 
 .version-text {
-    color: var(--ba-ink-soft);
-    font-size: 0.8125rem;
+    color: var(--ss-dark-gray);
+    font-size: var(--ss-size);
 }
 
-/* Login */
+/* Login: the black frame with a big wordmark and a white card, like the site's info panel. */
 
 .auth-layout {
-    position: relative;
     display: grid;
     place-items: center;
     min-height: 100vh;
     padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
-    overflow: hidden;
-    background: var(--ba-blue);
-}
-
-.auth-layout .brand-shape {
-    position: absolute;
+    box-sizing: border-box;
+    background: var(--ss-black);
 }
 
 .login-stack {
-    position: relative;
-    z-index: 1;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -625,16 +622,16 @@ h1:focus {
     max-width: 26rem;
 }
 
-.login-wordmark {
-    font-size: clamp(4rem, 14vw, 6.5rem);
+.wordmark.login-wordmark {
+    gap: 0.25em;
+    font-size: clamp(2.5rem, 12vw, 4.5rem);
+    letter-spacing: -0.01em;
 }
 
 .login-tagline {
-    margin: 0 0 0.5rem;
-    color: var(--ba-white);
-    font-size: 1rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
+    margin: 0 0 1rem;
+    color: var(--ss-gray);
+    font-size: var(--ss-size);
     text-transform: uppercase;
 }
 
@@ -643,13 +640,15 @@ h1:focus {
 }
 
 .login-field {
-    font-weight: 700;
-}
-
-.login-field {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.375rem;
+    font-size: var(--ss-size);
+    text-transform: uppercase;
+}
+
+.login-field .rz-textbox {
+    text-transform: none;
 }
 
 .login-remember {
@@ -659,13 +658,13 @@ h1:focus {
 }
 
 .validation-message {
-    color: var(--rz-danger);
+    color: var(--ss-bad);
 }
 
 /* Blazor error UI */
 
 .blazor-error-boundary {
-    background: var(--rz-danger);
+    background: var(--ss-bad);
     padding: 1rem;
     color: white;
 }

@@ -33,7 +33,7 @@
                 @if (shoot.Status.AwaitsDelivery() && shoot.DeliveryDue is { } due)
                 {
                     var overdue = shoot.IsDeliveryOverdue(Today);
-                    <RadzenText TextStyle="TextStyle.Caption" class="@(overdue ? "delivery-overdue" : null)">
+                    <RadzenText TextStyle="TextStyle.Caption" TagName="TagName.Div" class="@(overdue ? "delivery-overdue" : null)">
                         @(overdue ? "Delivery overdue" : $"Delivery {due:dd.MM.}")
                     </RadzenText>
                 }

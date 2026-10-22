@@ -486,3 +486,6 @@ $RECYCLE.BIN/
 
 # Builds for the Mac mini (deploy/publish.sh)
 /artifacts/
+
+# Scratch work that stays out of the repository
+/temp/

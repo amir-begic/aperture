@@ -1,9 +1,9 @@
 // Aperture's service worker. Aperture runs on the server (Blazor Server), so it can't work offline; this only replaces the
 // browser's error page with a branded "no connection" page when a page can't be loaded (e.g. Tailscale is off),
 // and shows notifications (Settings → Notifications). Everything else goes straight to the network, uncached.
-const CACHE = "aperture-offline-v1";
+const CACHE = "aperture-offline-v2";
 const OFFLINE_PAGE = "offline.html";
-const OFFLINE_ASSETS = [OFFLINE_PAGE, "fonts/Archivo.woff2", "icon-192.png"];
+const OFFLINE_ASSETS = [OFFLINE_PAGE, "icon-192.png"];
 
 self.addEventListener("install", event => {
     event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(OFFLINE_ASSETS)).then(() => self.skipWaiting()));
@@ -21,7 +21,7 @@ self.addEventListener("fetch", event => {
     if (request.mode === "navigate") {
         event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_PAGE)));
     } else if (request.method === "GET" && OFFLINE_ASSETS.some(asset => request.url.endsWith("/" + asset))) {
-        // The offline page's own font and icon, when the network is gone.
+        // The offline page's icon, when the network is gone.
         event.respondWith(fetch(request).catch(() => caches.match(request)));
     }
 });

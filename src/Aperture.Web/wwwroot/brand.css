@@ -1,149 +1,119 @@
-/* Bon Ajvar look (bonajvar.eu, see the Bon Ajvar stream kit): Ajvar Blue page, white and pink cards with ink
-   outlines, pill-shaped buttons, navigation and tags, Archivo Expanded Black headlines.
+/* The Aperture look: black frame, white working surface, light gray panels, 1px rules, square
+   corners, one weight, chrome in uppercase. No accent color; hover and the current item invert black/white.
    Loaded after Radzen's "standard" theme; app.css builds on these tokens. Light only.
 
-   Contrast (WCAG): white on blue 5.2:1, ink on blue 3.2:1 (large headlines only), ink on pink 11:1,
-   blue-deep on white 6.3:1. So text directly on the blue page is white, except the big page titles. */
-
-@font-face {
-    font-family: "Archivo";
-    src: url("fonts/Archivo.woff2") format("woff2");
-    font-weight: 100 900;
-    font-stretch: 62% 125%;
-    font-display: swap;
-}
+   Contrast (WCAG): black on white 21:1, black on gray 15:1, white on black 21:1, gray on black 14:1,
+   dark gray on white 13.6:1. Red stays only for danger/overdue, amber for warnings. */
 
 :root {
     color-scheme: light;
 
-    --ba-blue: #505FDE;
-    --ba-blue-deep: #4352D0;
-    --ba-pink: #ECC8D0;
-    --ba-pink-soft: #F8E8EC;
-    --ba-ink: #1D1D1B;
-    --ba-ink-soft: #4A4A47;
-    --ba-white: #FFFFFF;
-    --ba-hairline: rgba(29, 29, 27, 0.14);
-    --ba-good: #D5EEDC;
-    --ba-bad: #C62828;
-    --ba-warn: #B45309;
+    --ss-black: #000000;
+    --ss-white: #FFFFFF;
+    --ss-gray: #DBDBDB;
+    --ss-dark-gray: #2D2D2D;
+    /* Not on the site: a lighter gray for hover and selection on white surfaces. */
+    --ss-gray-soft: #F0F0F0;
+    --ss-bad: #C62828;
+    --ss-warn: #B45309;
 
-    --ba-outline: 3px solid var(--ba-ink);
-    --ba-outline-thin: 2px solid var(--ba-ink);
-    --ba-radius-lg: 28px;
-    --ba-radius-md: 18px;
-    --ba-radius-sm: 12px;
-    --ba-font: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --ss-rule: 1px solid var(--ss-black);
+    --ss-rule-dark: 1px solid var(--ss-dark-gray);
+    --ss-rule-light: 1px solid var(--ss-gray);
+    /* The site sets the brand typeface, a commercial face that isn't licensed for Aperture. Its own fallback
+       carries the look: it rests on the uppercase, the single weight and the rules. With a license, add the
+       @font-face and put "Brand" first. */
+    --ss-font: Arial, Helvetica, sans-serif;
+    /* The site's type is 13px (0.8125rem) for everything that isn't a big title. */
+    --ss-size: 0.8125rem;
+    --ss-size-data: 0.875rem;
+    --ss-size-title: 3rem;
+    --ss-speed: 200ms;
 
     /* Radzen: colors */
-    --rz-primary: var(--ba-blue);
-    --rz-primary-light: #7380E6;
-    --rz-primary-lighter: var(--ba-pink-soft);
-    --rz-primary-dark: var(--ba-blue-deep);
-    --rz-primary-darker: #3341B8;
-    --rz-on-primary: var(--ba-white);
-    --rz-on-primary-lighter: var(--ba-ink);
-    --rz-secondary: var(--ba-blue-deep);
-    --rz-secondary-dark: var(--ba-ink);
-    --rz-danger: var(--ba-bad);
+    --rz-primary: var(--ss-black);
+    --rz-primary-light: var(--ss-dark-gray);
+    --rz-primary-lighter: var(--ss-gray-soft);
+    --rz-primary-dark: var(--ss-black);
+    --rz-primary-darker: var(--ss-black);
+    --rz-on-primary: var(--ss-white);
+    --rz-on-primary-lighter: var(--ss-black);
+    --rz-secondary: var(--ss-dark-gray);
+    --rz-secondary-dark: var(--ss-black);
+    --rz-danger: var(--ss-bad);
     --rz-danger-dark: #A31F1F;
-    --rz-white: var(--ba-white);
-    --rz-base-background-color: var(--ba-white);
-    --rz-body-background-color: var(--ba-blue);
-    --rz-outline-color: var(--ba-ink);
-    --rz-outline-width: 3px;
+    /* Alerts and notifications: gray panels like the site's, the level in the icon and a colored edge
+       (see Alerts below), never a pastel fill. */
+    --rz-danger-lighter: var(--ss-gray-soft);
+    --rz-on-danger-lighter: var(--ss-black);
+    --rz-info: var(--ss-black);
+    --rz-info-lighter: var(--ss-gray-soft);
+    --rz-on-info-lighter: var(--ss-black);
+    --rz-warning: var(--ss-warn);
+    --rz-warning-lighter: var(--ss-gray-soft);
+    --rz-on-warning-lighter: var(--ss-black);
+    --rz-success: var(--ss-black);
+    --rz-success-lighter: var(--ss-gray-soft);
+    --rz-on-success-lighter: var(--ss-black);
+    --rz-white: var(--ss-white);
+    --rz-base-background-color: var(--ss-white);
+    --rz-body-background-color: var(--ss-white);
+    --rz-outline-color: var(--ss-black);
+    --rz-outline-width: 2px;
     --rz-outline-offset: 2px;
 
-    /* Radzen: type */
-    --rz-text-font-family: var(--ba-font);
-    --rz-body-font-size: 0.9375rem;
-    --rz-text-h4-color: var(--ba-ink);
-    --rz-text-h4-font-size: clamp(2rem, 3.4vw, 3.25rem);
-    --rz-text-h4-font-weight: 900;
-    --rz-text-h5-font-size: 1.125rem;
-    --rz-text-h5-font-weight: 800;
-    --rz-text-h6-font-size: 1rem;
-    --rz-text-h6-font-weight: 800;
-    --rz-text-overline-font-size: 0.75rem;
-    --rz-text-overline-font-weight: 800;
-    --rz-text-overline-letter-spacing: 0.08em;
+    /* Radzen: type. One weight everywhere, as on the site. */
+    --rz-text-font-family: var(--ss-font);
+    --rz-body-font-size: var(--ss-size-data);
+    --rz-text-h4-color: var(--ss-black);
+    --rz-text-h4-font-size: clamp(1.75rem, 3.4vw, var(--ss-size-title));
+    --rz-text-h4-font-weight: 400;
+    --rz-text-h5-font-size: var(--ss-size);
+    --rz-text-h5-font-weight: 400;
+    --rz-text-h6-font-size: var(--ss-size);
+    --rz-text-h6-font-weight: 400;
+    --rz-text-overline-font-size: var(--ss-size);
+    --rz-text-overline-font-weight: 400;
+    --rz-text-overline-letter-spacing: 0;
 
     /* Radzen: shapes */
-    --rz-border-radius: var(--ba-radius-sm);
-    --rz-card-border-radius: var(--ba-radius-lg);
-    --rz-card-border: var(--ba-outline);
+    --rz-border-radius: 0;
+    --rz-card-border-radius: 0;
+    --rz-card-border: var(--ss-rule);
     --rz-card-shadow: none;
-    --rz-card-padding: 1.5rem;
-    --rz-input-border: var(--ba-outline-thin);
-    --rz-input-hover-border: var(--ba-outline-thin);
-    --rz-input-focus-border: var(--ba-outline-thin);
-    --rz-input-border-block-end: var(--ba-outline-thin);
-    --rz-input-hover-border-block-end: var(--ba-outline-thin);
-    --rz-input-focus-border-block-end: var(--ba-outline-thin);
-    --rz-input-focus-shadow: 0 0 0 3px var(--ba-blue);
-    --rz-input-border-radius: var(--ba-radius-sm);
-    --rz-dropdown-panel-border: var(--ba-outline-thin);
-    --rz-dropdown-item-hover-background-color: var(--ba-pink);
-    --rz-dropdown-item-hover-color: var(--ba-ink);
-    --rz-dropdown-item-selected-background-color: var(--ba-pink-soft);
-    --rz-dropdown-item-selected-color: var(--ba-ink);
-    --rz-dropdown-item-selected-hover-background-color: var(--ba-pink);
-    --rz-dialog-border-radius: var(--ba-radius-lg);
+    --rz-card-padding: 1.25rem;
+    --rz-input-border: var(--ss-rule);
+    --rz-input-hover-border: var(--ss-rule);
+    --rz-input-focus-border: var(--ss-rule);
+    --rz-input-border-block-end: var(--ss-rule);
+    --rz-input-hover-border-block-end: var(--ss-rule);
+    --rz-input-focus-border-block-end: var(--ss-rule);
+    --rz-input-focus-shadow: 0 0 0 1px var(--ss-black);
+    --rz-input-border-radius: 0;
+    --rz-dropdown-panel-border: var(--ss-rule);
+    --rz-dropdown-item-hover-background-color: var(--ss-black);
+    --rz-dropdown-item-hover-color: var(--ss-white);
+    --rz-dropdown-item-selected-background-color: var(--ss-gray);
+    --rz-dropdown-item-selected-color: var(--ss-black);
+    --rz-dropdown-item-selected-hover-background-color: var(--ss-black);
+    --rz-dialog-border-radius: 0;
     --rz-dialog-shadow: none;
-    --rz-dialog-mask-background-color: rgba(29, 29, 27, 0.55);
+    --rz-dialog-mask-background-color: rgba(0, 0, 0, 0.7);
     --rz-header-shadow: none;
-    --rz-badge-font-weight: 800;
-    --rz-badge-letter-spacing: 0.06em;
+    --rz-badge-font-weight: 400;
+    --rz-badge-letter-spacing: 0;
 
-    /* Surfaces (cards, tables, dialogs, popups) use ink text. */
-    --rz-text-color: var(--ba-ink);
-    --rz-text-title-color: var(--ba-ink);
-    --rz-text-secondary-color: var(--ba-ink-soft);
-    --rz-text-tertiary-color: var(--ba-ink-soft);
-    --rz-link-color: var(--ba-blue-deep);
-    --rz-link-hover-color: var(--ba-ink);
+    --rz-text-color: var(--ss-black);
+    --rz-text-title-color: var(--ss-black);
+    --rz-text-secondary-color: var(--ss-dark-gray);
+    --rz-text-tertiary-color: var(--ss-dark-gray);
+    --rz-link-color: var(--ss-black);
+    --rz-link-hover-color: var(--ss-dark-gray);
 }
 
-/* Directly on the blue page: white text and links. */
-.rz-body {
-    --rz-text-color: var(--ba-white);
-    --rz-text-title-color: var(--ba-white);
-    --rz-text-secondary-color: var(--ba-white);
-    --rz-text-tertiary-color: var(--ba-white);
-    --rz-link-color: var(--ba-white);
-    --rz-link-hover-color: var(--ba-pink);
-    /* Radzen resolves these from the text color where they're declared, so they're restated per scope. */
-    --rz-text-body1-color: var(--rz-text-color);
-    --rz-text-body2-color: var(--rz-text-color);
-    --rz-text-caption-color: var(--rz-text-color);
-    --rz-text-overline-color: var(--rz-text-color);
-    --rz-text-subtitle1-color: var(--rz-text-color);
-    --rz-text-subtitle2-color: var(--rz-text-color);
-    --rz-text-h5-color: var(--rz-text-title-color);
-    --rz-text-h6-color: var(--rz-text-title-color);
-    color: var(--ba-white);
-}
-
-/* …and back to ink on anything with its own surface. */
-.rz-card, .rz-fieldset, .rz-data-grid, .rz-tabview-panels, .rz-scheduler, .rz-dialog, .rz-popup,
-.rz-dropdown-panel, .rz-datepicker-popup-container, .rz-form-field, .rz-textbox, .rz-textarea, .rz-dropdown,
-.rz-numeric, .rz-datepicker, .rz-alert, .rz-notification, .rz-tooltip, .rz-selectbar, .surface {
-    --rz-text-color: var(--ba-ink);
-    --rz-text-title-color: var(--ba-ink);
-    --rz-text-secondary-color: var(--ba-ink-soft);
-    --rz-text-tertiary-color: var(--ba-ink-soft);
-    --rz-link-color: var(--ba-blue-deep);
-    --rz-link-hover-color: var(--ba-ink);
-    /* Radzen resolves these from the text color where they're declared, so they're restated per scope. */
-    --rz-text-body1-color: var(--rz-text-color);
-    --rz-text-body2-color: var(--rz-text-color);
-    --rz-text-caption-color: var(--rz-text-color);
-    --rz-text-overline-color: var(--rz-text-color);
-    --rz-text-subtitle1-color: var(--rz-text-color);
-    --rz-text-subtitle2-color: var(--rz-text-color);
-    --rz-text-h5-color: var(--rz-text-title-color);
-    --rz-text-h6-color: var(--rz-text-title-color);
-    color: var(--rz-text-color);
+::selection {
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
 a {
@@ -151,30 +121,29 @@ a {
 }
 
 body {
-    font-family: var(--ba-font);
-    background: var(--ba-blue);
+    font-family: var(--ss-font);
+    font-weight: 400;
+    accent-color: var(--ss-black);
+    background: var(--ss-black);
+    color: var(--ss-black);
     font-variant-numeric: tabular-nums;
 }
 
-/* Type */
+/* Type: chrome (titles, labels, navigation, buttons, tags) is uppercase like the site. What people typed —
+   names, emails, addresses, notes — keeps its own case, so it reads back exactly as entered. */
 
 .rz-text-h4 {
-    font-stretch: 125%;
     text-transform: uppercase;
-    letter-spacing: -0.02em;
-    line-height: 0.92;
+    letter-spacing: -0.01em;
+    line-height: 1;
 }
 
-.rz-text-h5, .rz-text-h6 {
+.rz-text-h5, .rz-text-h6, .rz-text-overline, .rz-form-field-label, .rz-label {
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    font-weight: 400;
 }
 
-.rz-text-overline {
-    text-transform: uppercase;
-}
-
-/* Frame: header and sidebar are blue too, separated by ink rules. */
+/* Frame: header and sidebar are the black bars of the site, split by dark-gray rules. */
 
 /* Installed on the iPhone (Add to Home Screen), the page runs up behind the status bar and around the notch:
    the safe-area insets keep content clear of them. They're 0 everywhere else. */
@@ -182,12 +151,14 @@ body {
     display: flex;
     align-items: center;
     box-sizing: content-box;
-    min-height: 4rem;
+    min-height: 3rem;
     padding-top: env(safe-area-inset-top);
     padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
-    background: var(--ba-blue);
-    color: var(--ba-white);
-    border-bottom: var(--ba-outline);
+    background: var(--ss-black);
+    color: var(--ss-white);
+    border-bottom: var(--ss-rule-dark);
+    font-size: var(--ss-size);
+    text-transform: uppercase;
 }
 
 .rz-header > .rz-stack {
@@ -195,75 +166,88 @@ body {
 }
 
 .rz-sidebar {
-    background: var(--ba-blue);
-    color: var(--ba-white);
-    border-inline-end: var(--ba-outline);
+    background: var(--ss-black);
+    color: var(--ss-white);
+    border-inline-end: var(--ss-rule-dark);
 }
 
 .rz-sidebar-toggle, .rz-sidebar-toggle:hover {
     background: transparent;
-    color: var(--ba-white);
+    color: var(--ss-white);
     border: none;
 }
 
 .rz-body {
-    background: var(--ba-blue);
+    background: var(--ss-white);
     padding-bottom: env(safe-area-inset-bottom);
     padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 
-/* Navigation: outlined pills; the current page is filled with ink. */
+/* Navigation: numbered rows like the site's project list (01, 02, …), each over a dark-gray rule. Hover and
+   the current page invert to white. The numbers stand in for the icons while the sidebar is open; collapsed,
+   the icons come back. */
 
 .rz-sidebar .rz-panel-menu {
     background: transparent;
-    padding: 1rem 1rem 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    padding: 0;
+    counter-reset: nav;
 }
 
 .rz-sidebar .rz-navigation-item {
     border: none;
     background: transparent;
+    counter-increment: nav;
 }
 
 .rz-sidebar .rz-navigation-item-wrapper {
-    border: 2.5px solid var(--ba-ink);
-    border-radius: 999px;
+    border-bottom: var(--ss-rule-dark);
+    border-radius: 0;
     background: transparent;
-    color: var(--ba-white);
-    transition: background-color 0.12s, color 0.12s;
+    color: var(--ss-white);
+    transition: background-color var(--ss-speed) ease, color var(--ss-speed) ease;
 }
 
 .rz-sidebar .rz-navigation-item-link {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.25rem 0.375rem;
     color: inherit;
-    font-weight: 800;
+    font-size: var(--ss-size);
+    font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+}
+
+/* Radzen sets its own size and weight on the label; it follows the row instead (bigger on phones). */
+.rz-sidebar .rz-navigation-item-text {
+    font-size: inherit;
+    font-weight: inherit;
+}
+
+.rz-sidebar-expanded .rz-navigation-item-link::before {
+    content: counter(nav, decimal-leading-zero);
+    min-width: 2.5rem;
+}
+
+.rz-sidebar-expanded .rz-navigation-item-icon {
+    display: none;
 }
 
 .rz-sidebar .rz-navigation-item-icon {
     color: inherit;
+    font-size: 1rem;
 }
 
-/* Only the pill animates. Radzen also transitions the link, icon and label; each of those restarts whenever the
-   color it inherits changes, so on hover they flicker between light and dark instead of fading once. */
+/* Only the row animates. Radzen also transitions the link, icon and label; each of those restarts whenever the
+   color it inherits changes, so on hover they flicker instead of fading once. */
 .rz-sidebar .rz-navigation-item-link,
 .rz-sidebar .rz-navigation-item-icon,
 .rz-sidebar .rz-navigation-item-text {
     transition: none;
 }
 
-.rz-sidebar .rz-navigation-item-wrapper:hover {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
-}
-
+.rz-sidebar .rz-navigation-item-wrapper:hover,
 .rz-sidebar .rz-navigation-item-wrapper-active,
 .rz-sidebar .rz-navigation-item-wrapper-active:hover {
-    background: var(--ba-ink);
-    color: var(--ba-white);
+    background: var(--ss-white);
+    color: var(--ss-black);
 }
 
 .rz-sidebar .rz-navigation-item-wrapper-active::before,
@@ -271,97 +255,96 @@ body {
     display: none;
 }
 
-/* Cards: white (or pink) with an ink outline, whatever variant the page asked for. */
+/* Cards: white with a 1px black rule, square. */
 
 .rz-card,
 .rz-card.rz-variant-outlined,
 .rz-card.rz-variant-flat,
 .rz-card.rz-variant-filled,
 .rz-card.rz-variant-text {
-    background: var(--ba-white);
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-lg);
+    background: var(--ss-white);
+    border: var(--ss-rule);
+    border-radius: 0;
     box-shadow: none;
 }
 
-.rz-card.pink {
-    background: var(--ba-pink);
-}
-
-/* Fieldsets are cards whose legend is an ink pill on the outline. */
+/* Fieldsets: the legend is a black bar label on the rule. */
 
 .rz-fieldset {
-    background: var(--ba-white);
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-lg);
-    padding: 1.5rem;
+    background: var(--ss-white);
+    border: var(--ss-rule);
+    border-radius: 0;
+    padding: 1.25rem;
 }
 
 .rz-fieldset-legend {
-    background: var(--ba-ink);
-    color: var(--ba-white);
-    border-radius: 999px;
-    padding: 0.25rem 1rem;
+    background: var(--ss-black);
+    color: var(--ss-white);
+    border-radius: 0;
+    padding: 0.3125rem 0.75rem 0.1875rem;
     margin-inline-start: 0.5rem;
-    font-size: 0.8125rem;
-    font-weight: 800;
+    font-size: var(--ss-size);
+    font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    word-spacing: 0.15em;
 }
 
 .rz-fieldset-legend .rz-fieldset-legend-text {
-    color: var(--ba-white);
+    color: var(--ss-white);
 }
 
-/* Buttons: pills. Primary = ink (like "Book me"), turning pink on hover. */
+/* Buttons: square, 1px rule, uppercase. Primary is black and inverts to white on hover, like the site's
+   "close" bar; outlined is the reverse. */
 
 .rz-button {
-    border-radius: 999px;
-    font-weight: 800;
+    border-radius: 0;
+    font-size: var(--ss-size);
+    font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0;
+    box-shadow: none;
+    transition: background-color var(--ss-speed) ease, color var(--ss-speed) ease;
 }
 
 .rz-button.rz-variant-filled.rz-primary,
 .rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
-    background: var(--ba-ink);
-    color: var(--ba-white);
-    border: 2.5px solid var(--ba-ink);
+    background: var(--ss-black);
+    color: var(--ss-white);
+    border: var(--ss-rule);
 }
 
 .rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat):not(:disabled):hover {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
+    background: var(--ss-white);
+    color: var(--ss-black);
 }
 
 .rz-button.rz-variant-outlined,
 .rz-button.rz-variant-outlined:is(.rz-primary, .rz-secondary, .rz-base, .rz-info, .rz-success, .rz-light, .rz-dark):is(.rz-shade-default, .rz-shade-lighter, .rz-shade-light, .rz-shade-dark, .rz-shade-darker) {
-    background: var(--ba-white);
-    color: var(--ba-ink);
-    border: 2.5px solid var(--ba-ink);
+    background: var(--ss-white);
+    color: var(--ss-black);
+    border: var(--ss-rule);
     box-shadow: none;
 }
 
 .rz-button.rz-variant-outlined:not(:disabled):hover {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
 .rz-button.rz-variant-flat {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
-    border: 2.5px solid var(--ba-ink);
+    background: var(--ss-gray);
+    color: var(--ss-black);
+    border: var(--ss-rule);
 }
 
 .rz-button.rz-variant-flat:not(:disabled):hover {
-    background: var(--ba-pink-soft);
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
 .rz-button.rz-danger:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
-    background: var(--ba-bad);
-    color: var(--ba-white);
-    border: 2.5px solid var(--ba-ink);
+    background: var(--ss-bad);
+    color: var(--ss-white);
+    border: 1px solid var(--ss-bad);
 }
 
 .rz-button.rz-variant-text {
@@ -370,7 +353,9 @@ body {
 }
 
 .rz-button.rz-variant-text.rz-primary {
-    color: var(--ba-blue-deep);
+    color: var(--ss-black);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
 }
 
 .rz-button.rz-variant-text.rz-base {
@@ -378,66 +363,58 @@ body {
 }
 
 .rz-header .rz-button.rz-variant-text {
-    color: var(--ba-white);
+    color: var(--ss-white);
 }
 
 /* Inputs */
 
-.rz-form-field-label, .rz-label {
-    font-weight: 700;
-}
-
 .rz-form-field .rz-form-field-label {
-    color: var(--ba-ink);
+    color: var(--ss-black);
 }
 
 .rz-textbox, .rz-textarea, .rz-dropdown, .rz-numeric, .rz-datepicker, .rz-multiselect {
-    background-color: var(--ba-white);
+    background-color: var(--ss-white);
+    border-radius: 0;
 }
 
 .rz-dropdown-panel, .rz-multiselect-panel, .rz-autocomplete-panel, .rz-popup {
-    border-radius: var(--ba-radius-sm);
+    border-radius: 0;
     box-shadow: none;
 }
 
-.rz-dropdown-item.rz-state-highlight {
-    font-weight: 700;
-}
-
-/* Tabs: pills on the blue page, the content in a white card below. */
+/* Tabs: a row of cells over a black rule; the selected one is filled black. */
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav {
-    gap: 0.5rem;
-    padding-bottom: 0.75rem;
+    gap: 0;
+    padding-bottom: 0;
     border: none;
+    border-bottom: var(--ss-rule);
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li {
-    border: 2.5px solid var(--ba-ink);
-    border-radius: 999px;
+    border: none;
+    border-radius: 0;
     background: transparent;
-    color: var(--ba-white);
+    color: var(--ss-black);
     margin: 0;
+    transition: background-color var(--ss-speed) ease, color var(--ss-speed) ease;
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li a,
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li button {
-    padding: 0.4rem 1rem;
-    font-weight: 800;
+    padding: 0.5rem 1rem 0.375rem;
+    font-size: var(--ss-size);
+    font-weight: 400;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li:hover:not(.rz-tabview-selected) {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
-    border-color: var(--ba-ink);
+    background: var(--ss-gray);
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li.rz-tabview-selected {
-    background: var(--ba-ink);
-    color: var(--ba-white);
-    border-color: var(--ba-ink);
+    background: var(--ss-black);
+    color: var(--ss-white);
     margin: 0;
 }
 
@@ -448,52 +425,55 @@ body {
 
 .rz-tabview-panels,
 .rz-tabview.rz-tabview-top > .rz-tabview-panels {
-    background: var(--ba-white);
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-lg);
-    padding: 1.5rem;
+    background: var(--ss-white);
+    border: var(--ss-rule);
+    border-top: none;
+    border-radius: 0;
+    padding: 1.25rem;
 }
 
-/* A card inside a tab or dialog is a section of it, not another outlined box. */
+/* A card inside a tab or dialog is a section of it, not another box. */
 .rz-tabview-panels .rz-card:not(.kpi-tile) {
     border: none;
-    border-radius: 0;
     padding: 0;
     background: transparent;
 }
 
 .rz-dialog .rz-card {
-    border: var(--ba-outline-thin);
-    border-radius: var(--ba-radius-md);
-    background: var(--ba-pink-soft);
+    border: var(--ss-rule);
+    background: var(--ss-gray-soft);
 }
 
 .rz-tabview-panel {
     padding: 0;
 }
 
-/* Data grids: a white card; ink header rule, hairlines between rows, pink on hover. */
+/* Data grids: the header row is a black bar like the site's list headers; light rules between rows,
+   gray on hover. */
 
 .rz-data-grid {
-    background: var(--ba-white);
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-lg);
+    background: var(--ss-white);
+    border: var(--ss-rule);
+    border-radius: 0;
     overflow: hidden;
-    --rz-grid-header-background-color: var(--ba-white);
-    --rz-grid-header-sorted-background-color: var(--ba-pink-soft);
-    --rz-grid-stripe-background-color: var(--ba-white);
-    --rz-grid-hover-background-color: var(--ba-pink-soft);
-    --rz-grid-hover-color: var(--ba-ink);
-    --rz-grid-cell-border: 1px solid var(--ba-hairline);
+    --rz-grid-header-background-color: var(--ss-black);
+    --rz-grid-header-color: var(--ss-white);
+    --rz-grid-header-sorted-background-color: var(--ss-dark-gray);
+    --rz-grid-stripe-background-color: var(--ss-white);
+    --rz-grid-hover-background-color: var(--ss-gray);
+    --rz-grid-hover-color: var(--ss-black);
+    --rz-grid-cell-border: var(--ss-rule-light);
     --rz-grid-header-cell-border: none;
-    --rz-grid-header-cell-border-bottom: 2.5px solid var(--ba-ink);
-    --rz-grid-header-font-size: 0.75rem;
-    --rz-grid-header-font-weight: 800;
+    --rz-grid-header-cell-border-bottom: none;
+    --rz-grid-header-font-size: var(--ss-size);
+    --rz-grid-header-font-weight: 400;
     --rz-grid-header-text-transform: uppercase;
 }
 
-.rz-data-grid .rz-grid-table thead th {
-    letter-spacing: 0.04em;
+.rz-data-grid .rz-grid-table thead th,
+.rz-data-grid .rz-grid-table thead th .rz-column-title,
+.rz-data-grid .rz-grid-table thead th .rzi {
+    color: var(--ss-white);
 }
 
 .rz-data-grid .rz-column-title-content {
@@ -502,12 +482,12 @@ body {
 
 .rz-data-grid .rz-grid-table th:first-child,
 .rz-data-grid .rz-grid-table td:first-child {
-    padding-inline-start: 0.75rem;
+    padding-inline-start: 1.25rem;
 }
 
 .rz-data-grid .rz-grid-table th:last-child,
 .rz-data-grid .rz-grid-table td:last-child {
-    padding-inline-end: 1rem;
+    padding-inline-end: 1.25rem;
 }
 
 .rz-data-grid .rz-grid-table td {
@@ -515,260 +495,298 @@ body {
 }
 
 .rz-data-grid .rz-pager {
-    background: var(--ba-white);
-    border-top: 1px solid var(--ba-hairline);
+    background: var(--ss-white);
+    border-top: var(--ss-rule);
 }
 
-/* Tags: ink-outlined pills. Shoot and payment states set their own fill (app.css). */
+/* Tags: small square labels with a 1px rule. Shoot and payment states set their own fill (app.css). */
 
 .rz-badge {
-    border: 2px solid var(--ba-ink);
-    border-radius: 999px;
-    background: var(--ba-white);
-    color: var(--ba-ink);
-    padding: 0.0625rem 0.625rem;
+    border: var(--ss-rule);
+    border-radius: 0;
+    background: var(--ss-white);
+    color: var(--ss-black);
+    padding: 0.1875rem 0.375rem 0.0625rem;
     font-size: 0.6875rem;
+    text-transform: uppercase;
 }
 
 .rz-badge.rz-badge-base {
-    background: var(--ba-white);
-    color: var(--ba-ink);
+    background: var(--ss-white);
+    color: var(--ss-black);
 }
 
 .rz-badge.rz-badge-info {
-    background: var(--ba-blue);
-    color: var(--ba-white);
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
 .rz-badge.rz-badge-warning {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
+    background: var(--ss-white);
+    color: var(--ss-black);
     border-style: dashed;
 }
 
 .rz-badge.rz-badge-success {
-    background: var(--ba-good);
-    color: var(--ba-ink);
+    background: var(--ss-gray);
+    color: var(--ss-black);
 }
 
 .rz-badge.rz-badge-danger {
-    background: var(--ba-bad);
-    color: var(--ba-white);
+    background: var(--ss-bad);
+    color: var(--ss-white);
+    border-color: var(--ss-bad);
 }
 
 .rz-badge.rz-badge-secondary {
-    background: var(--ba-pink);
-    color: var(--ba-ink);
+    background: var(--ss-gray);
+    color: var(--ss-black);
 }
 
 .rz-badge.badge-cancelled {
-    background: #E4E4E1;
-    color: var(--ba-ink-soft);
-    border-color: var(--ba-ink-soft);
+    background: var(--ss-white);
+    color: var(--ss-dark-gray);
+    border-color: var(--ss-gray);
     text-decoration: line-through;
 }
 
 /* Two-way switches (chart / table) */
 
 .rz-selectbar {
-    border: 2.5px solid var(--ba-ink);
-    border-radius: 999px;
+    border: var(--ss-rule);
+    border-radius: 0;
     overflow: hidden;
-    background: var(--ba-white);
+    background: var(--ss-white);
 }
 
 .rz-selectbar .rz-button {
     border: none;
     border-radius: 0;
-    background: var(--ba-white);
-    color: var(--ba-ink);
+    background: var(--ss-white);
+    color: var(--ss-black);
 }
 
 .rz-selectbar .rz-button.rz-state-active {
-    background: var(--ba-ink);
-    color: var(--ba-white);
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
-/* Dialogs */
+/* Dialogs: a black title bar over a white body. */
 
 .rz-dialog {
-    border: var(--ba-outline);
+    border: var(--ss-rule);
     overflow: hidden;
 }
 
-.rz-dialog-titlebar .rz-dialog-title {
-    font-weight: 900;
-    font-stretch: 125%;
-    text-transform: uppercase;
-    letter-spacing: -0.01em;
+.rz-dialog-titlebar {
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
-/* Alerts and notifications */
+.rz-dialog-titlebar .rz-dialog-title {
+    font-size: var(--ss-size);
+    font-weight: 400;
+    text-transform: uppercase;
+}
+
+.rz-dialog-titlebar .rz-dialog-titlebar-close {
+    color: var(--ss-white);
+}
+
+/* Alerts and notifications: a 1px rule; alerts add a colored edge for warnings and errors, like the dashboard. */
 
 .rz-alert, .rz-notification-item {
-    border: var(--ba-outline-thin);
-    border-radius: var(--ba-radius-md);
+    border: var(--ss-rule);
+    border-radius: 0;
 }
 
-/* Breadcrumb on the blue page */
+.rz-alert {
+    border-left-width: 4px;
+}
+
+.rz-alert.rz-warning.rz-shade-lighter {
+    border-left-color: var(--ss-warn);
+    --rz-alert-icon-color: var(--ss-warn);
+}
+
+.rz-alert.rz-danger.rz-shade-lighter {
+    border-left-color: var(--ss-bad);
+    --rz-alert-icon-color: var(--ss-bad);
+}
+
+/* Switches: a square track that fills black when on. */
+
+.rz-switch .rz-switch-circle {
+    border: var(--ss-rule);
+    border-radius: 0;
+    background: var(--ss-white);
+}
+
+.rz-switch .rz-switch-circle::before {
+    border-radius: 0;
+    background: var(--ss-black);
+}
+
+.rz-switch.rz-switch-checked .rz-switch-circle {
+    background: var(--ss-black);
+}
+
+.rz-switch.rz-switch-checked .rz-switch-circle::before {
+    background: var(--ss-white);
+}
+
+/* Breadcrumb */
 
 .rz-breadcrumb-item, .rz-breadcrumb-item .rz-link {
-    color: var(--ba-white);
-    font-weight: 700;
+    color: var(--ss-black);
+    font-size: var(--ss-size);
+    text-transform: uppercase;
 }
 
-.rz-breadcrumb-item .rz-link {
-    text-decoration: underline;
-}
+/* Links are underlined everywhere, as on the site, so they don't depend on color. */
 
-/* Links on surfaces are underlined, so they don't depend on color. */
-
-.rz-card .rz-link, .rz-tabview-panels .rz-link, .rz-data-grid .rz-link, .surface .rz-link {
+.rz-link, .rz-breadcrumb-item .rz-link {
     text-decoration: underline;
     text-underline-offset: 0.15em;
 }
 
-/* Calendar (RadzenScheduler) as a white card */
+/* Calendar (RadzenScheduler) */
 
 .rz-scheduler {
-    border: var(--ba-outline);
-    border-radius: var(--ba-radius-lg);
+    border: var(--ss-rule);
+    border-radius: 0;
     overflow: hidden;
-    --rz-scheduler-toolbar-background-color: var(--ba-white);
-    --rz-scheduler-header-background-color: var(--ba-white);
-    --rz-scheduler-header-color: var(--ba-ink);
-    --rz-scheduler-border-color: var(--ba-hairline);
-    --rz-scheduler-other-month-background-color: #F6F6F4;
-    --rz-scheduler-weekend-background-color: var(--ba-white);
-    --rz-scheduler-highlight-background-color: var(--ba-pink-soft);
-    --rz-scheduler-view-selected-background-color: var(--ba-ink);
-    --rz-scheduler-view-selected-color: var(--ba-white);
-    --rz-scheduler-view-button-border: 2px solid var(--ba-ink);
-    --rz-scheduler-toolbar-title-font-size: 1.25rem;
-    --rz-scheduler-toolbar-title-font-weight: 900;
+    --rz-scheduler-toolbar-background-color: var(--ss-white);
+    --rz-scheduler-header-background-color: var(--ss-white);
+    --rz-scheduler-header-color: var(--ss-black);
+    --rz-scheduler-border-color: var(--ss-gray);
+    --rz-scheduler-other-month-background-color: var(--ss-gray-soft);
+    --rz-scheduler-weekend-background-color: var(--ss-white);
+    --rz-scheduler-highlight-background-color: var(--ss-gray);
+    --rz-scheduler-view-selected-background-color: var(--ss-black);
+    --rz-scheduler-view-selected-color: var(--ss-white);
+    --rz-scheduler-view-button-border: var(--ss-rule);
+    --rz-scheduler-toolbar-title-font-size: var(--ss-size);
+    --rz-scheduler-toolbar-title-font-weight: 400;
 }
 
 .rz-scheduler .rz-scheduler-nav-title {
-    font-stretch: 125%;
     text-transform: uppercase;
 }
 
+/* The view buttons are filled primary buttons: the :not()s match the general primary rule's weight, so this
+   later rule wins and only the current view stays black. */
 .rz-scheduler .rz-scheduler-nav .rz-button,
-.rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary {
-    border: 2.5px solid var(--ba-ink);
-    border-radius: 999px;
-    background: var(--ba-white);
-    color: var(--ba-ink);
+.rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
+    border: var(--ss-rule);
+    border-radius: 0;
+    background: var(--ss-white);
+    color: var(--ss-black);
 }
 
 .rz-scheduler .rz-scheduler-nav-views {
-    gap: 0.375rem;
+    gap: 0;
 }
 
-.rz-scheduler .rz-scheduler-nav .rz-button:not(.rz-state-active):hover {
-    background: var(--ba-pink);
+.rz-scheduler .rz-scheduler-nav .rz-button:not(.rz-state-active):hover,
+.rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary:not(.rz-state-active):not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat):not(:disabled):hover {
+    background: var(--ss-gray);
 }
 
-.rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary.rz-state-active {
-    background: var(--ba-ink);
-    border-color: var(--ba-ink);
-    color: var(--ba-white);
+.rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary.rz-state-active:not(.rz-variant-outlined):not(.rz-variant-text) {
+    background: var(--ss-black);
+    color: var(--ss-white);
 }
 
-/* Decorative shapes (ajvar splats). Never in front of content. */
+/* Logo: the ring. */
 
-.brand-shape {
-    display: block;
-    pointer-events: none;
-    user-select: none;
+.brand-ring {
+    display: inline-block;
+    flex: none;
+    width: 1em;
+    height: 1em;
+    border: 0.173em solid currentColor;
+    border-radius: 50%;
+    box-sizing: border-box;
 }
 
-.brand-shape path, .brand-shape ellipse, .brand-shape circle {
-    fill: var(--ba-pink);
-    stroke: var(--ba-ink);
-    stroke-width: 2.5px;
-    vector-effect: non-scaling-stroke;
-}
-
-.brand-shape .ring {
-    fill: none;
-}
+/* Sidebar decoration: the site's loader, slowed down. Two white discs slide past each other; where they
+   overlap, difference blending turns them black. Never in front of content. */
 
 .sidebar-shapes {
     position: relative;
-    height: 15rem;
+    height: 10rem;
     margin-top: 2rem;
     overflow: hidden;
+    isolation: isolate;
+    pointer-events: none;
 }
 
-.sidebar-shapes .brand-shape {
+.sidebar-shapes::before,
+.sidebar-shapes::after {
+    content: "";
     position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--ss-white);
 }
 
-/* The splats drift slowly, each on its own path and tempo so they never move in step.
-   translate/rotate are separate from transform, so a shape's own inline rotation stays as it is. */
-@keyframes splat-drift-a {
-    0%, 100% { translate: 0 0; rotate: 0deg; }
-    33% { translate: 4px -7px; rotate: 3deg; }
-    66% { translate: -3px -3px; rotate: -2deg; }
+.sidebar-shapes::before {
+    animation: ss-loader-y 6s linear infinite alternate;
 }
 
-@keyframes splat-drift-b {
-    0%, 100% { translate: 0 0; rotate: 0deg; }
-    50% { translate: -6px 5px; rotate: -6deg; }
+.sidebar-shapes::after {
+    mix-blend-mode: difference;
+    animation: ss-loader-x 6s linear infinite alternate;
 }
 
-@keyframes splat-drift-c {
-    0%, 100% { translate: 0 0; }
-    25% { translate: 3px 4px; }
-    75% { translate: -4px -2px; }
+@keyframes ss-loader-y {
+    from { transform: translate3d(-50%, -20%, 0); }
+    to { transform: translate3d(-50%, -120%, 0); }
 }
 
-.sidebar-shapes .brand-shape:nth-child(1) {
-    animation: splat-drift-a 11s ease-in-out infinite;
-}
-
-.sidebar-shapes .brand-shape:nth-child(2) {
-    animation: splat-drift-b 8s ease-in-out -3s infinite;
-}
-
-.sidebar-shapes .brand-shape:nth-child(3) {
-    animation: splat-drift-c 9.5s ease-in-out -5s infinite;
+@keyframes ss-loader-x {
+    from { transform: translate3d(20%, -50%, 0); }
+    to { transform: translate3d(-120%, -50%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .sidebar-shapes .brand-shape:nth-child(n) {
+    .sidebar-shapes::before, .sidebar-shapes::after {
         animation: none;
     }
 }
 
-/* Wordmark */
+/* Wordmark: ring + name, the size of the site's header text. */
 
 .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     margin: 0;
-    font-weight: 900;
-    font-stretch: 125%;
-    letter-spacing: -0.02em;
-    line-height: 0.86;
+    font-size: var(--ss-size);
+    font-weight: 400;
+    line-height: 1;
     text-transform: uppercase;
-    color: var(--ba-ink);
+    color: var(--ss-white);
 }
 
 .header-wordmark {
-    font-size: 1.875rem;
     text-decoration: none;
 }
 
 .header-wordmark:hover {
-    color: var(--ba-white);
+    color: var(--ss-gray);
 }
 
-/* Phones: the sidebar opens as a full-screen menu below the header, with big pills. It closes again
+/* Phones: the sidebar opens as a full-screen black menu below the header, with big rows. It closes again
    after choosing a page (MainLayout). Radzen hides the collapsed responsive sidebar itself. */
 @media (max-width: 768px) {
     .rz-sidebar.rz-sidebar-responsive.rz-sidebar-expanded {
         position: fixed;
-        inset: calc(4rem + 3px + env(safe-area-inset-top)) 0 0 0;
+        inset: calc(3rem + 1px + env(safe-area-inset-top)) 0 0 0;
         padding-bottom: env(safe-area-inset-bottom);
         width: 100vw;
         height: auto;
@@ -786,39 +804,25 @@ body {
 
     .rz-sidebar .rz-panel-menu {
         flex: none;
-        padding: 1.5rem 1.25rem 0;
-        gap: 0.75rem;
     }
 
     .rz-sidebar .rz-navigation-item-link {
-        padding: 0.75rem 1.25rem;
-        font-size: 1.25rem;
-        font-weight: 900;
-        font-stretch: 125%;
-        letter-spacing: 0;
+        padding: 0.875rem 1.25rem 0.75rem;
+        font-size: 1.3rem;
     }
 
-    .rz-sidebar .rz-navigation-item-icon {
-        font-size: 1.5rem;
-        width: 1.5rem;
-        height: 1.5rem;
-        margin-inline-end: 0.75rem;
+    .rz-sidebar-expanded .rz-navigation-item-link::before {
+        min-width: 3.5rem;
     }
 
     .sidebar-shapes {
-        flex: 1 0 12rem;
+        flex: 1 0 8rem;
         margin-top: 1rem;
-    }
-
-    .rz-tabview.rz-tabview-top > .rz-tabview-nav {
-        gap: 0.375rem;
     }
 
     .rz-tabview.rz-tabview-top > .rz-tabview-nav li a,
     .rz-tabview.rz-tabview-top > .rz-tabview-nav li button {
-        padding: 0.3rem 0.7rem;
-        font-size: 0.8125rem;
-        letter-spacing: 0.02em;
+        padding: 0.4rem 0.625rem 0.3rem;
     }
 
     .rz-tabview.rz-tabview-top > .rz-tabview-nav .rz-tabview-icon {
