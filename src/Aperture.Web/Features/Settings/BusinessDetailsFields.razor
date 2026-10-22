@@ -1,0 +1,93 @@
+@* The business details invoices need: name, address, contact and IBAN. Inside a RadzenTemplateForm of BusinessSettings,
+   on the Settings page and on the welcome page after the first login. *@
+
+<RadzenFieldset Text="Business">
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="Your name" class="w-full">
+                <ChildContent><RadzenTextBox Name="OwnerName" @bind-Value="Settings.OwnerName" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="OwnerName" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="Studio / business name (optional)" class="w-full">
+                <ChildContent><RadzenTextBox Name="BusinessName" @bind-Value="Settings.BusinessName" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="BusinessName" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenFieldset>
+
+<RadzenFieldset Text="Address">
+    <RadzenRow>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Street and number" class="w-full">
+                <ChildContent><RadzenTextBox Name="Street" @bind-Value="Settings.Street" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="Street" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="4" SizeMD="3">
+            <RadzenFormField Text="Postal code" class="w-full">
+                <ChildContent><RadzenTextBox Name="PostalCode" @bind-Value="Settings.PostalCode" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="PostalCode" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="8" SizeMD="6">
+            <RadzenFormField Text="City" class="w-full">
+                <ChildContent><RadzenTextBox Name="City" @bind-Value="Settings.City" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="City" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenFormField Text="Country" class="w-full">
+                <ChildContent><RadzenTextBox Name="CountryCode" @bind-Value="Settings.CountryCode" MaxLength="2" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="CountryCode" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenFieldset>
+
+<RadzenFieldset Text="Contact">
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="Email" class="w-full">
+                <ChildContent><RadzenTextBox Name="Email" @bind-Value="Settings.Email" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="Email" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenFormField Text="Phone" class="w-full">
+                <ChildContent><RadzenTextBox Name="Phone" @bind-Value="Settings.Phone" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="Phone" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12">
+            <RadzenFormField Text="Website" class="w-full">
+                <ChildContent><RadzenTextBox Name="Website" @bind-Value="Settings.Website" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="Website" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenFieldset>
+
+<RadzenFieldset Text="Payment">
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenFormField Text="IBAN" class="w-full">
+                <ChildContent><RadzenTextBox Name="Iban" @bind-Value="Settings.Iban" Placeholder="CH93 0076 2011 6238 5295 7" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="Iban" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenFormField Text="Payment terms (days)" class="w-full">
+                <ChildContent><RadzenNumeric TValue="int" Name="PaymentTermsDays" @bind-Value="Settings.PaymentTermsDays" Min="0" Max="365" /></ChildContent>
+                <Helper><RadzenDataAnnotationValidator Component="PaymentTermsDays" /></Helper>
+            </RadzenFormField>
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenFieldset>
+
+@code {
+    [Parameter, EditorRequired]
+    public BusinessSettings Settings { get; set; } = default!;
+}

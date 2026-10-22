@@ -58,7 +58,8 @@ See [docs/deployment.md](docs/deployment.md):
   copies check for updates. Aperture offers it under **Settings → Updates** and goes back to the previous version if
   the new one doesn't start.
 - The program installs, updates, backs up and restores itself (`Aperture.Web install`, `update`, `backup`, `restore`,
-  `uninstall`; `src/Aperture.Web/Installation`), the same on every system. Per system, only how it starts at login and
+  `uninstall`; `src/Aperture.Web/Installation`), the same on every system. Its options are listed under
+  [Commands](docs/deployment.md#commands). Per system, only how it starts at login and
   schedules its backup and updater differs: launchd agents, scheduled tasks, systemd user units.
 
 ## Configuration

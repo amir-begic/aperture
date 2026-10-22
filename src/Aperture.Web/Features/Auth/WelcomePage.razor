@@ -1,0 +1,70 @@
+@page "/welcome"
+@layout AuthLayout
+@using Aperture.Web.Features.Settings
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject NavigationManager Navigation
+
+@* The second step of the first start, after the login (SetupPage): the business details invoices need, so nobody has
+   to go looking for Settings. It can be skipped; the dashboard keeps asking until the details are complete. *@
+
+<PageTitle>Your business · Aperture</PageTitle>
+
+<div class="login-stack welcome-stack">
+<div>
+    <p class="login-tagline">Step 2 of 2 · Your business</p>
+    <h1 class="wordmark login-wordmark"><span class="brand-ring" aria-hidden="true"></span>Aperture</h1>
+</div>
+<RadzenCard class="login-card">
+    @if (_settings is null)
+    {
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+    }
+    else
+    {
+        <RadzenTemplateForm TItem="BusinessSettings" Data="_settings" Submit="SaveAsync">
+            <RadzenStack Gap="1.5rem">
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                    These details go on every invoice, with a Swiss QR-bill for your IBAN. Your email is also what
+                    notifications need. You can change all of it under Settings later, where you'll also find VAT, your usual
+                    delivery time and more.
+                </RadzenText>
+
+                <BusinessDetailsFields Settings="_settings" />
+
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Save and start" Icon="arrow_forward" IsBusy="_saving" BusyText="Saving…" />
+                    <RadzenLink Path="" Text="Skip for now" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenTemplateForm>
+    }
+</RadzenCard>
+</div>
+
+@code {
+    private BusinessSettings? _settings;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
+    }
+
+    private async Task SaveAsync(BusinessSettings settings)
+    {
+        _saving = true;
+        try
+        {
+            settings.Iban = Iban.Normalize(settings.Iban);
+            await using var db = await DbFactory.CreateDbContextAsync();
+            db.BusinessSettings.Update(settings);
+            await db.SaveChangesAsync();
+            Navigation.NavigateTo("");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

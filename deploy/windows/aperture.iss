@@ -4,8 +4,8 @@
 ;
 ; Installs for the person logged in, without administrator rights, into %LOCALAPPDATA%\Aperture\releases, then runs
 ; "Aperture.Web install": scheduled tasks for Aperture at logon, the updater and the daily backup, and the browser opens
-; on Aperture. Its uninstaller (Settings → Apps) runs "Aperture.Web uninstall", which keeps the data and backups.
-; Installing a newer one over it keeps all data too.
+; on Aperture. Its uninstaller (Settings → Apps) runs "Aperture.Web uninstall"; it asks whether to remove the data and
+; backups too, and keeps them unless told to. Installing a newer one over it keeps all data.
 
 #ifndef ReleaseDir
   #error Pass /DReleaseDir=<the unpacked release folder>
@@ -53,11 +53,8 @@ Source: "{#ReleaseDir}\*"; DestDir: "{app}\releases\{#ReleaseName}"; Flags: igno
 ; In the Start menu: opens Aperture in the browser.
 Filename: "{userprograms}\Aperture.url"; Section: "InternetShortcut"; Key: "URL"; String: "http://localhost:5090"
 
-[UninstallRun]
-Filename: "{app}\app\Aperture.Web.exe"; Parameters: "uninstall --home ""{app}"""; Flags: runhidden waituntilterminated; RunOnceId: "Uninstall"
-
 [UninstallDelete]
-; Also the releases installed by updates since; the data, logs and backups stay.
+; Also the releases installed by updates since. The data, logs and backups stay unless the person chose to remove them.
 Type: filesandordirs; Name: "{app}\releases"
 Type: files; Name: "{userprograms}\Aperture.url"
 
@@ -73,5 +70,26 @@ begin
       '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
       MsgBox('Aperture was installed but didn''t start. The details are in ' + ExpandConstant('{app}\logs\install.log') + '.',
         mbError, MB_OK);
+  end;
+end;
+
+// Before the uninstaller removes the program: stop Aperture and remove its tasks, and with the person's yes, all its
+// data. No by default; a silent uninstall always keeps the data.
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  ResultCode: Integer;
+  Parameters: String;
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    Parameters := 'uninstall --home "' + ExpandConstant('{app}') + '"';
+    // Nested, so a silent uninstall never asks (Pascal Script may evaluate both sides of an "and").
+    if not UninstallSilent then
+      if MsgBox('Also remove all your Aperture data?' + #13#10 + #13#10 +
+        'This deletes the database, all receipts, invoices and other files, the login, the backups and the logs in ' +
+        ExpandConstant('{app}') + '. It can''t be undone.' + #13#10 + #13#10 +
+        'Choose No to keep them, e.g. to install Aperture again later.', mbConfirmation, MB_YESNO or MB_DEFBUTTON2) = IDYES then
+        Parameters := Parameters + ' --remove-data';
+    Exec(ExpandConstant('{app}\app\Aperture.Web.exe'), Parameters, '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   end;
 end;

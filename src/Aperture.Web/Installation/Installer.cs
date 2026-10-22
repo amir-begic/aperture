@@ -71,9 +71,24 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
         return 0;
     }
 
-    /// <summary>Stops Aperture and removes its services and program. Data, logs and backups stay.</summary>
-    public async Task<int> UninstallAsync()
+    /// <summary>
+    /// Stops Aperture and removes its services and program. Data, logs and backups stay, unless
+    /// <paramref name="removeData"/>: then everything Aperture keeps in the install folder goes too (database, files,
+    /// login, backups, logs, settings). Only what Aperture creates there is deleted, and only in a folder that is an
+    /// Aperture installation; backups in other folders (backup.conf) stay.
+    /// </summary>
+    public async Task<int> UninstallAsync(bool removeData = false)
     {
+        if (removeData && !IsInstallation())
+        {
+            throw new InstallationException($"{home.Root} isn't an Aperture installation, so nothing was removed.");
+        }
+
+        var otherBackups = removeData
+            ? new BackupJob(home, TimeProvider.System, log).Folders()
+                .Where(f => Path.GetFullPath(f) != Path.GetFullPath(home.Backups) && Directory.Exists(f)).ToList()
+            : [];
+
         log.Write("Stopping Aperture");
         await platform.StopWebAsync(home);
         await platform.UnregisterAsync(home);
@@ -107,8 +122,49 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
             }
         }
         File.Delete(home.SettingsFile);
-        log.Write($"Removed. Your data is still in {home.Data}, the backups in {home.Backups}.");
+        if (!removeData)
+        {
+            log.Write($"Removed. Your data is still in {home.Data}, the backups in {home.Backups}.");
+            return 0;
+        }
+
+        foreach (var folder in new[] { home.Data, home.Backups, home.Logs })
+        {
+            if (Directory.Exists(folder))
+            {
+                Directory.Delete(folder, recursive: true);
+            }
+        }
+        File.Delete(home.BackupConfig);
+        if (Directory.Exists(home.Root) && !Directory.EnumerateFileSystemEntries(home.Root).Any())
+        {
+            Directory.Delete(home.Root);
+        }
+
+        // Written to the console only: the logs folder is gone.
+        Console.WriteLine("Removed Aperture and all its data.");
+        foreach (var folder in otherBackups)
+        {
+            Console.WriteLine($"Backups in {Path.Combine(folder, BackupJob.FolderName)} stay; delete them yourself if you like.");
+        }
         return 0;
+    }
+
+    /// <summary>
+    /// Whether the home folder is an Aperture installation, before deleting what's in it: never the user's own folder
+    /// or a drive's root, and only one Aperture set up (or left its data in).
+    /// </summary>
+    private bool IsInstallation()
+    {
+        var root = Path.TrimEndingDirectorySeparator(home.Root);
+        var user = Path.TrimEndingDirectorySeparator(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        if (Path.GetPathRoot(root) == home.Root || string.Equals(root, user, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return File.Exists(home.SettingsFile) || Directory.Exists(home.Releases) || new DirectoryInfo(home.App).LinkTarget is not null
+            || File.Exists(Path.Combine(home.Data, "aperture.db"));
     }
 
     /// <summary>

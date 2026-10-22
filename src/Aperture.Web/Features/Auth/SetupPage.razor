@@ -12,13 +12,13 @@
 @inject NavigationManager Navigation
 @inject Aperture.Web.Installation.Platform Platform
 
-@* First start: there's no login yet, so the first visit creates it. *@
+@* First start: there's no login yet, so the first visit creates it. Then the business details (WelcomePage). *@
 
 <PageTitle>Create your login · Aperture</PageTitle>
 
 <div class="login-stack">
 <div>
-    <p class="login-tagline">Photo office</p>
+    <p class="login-tagline">Step 1 of 2 · Your login</p>
     <h1 class="wordmark login-wordmark"><span class="brand-ring" aria-hidden="true"></span>Aperture</h1>
 </div>
 <RadzenCard class="login-card">
@@ -107,7 +107,7 @@
             new ClaimsPrincipal(identity),
             new AuthenticationProperties { IsPersistent = true });
 
-        Navigation.NavigateTo("", forceLoad: true);
+        Navigation.NavigateTo("welcome", forceLoad: true);
     }
 
     private sealed class SetupInput

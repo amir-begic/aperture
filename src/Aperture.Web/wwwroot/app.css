@@ -577,6 +577,11 @@ h1:focus {
     width: 100%;
 }
 
+/* First start, step 2: the business details need more room than the login. */
+.login-stack.welcome-stack {
+    max-width: 44rem;
+}
+
 .login-field {
     display: flex;
     flex-direction: column;

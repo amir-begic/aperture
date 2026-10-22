@@ -171,4 +171,65 @@ public sealed class InstallationTests : IDisposable
             Assert.Throws<InstallationException>(check);
         }
     }
+
+    /// <summary>A platform with no services to start or stop, for testing what the installer does with files.</summary>
+    private sealed class FilesOnlyPlatform() : Platform(new RecordingRunner())
+    {
+        public override string ThisComputer => "this computer";
+        public override Task RegisterAsync(ApertureHome home) => Task.CompletedTask;
+        public override Task StartBackupsAsync(ApertureHome home) => Task.CompletedTask;
+        public override Task UnregisterAsync(ApertureHome home) => Task.CompletedTask;
+        public override Task StartWebAsync(ApertureHome home) => Task.CompletedTask;
+        protected override Task StopWebServiceAsync(ApertureHome home) => Task.CompletedTask;
+    }
+
+    /// <summary>An installation as the install command leaves it, with data, plus a file Aperture didn't make.</summary>
+    private void Installed()
+    {
+        var release = Path.Combine(Home.Releases, "aperture-2026.10.23-30-abc1234");
+        Directory.CreateDirectory(release);
+        Directory.CreateSymbolicLink(Home.App, release);
+        Directory.CreateDirectory(Path.Combine(Home.Data, "attachments"));
+        File.WriteAllText(Path.Combine(Home.Data, "aperture.db"), "");
+        Directory.CreateDirectory(Path.Combine(Home.Backups, BackupJob.FolderName));
+        Directory.CreateDirectory(Home.Logs);
+        new HomeSettings(5090, null).Write(Home);
+        BackupJob.WriteDefaultConfig(Home);
+        File.WriteAllText(Path.Combine(_root, "my-notes.txt"), "not Aperture's");
+    }
+
+    private Installer Installer(ApertureHome? home = null) => new(home ?? Home, new FilesOnlyPlatform(), new CommandLog(null));
+
+    [Fact]
+    public async Task Uninstalling_keeps_the_data()
+    {
+        Installed();
+
+        Assert.Equal(0, await Installer().UninstallAsync());
+
+        Assert.Equal(["backup.conf", "backups", "data", "logs", "my-notes.txt"],
+            Directory.GetFileSystemEntries(_root).Select(Path.GetFileName).Order());
+    }
+
+    [Fact]
+    public async Task Removing_the_data_deletes_only_what_Aperture_made()
+    {
+        Installed();
+
+        Assert.Equal(0, await Installer().UninstallAsync(removeData: true));
+
+        Assert.Equal(["my-notes.txt"], Directory.GetFileSystemEntries(_root).Select(Path.GetFileName));
+    }
+
+    [Fact]
+    public async Task Removing_the_data_of_a_folder_that_isnt_an_installation_is_refused()
+    {
+        var folder = Path.Combine(_root, "somewhere");
+        Directory.CreateDirectory(Path.Combine(folder, "data"));
+        File.WriteAllText(Path.Combine(folder, "data", "important.txt"), "");
+
+        await Assert.ThrowsAsync<InstallationException>(() => Installer(new ApertureHome(folder)).UninstallAsync(removeData: true));
+
+        Assert.True(File.Exists(Path.Combine(folder, "data", "important.txt")));
+    }
 }

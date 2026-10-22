@@ -8,7 +8,7 @@ namespace Aperture.Web.Installation;
 /// Aperture.Web update [&lt;aperture-…-&lt;runtime&gt;.tar.gz&gt;]   (without one: the update Aperture downloaded)
 /// Aperture.Web backup
 /// Aperture.Web restore &lt;backup ZIP, its folder, or a daily aperture-YYYY-MM-DD.db&gt;
-/// Aperture.Web uninstall
+/// Aperture.Web uninstall [--remove-data]   (with it: also the data, files, login, backups and logs)
 /// </code>
 /// Each takes --home &lt;folder&gt; for an installation elsewhere than the usual place (ApertureHome).
 /// </summary>
@@ -42,7 +42,7 @@ public static class Commands
                 "restore" => Positional(args) is { } source
                     ? await installer.RestoreAsync(source)
                     : Usage(log, "restore <backup ZIP, its folder, or a daily aperture-YYYY-MM-DD.db>"),
-                "uninstall" => await installer.UninstallAsync(),
+                "uninstall" => await installer.UninstallAsync(removeData: args.Contains("--remove-data")),
                 _ => null,
             };
         }
@@ -66,7 +66,7 @@ public static class Commands
         {
             if (args[i].StartsWith("--"))
             {
-                i += args[i] is "--no-open" ? 0 : 1;
+                i += args[i] is "--no-open" or "--remove-data" ? 0 : 1;
                 continue;
             }
 

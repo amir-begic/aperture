@@ -26,8 +26,8 @@ aperture.json       port, data folder and update feed
 backup.conf         where backups go, one folder per line
 ```
 
-The program installs, updates and backs itself up: `Aperture.Web install`, `update`, `backup`, `restore` and
-`uninstall` (`src/Aperture.Web/Installation`). The installers only unpack a release and start `install`.
+The program installs, updates and backs itself up (see [Commands](#commands)). The installers only unpack a release
+and start `Aperture.Web install`.
 
 ## Setting it up, once (you)
 
@@ -75,7 +75,8 @@ To give Aperture its own window and a place in the Dock: *File → Add to Dock* 
    `http://localhost:5090`.
 
 To give Aperture its own window: in Edge or Chrome, *⋯ → Apps → Install this site as an app*. To remove Aperture:
-*Settings → Apps → Installed apps → Aperture → Uninstall*; data and backups stay.
+*Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
+keeps them.
 
 ### Linux
 
@@ -91,9 +92,12 @@ has. Aperture runs while you're logged in; for it to run without a login session
 
 ### Then, everywhere
 
-**Create the login** on the page that opens: a username and password for Aperture, kept hashed in
-`data/keys/login.json`. Then fill in *Settings*: name, address and IBAN appear on invoices; the email is needed for
-notifications.
+The browser opens on the first start, in two steps:
+
+1. **Your login:** a username and password for Aperture, kept hashed in `data/keys/login.json`.
+2. **Your business:** name, address, contact and IBAN, which go on every invoice; the email is also what
+   notifications need. *Skip for now* goes straight to Aperture; the Dashboard then reminds you until the details are
+   complete. Everything else (VAT, usual delivery time, depreciation) is under *Settings*.
 
 ## Calendar and notifications
 
@@ -184,6 +188,30 @@ new computer, install Aperture and create a login first.
 - **Encrypt the disk** (FileVault on a Mac, BitLocker or Device Encryption on Windows, LUKS on Linux): the data folder
   holds receipts, invoices and client details.
 
+## Commands
+
+Everything the installers, the updater and the backup do is a command of the program, so it can also be run by hand,
+e.g. to repair an installation or to restore a backup. The program is `app/Aperture.Web` in the install folder
+(`Aperture.Web.exe` on Windows):
+
+| Command | What it does |
+|---|---|
+| `install [--feed <url>] [--port <port>] [--no-open]` | Sets up the release it belongs to in the install folder, and the services that start Aperture at login, run the daily backup and install updates. Safe to run again: it keeps all data, and repairs an installation or changes its settings. |
+| `update [<package>]` | Installs a release package (`aperture-…-<system>.tar.gz`), or without one the update Aperture downloaded. Goes back to the previous version if the new one doesn't start. |
+| `backup` | Runs the daily backup now. |
+| `restore <backup>` | Puts a backup in place: a downloaded ZIP, its unpacked folder, or a daily copy (`…/Aperture Backup/database/aperture-YYYY-MM-DD.db`). The current database is kept in `backups/before-restore`. |
+| `uninstall [--remove-data]` | Stops Aperture and removes its services and program. Data, backups and logs stay unless `--remove-data` is given. |
+
+| Option | For | Meaning |
+|---|---|---|
+| `--home <folder>` | all | The install folder, if it's not the usual one (see the table at the top). `APERTURE_HOME` does the same. |
+| `--feed <url>` | `install` | Where to look for updates: the `latest.json` of the latest release. Default: the installation's current one, else the one the release was built with. |
+| `--port <port>` | `install` | The port Aperture listens on, on this computer only. Default: the installation's current one, else 5090. |
+| `--no-open` | `install` | Don't open the browser afterwards. `APERTURE_NO_OPEN=1` does the same. |
+| `--remove-data` | `uninstall` | Also delete the data, uploaded files, login, backups, logs and settings in the install folder. It can't be undone. Only what Aperture created there is deleted, and only in a folder that is an Aperture installation; backups in other folders listed in `backup.conf` stay. On Windows, the uninstaller in *Settings → Apps* asks instead. |
+
+On Windows the program has no console window, so it writes what it does to `logs/<command>.log` instead.
+
 ## Troubleshooting
 
 | Problem | What to do |
@@ -191,7 +219,7 @@ new computer, install Aperture and create a login first.
 | The installer failed | macOS: *Console → Log Reports → install.log*, search for `Aperture`. Windows: `%LOCALAPPDATA%\Aperture\logs\install.log`. Linux: the terminal shows it. |
 | Aperture isn't reachable | `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
 | Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open `http://localhost:5090` and create a new login. All data stays. |
-| Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay. |
+| Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. Backups in other folders listed in `backup.conf` stay. |
 | Restoring a backup | See [Restoring](#restoring). |
 
 ## Signing the installers (optional)
