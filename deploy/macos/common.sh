@@ -1,44 +1,27 @@
 #!/bin/bash
-# Shared by install.sh, install-laptop.sh and update.sh. Written for macOS's /bin/bash 3.2: no bash 4+ features.
+# Shared by install-laptop.sh, update.sh and uninstall-laptop.sh. Written for macOS's /bin/bash 3.2: no bash 4+ features.
+#
+# Aperture runs as launchd agents of the person logged in (~/Library/LaunchAgents): no sudo, and nothing listens beyond
+# this Mac.
 
 APERTURE_HOME="${APERTURE_HOME:-$HOME/Aperture}"
 WEB_LABEL="ch.aperture.web"
 BACKUP_LABEL="ch.aperture.backup"
 UPDATER_LABEL="ch.aperture.updater"
-WEB_PLIST="/Library/LaunchDaemons/$WEB_LABEL.plist"
-BACKUP_PLIST="/Library/LaunchDaemons/$BACKUP_LABEL.plist"
-UPDATER_PLIST="/Library/LaunchDaemons/$UPDATER_LABEL.plist"
-SUDOERS_FILE="/etc/sudoers.d/aperture"
 AGENTS_DIR="$HOME/Library/LaunchAgents"
-FIREWALL="/usr/libexec/ApplicationFirewall/socketfilterfw"
 KEEP_RELEASES=3
-
-# Several passwords come up during setup; sudo's bare "Password:" is easy to mistake for one of the others.
-export SUDO_PROMPT="Mac password for %u (for system settings): "
 
 say() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 fail() { printf '\n\033[31mError: %s\033[0m\n' "$*" >&2; exit 1; }
 
-ask_yes() {
-    local answer
-    read -r -p "$1 [Y/n] " answer
-    [[ -z $answer || $answer == [Yy]* ]]
-}
-
-# A laptop installation (install-laptop.sh) runs Aperture as launchd agents of your user rather than system services:
-# no sudo, and nothing listens beyond this Mac. install-laptop.sh sets APERTURE_LAPTOP=1 before its agents exist.
-is_laptop() {
-    [[ ${APERTURE_LAPTOP:-} == 1 || -f $AGENTS_DIR/$WEB_LABEL.plist ]]
-}
-
 is_installed() {
-    [[ -f $WEB_PLIST ]] || is_laptop
+    [[ -f $AGENTS_DIR/$WEB_LABEL.plist ]]
 }
 
 require_mac() {
     [[ $(uname -s) == Darwin ]] || fail "This script runs on a Mac (macOS)."
     [[ $(uname -m) == arm64 ]] || fail "This build is for Apple silicon (arm64)."
-    [[ $EUID -ne 0 ]] || fail "Run it as your normal user, not with sudo. It asks for your password when needed."
+    [[ $EUID -ne 0 ]] || fail "Run it as your normal user, not with sudo."
 }
 
 # Unpacks a release tarball into $APERTURE_HOME/releases and prints the release directory.
@@ -46,7 +29,7 @@ unpack_release() {
     local tarball="$1" name
     [[ -f $tarball ]] || fail "Release not found: $tarball"
     name="$(tar -tzf "$tarball" | awk -F/ 'NR == 1 { print $1 }')"
-    [[ $name == aperture-* ]] || fail "$tarball doesn't look like a Aperture release."
+    [[ $name == aperture-* ]] || fail "$tarball doesn't look like an Aperture release."
     mkdir -p "$APERTURE_HOME/releases"
     rm -rf "$APERTURE_HOME/releases/$name"
     tar -xzf "$tarball" -C "$APERTURE_HOME/releases"
@@ -72,31 +55,12 @@ switch_to() {
     ln -sfn "$1" "$APERTURE_HOME/app"
 }
 
-# The macOS firewall asks before an app may accept connections; a background service can't answer,
-# so the executable is allowed explicitly (again after each update, as it's a new file).
-allow_through_firewall() {
-    local executable="$1"
-    is_laptop && return 0   # only reachable from this Mac
-    if sudo "$FIREWALL" --getglobalstate | grep -q "enabled"; then
-        sudo "$FIREWALL" --add "$executable" >/dev/null
-        sudo "$FIREWALL" --unblockapp "$executable" >/dev/null
-    fi
-}
-
 start_web() {
-    if is_laptop; then
-        launchctl bootstrap "gui/$UID" "$AGENTS_DIR/$WEB_LABEL.plist" 2>/dev/null || launchctl kickstart -k "gui/$UID/$WEB_LABEL"
-    else
-        sudo launchctl bootstrap system "$WEB_PLIST" 2>/dev/null || sudo launchctl kickstart -k "system/$WEB_LABEL"
-    fi
+    launchctl bootstrap "gui/$UID" "$AGENTS_DIR/$WEB_LABEL.plist" 2>/dev/null || launchctl kickstart -k "gui/$UID/$WEB_LABEL"
 }
 
 stop_web() {
-    if is_laptop; then
-        launchctl bootout "gui/$UID/$WEB_LABEL" 2>/dev/null || true
-    else
-        sudo launchctl bootout "system/$WEB_LABEL" 2>/dev/null || true
-    fi
+    launchctl bootout "gui/$UID/$WEB_LABEL" 2>/dev/null || true
     # bootout returns before the process is gone; wait so the database is closed.
     local i
     for i in $(seq 1 20); do
@@ -105,35 +69,10 @@ stop_web() {
     done
 }
 
-# install.sh writes the port to a file, so updates don't need sudo to read it from the service definition.
+# install-laptop.sh writes the port to a file, so updates know where to check that Aperture is up.
 web_port() {
     if [[ -f $APERTURE_HOME/port ]]; then
         head -n 1 "$APERTURE_HOME/port"
-    elif ! is_laptop; then
-        sudo /usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:ASPNETCORE_URLS" "$WEB_PLIST" 2>/dev/null | sed 's/.*://'
-    fi
-}
-
-# Lets update.sh restart Aperture without a password, so updates from Settings can run unattended (and deploy.sh
-# doesn't ask): exactly the commands it uses, nothing else. Checked with visudo before it's installed.
-install_sudo_rules() {
-    local file="$APERTURE_HOME/.sudoers"
-    cat > "$file" <<RULES
-# Aperture: lets $USER's update script restart the Aperture service without a password (installed by install.sh).
-$USER ALL=(root) NOPASSWD: /bin/launchctl bootout system/$WEB_LABEL
-$USER ALL=(root) NOPASSWD: /bin/launchctl bootstrap system $WEB_PLIST
-$USER ALL=(root) NOPASSWD: /bin/launchctl kickstart -k system/$WEB_LABEL
-$USER ALL=(root) NOPASSWD: $FIREWALL --getglobalstate
-$USER ALL=(root) NOPASSWD: $FIREWALL --add $APERTURE_HOME/releases/*/Aperture.Web
-$USER ALL=(root) NOPASSWD: $FIREWALL --unblockapp $APERTURE_HOME/releases/*/Aperture.Web
-RULES
-    if /usr/sbin/visudo -cf "$file" >/dev/null; then
-        sudo install -m 440 -o root -g wheel "$file" "$SUDOERS_FILE"
-        rm -f "$file"
-    else
-        rm -f "$file"
-        echo "Couldn't set up the sudo rules (is there a space in $APERTURE_HOME?). Updates will ask for your password."
-        return 1
     fi
 }
 
@@ -175,7 +114,7 @@ remove_old_releases() {
     done
 }
 
-# The log is reopened when the service restarts, so updates are a good moment to start a new one.
+# The log is reopened when Aperture restarts, so updates are a good moment to start a new one.
 rotate_log() {
     local log="$APERTURE_HOME/logs/aperture.log"
     [[ -f $log ]] || return 0

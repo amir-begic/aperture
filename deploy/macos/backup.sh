@@ -1,7 +1,8 @@
 #!/bin/bash
-# Nightly backup of Aperture's data to every connected backup drive (run by launchd, see ch.aperture.backup.plist).
+# Daily backup of Aperture's data (run by launchd, see ch.aperture.backup.plist).
 #
-# For each drive listed in ~/Aperture/backup.conf that is connected, writes to "<drive>/Aperture Backup":
+# For each folder listed in ~/Aperture/backup.conf that exists (~/Aperture/backups, and any external drive added there),
+# writes to "<folder>/Aperture Backup":
 #   database/aperture-YYYY-MM-DD.db   a consistent copy of the database (taken once, checked, then copied)
 #   attachments/                  all uploaded files (receipts, payslips, invoices); added, never deleted
 #   keys/                         login cookie keys
@@ -77,7 +78,7 @@ if [[ ! -f $DATA/aperture.db ]]; then
 fi
 
 if [[ ! -f $CONF ]] || ! grep -qv '^[[:space:]]*\(#.*\)\{0,1\}$' "$CONF"; then
-    problems+=("No backup drives configured in $CONF")
+    problems+=("No backup folders configured in $CONF")
     finish
 fi
 

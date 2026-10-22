@@ -1,3 +1,5 @@
+using Aperture.Web.Data.Entities;
+
 namespace Aperture.Web.Domain;
 
 public static class ChecklistTemplates
@@ -37,10 +39,31 @@ public static class ChecklistTemplates
         "Batteries charged, cards formatted, backup body packed",
     ];
 
+    public static readonly IReadOnlyList<string> Event =
+    [
+        "Run sheet and timings received",
+        "Contact person on the day confirmed",
+        "Key people and must-have moments listed",
+        "Access, dress code and photo rules checked (stage, flash, guests who don't want photos)",
+        "Same-day selection or social media images agreed",
+        "Batteries charged, cards formatted, backup body packed",
+    ];
+
     public static readonly IReadOnlyList<(string Name, IReadOnlyList<string> Items)> All =
     [
         ("Wedding", Wedding),
         ("Portrait", Portrait),
+        ("Event", Event),
         ("Commercial", Commercial),
     ];
+
+    /// <summary>The template that fits a shoot type, offered first on the prep tab; null for <see cref="ShootType.Other"/>.</summary>
+    public static string? For(ShootType type) => type switch
+    {
+        ShootType.Wedding => "Wedding",
+        ShootType.Portrait or ShootType.Family => "Portrait",
+        ShootType.Event => "Event",
+        ShootType.Corporate or ShootType.Commercial => "Commercial",
+        _ => null,
+    };
 }

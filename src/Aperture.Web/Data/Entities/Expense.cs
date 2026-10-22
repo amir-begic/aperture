@@ -8,7 +8,7 @@ public class Expense
 {
     public int Id { get; set; }
 
-    /// <summary>Null for general business costs (added in a later phase).</summary>
+    /// <summary>Null for general business costs (Finance → Costs).</summary>
     public int? ShootId { get; set; }
     public Shoot? Shoot { get; set; }
 

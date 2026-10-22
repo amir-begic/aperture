@@ -2,14 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   Installs updates Aperture downloaded (Settings → Updates): launchd starts auto-update.sh whenever Aperture writes the
-  request file. Runs as your user. Installed by install.sh.
+  request file. Runs as an agent of your user. Installed by install-laptop.sh.
 -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>ch.aperture.updater</string>
-    <key>UserName</key>
-    <string>__USER__</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>

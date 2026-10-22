@@ -62,7 +62,7 @@
         await using var db = await DbFactory.CreateDbContextAsync();
         var invoices = await db.Invoices.AsNoTracking()
             .Include(i => i.Lines)
-            .Include(i => i.Shoot).ThenInclude(g => g.Client)
+            .Include(i => i.Shoot).ThenInclude(s => s.Client)
             .ToListAsync();
         var shootIds = invoices.Select(i => i.ShootId).Distinct().ToList();
         var payments = await db.Payments.Where(p => shootIds.Contains(p.ShootId)).Select(p => new { p.ShootId, p.Amount }).ToListAsync();

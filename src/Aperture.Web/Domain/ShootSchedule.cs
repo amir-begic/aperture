@@ -3,7 +3,7 @@ namespace Aperture.Web.Domain;
 public static class ShootSchedule
 {
     /// <summary>
-    /// Builds a shoot's start and end from a date and two times. Shoots often run past midnight,
+    /// Builds a shoot's start and end from a date and two times. Weddings and events often run past midnight,
     /// so an end time at or before the start time means the next day (22:00–03:00).
     /// </summary>
     public static (DateTime Start, DateTime End) ToRange(DateOnly date, TimeOnly startTime, TimeOnly endTime)

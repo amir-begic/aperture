@@ -6,11 +6,9 @@
 # Stops Aperture, the updater and the backup, removes their launchd agents and the program. ~/Aperture/data (database,
 # receipts, invoices, login) and ~/Aperture/backups stay; delete ~/Aperture yourself to remove those too.
 set -euo pipefail
-export APERTURE_LAPTOP=1
 source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 require_mac
-[[ ! -f $WEB_PLIST ]] || fail "Aperture runs as a service on this Mac (install.sh); this script is for laptop installations."
 
 say "Stopping Aperture"
 stop_web

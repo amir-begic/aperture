@@ -7,7 +7,6 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <!-- The UI is English: skip libraries' translated messages (de, es, fr, …) in the published app. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <UserSecretsId>53f29657-b8c3-4e4d-95ae-0e2ba8b85745</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,6 +24,12 @@
   <ItemGroup>
     <!-- Liberation Sans (SIL OFL 1.1), one of the fonts the Swiss QR-bill standard allows. -->
     <EmbeddedResource Include="Features/Invoices/Fonts/*.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The development data directory (Aperture:DataDirectory = data): database, login and keys. Never part of a build. -->
+    <Content Remove="data/**" />
+    <None Remove="data/**" />
   </ItemGroup>
 
 </Project>

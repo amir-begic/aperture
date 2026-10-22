@@ -4,12 +4,28 @@ using System.Text.RegularExpressions;
 
 namespace Aperture.Web.Features.Updates;
 
+/// <summary>Where releases come from: set by install-laptop.sh. Without it, Aperture doesn't look for updates.</summary>
+public sealed class UpdateOptions
+{
+    /// <summary>The address of the release feed's latest.json, on the public repository that holds only releases.</summary>
+    public string? FeedUrl { get; set; }
+
+    public bool IsConfigured => Uri.TryCreate(FeedUrl, UriKind.Absolute, out var feed) && feed.Scheme == Uri.UriSchemeHttps;
+}
+
 /// <summary>
-/// Reads releases from a public feed, so a laptop installation needs no GitHub token: latest.json, written by
-/// .github/workflows/promote.yml next to the package it describes. Nothing to sign in to; the SHA-256 in it is
-/// checked before a download is installed.
+/// A release built by .github/workflows/release.yml and promoted to the feed, with its Mac package: downloaded from
+/// <paramref name="DownloadUrl"/> and checked against <paramref name="Sha256"/>.
 /// </summary>
-public sealed partial class ReleaseFeed(HttpClient http, UpdateOptions options) : IReleaseSource
+public sealed record Release(
+    ReleaseVersion Version, DateTimeOffset Published, string Notes, string Url, string AssetName, long AssetSize,
+    Uri DownloadUrl, string Sha256);
+
+/// <summary>
+/// Reads releases from the public feed: latest.json, written by .github/workflows/promote.yml next to the package it
+/// describes. Nothing to sign in to; the SHA-256 in it is checked before a download is installed.
+/// </summary>
+public sealed partial class ReleaseFeed(HttpClient http, UpdateOptions options)
 {
     public static void Configure(HttpClient http)
     {
@@ -17,6 +33,7 @@ public sealed partial class ReleaseFeed(HttpClient http, UpdateOptions options) 
         http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Aperture", "1.0"));
     }
 
+    /// <summary>The promoted release, or null when nothing has been promoted yet.</summary>
     public async Task<Release?> GetLatestAsync(CancellationToken cancellationToken = default)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, options.FeedUrl);
@@ -36,7 +53,7 @@ public sealed partial class ReleaseFeed(HttpClient http, UpdateOptions options) 
     public static Release? ToRelease(FeedJson json)
     {
         if (string.IsNullOrWhiteSpace(json.Version)
-            || json.File is null || !GitHubReleases.PackageName().IsMatch(json.File)
+            || json.File is null || !PackageName().IsMatch(json.File)
             || !Uri.TryCreate(json.Download, UriKind.Absolute, out var download) || download.Scheme != Uri.UriSchemeHttps
             || json.Sha256 is null || !Sha256Pattern().IsMatch(json.Sha256))
         {
@@ -44,7 +61,7 @@ public sealed partial class ReleaseFeed(HttpClient http, UpdateOptions options) 
         }
 
         return new Release(ReleaseVersion.Parse(json.Version), json.Published ?? DateTimeOffset.MinValue,
-            json.Notes?.Trim() ?? "", json.Page ?? "", 0, json.File, json.Size ?? 0, download, json.Sha256.ToLowerInvariant());
+            json.Notes?.Trim() ?? "", json.Page ?? "", json.File, json.Size ?? 0, download, json.Sha256.ToLowerInvariant());
     }
 
     public async Task DownloadAsync(Release release, Stream destination, CancellationToken cancellationToken = default)
@@ -54,6 +71,10 @@ public sealed partial class ReleaseFeed(HttpClient http, UpdateOptions options) 
         await using var body = await response.Content.ReadAsStreamAsync(cancellationToken);
         await body.CopyToAsync(destination, cancellationToken);
     }
+
+    /// <summary>The package name deploy/publish.sh produces. Also checked again by the updater on the Mac.</summary>
+    [GeneratedRegex(@"^aperture-[0-9A-Za-z.-]+-osx-arm64\.tar\.gz$")]
+    public static partial Regex PackageName();
 
     [GeneratedRegex("^[0-9A-Fa-f]{64}$")]
     private static partial Regex Sha256Pattern();

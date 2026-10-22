@@ -18,7 +18,7 @@ public class Location
     [MaxLength(100)]
     public string? City { get; set; }
 
-    /// <summary>Load-in, parking, tech contact, power, …</summary>
+    /// <summary>Access, parking, best light, permits, …</summary>
     [MaxLength(4000)]
     public string? Notes { get; set; }
 

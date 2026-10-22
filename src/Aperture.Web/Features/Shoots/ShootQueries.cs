@@ -17,11 +17,11 @@ public static class ShootQueries
     /// next starts) don't count, and neither do cancelled ones.
     /// </summary>
     public static IQueryable<Shoot> Overlapping(this IQueryable<Shoot> shoots, DateTime start, DateTime end, int? excludeShootId = null) =>
-        shoots.InRange(start, end, includeCancelled: false).Where(g => g.Id != excludeShootId);
+        shoots.InRange(start, end, includeCancelled: false).Where(s => s.Id != excludeShootId);
 
     /// <summary>Shoots that take place (at least partly) within [start, end), e.g. the days a calendar shows.</summary>
     public static IQueryable<Shoot> InRange(this IQueryable<Shoot> shoots, DateTime start, DateTime end, bool includeCancelled) =>
-        shoots.Where(g => g.Start < end && start < g.End && (includeCancelled || g.Status != ShootStatus.Cancelled));
+        shoots.Where(s => s.Start < end && start < s.End && (includeCancelled || s.Status != ShootStatus.Cancelled));
 
     /// <summary>
     /// Filters for the shoot list. Upcoming shoots (including one in progress) are sorted soonest first,
@@ -32,24 +32,24 @@ public static class ShootQueries
     {
         if (statuses.Count > 0)
         {
-            shoots = shoots.Where(g => statuses.Contains(g.Status));
+            shoots = shoots.Where(s => statuses.Contains(s.Status));
         }
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             var pattern = $"%{search.Trim()}%";
-            shoots = shoots.Where(g => EF.Functions.Like(g.Title, pattern)
-                || EF.Functions.Like(g.Client.Name, pattern)
-                || (g.Client.Company != null && EF.Functions.Like(g.Client.Company, pattern))
-                || (g.Location != null && (EF.Functions.Like(g.Location.Name, pattern)
-                    || (g.Location.City != null && EF.Functions.Like(g.Location.City, pattern)))));
+            shoots = shoots.Where(s => EF.Functions.Like(s.Title, pattern)
+                || EF.Functions.Like(s.Client.Name, pattern)
+                || (s.Client.Company != null && EF.Functions.Like(s.Client.Company, pattern))
+                || (s.Location != null && (EF.Functions.Like(s.Location.Name, pattern)
+                    || (s.Location.City != null && EF.Functions.Like(s.Location.City, pattern)))));
         }
 
         return period switch
         {
-            ShootPeriod.Upcoming => shoots.Where(g => g.End > now).OrderBy(g => g.Start),
-            ShootPeriod.Past => shoots.Where(g => g.End <= now).OrderByDescending(g => g.Start),
-            _ => shoots.OrderByDescending(g => g.Start),
+            ShootPeriod.Upcoming => shoots.Where(s => s.End > now).OrderBy(s => s.Start),
+            ShootPeriod.Past => shoots.Where(s => s.End <= now).OrderByDescending(s => s.Start),
+            _ => shoots.OrderByDescending(s => s.Start),
         };
     }
 }

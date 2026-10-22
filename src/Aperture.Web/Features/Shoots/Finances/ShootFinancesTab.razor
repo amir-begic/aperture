@@ -53,7 +53,10 @@ else
 
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
         <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Costs</RadzenText>
-        <RadzenButton Text="Add cost" Icon="add" Size="ButtonSize.Small" Click="@(() => EditExpenseAsync(null))" />
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+            <RadzenButton Text="Add train trip" Icon="train" Size="ButtonSize.Small" Variant="Variant.Outlined" Click="AddTrainTripAsync" />
+            <RadzenButton Text="Add cost" Icon="add" Size="ButtonSize.Small" Click="@(() => EditExpenseAsync(null))" />
+        </RadzenStack>
     </RadzenStack>
     <RadzenDataGrid TItem="Expense" Data="_expenses" class="clickable-rows" EmptyText="No costs yet."
                     RowClick="@(args => EditExpenseAsync(args.Data!.Id))">
@@ -143,6 +146,20 @@ else
         _payments = await db.Payments.AsNoTracking().Include(p => p.Proof)
             .Where(p => p.ShootId == ShootId).OrderBy(p => p.Date).ThenBy(p => p.Id).ToListAsync();
         _invoice = (await db.IssuedInvoicesAsync([ShootId])).GetValueOrDefault(ShootId);
+    }
+
+    private async Task AddTrainTripAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var changed = await Dialogs.OpenAsync<ExpenseDialog>("Add train trip",
+            new Dictionary<string, object?>
+            {
+                ["ShootId"] = ShootId,
+                ["DefaultDate"] = ShootDate,
+                ["Preset"] = await TrainTrips.SuggestAsync(db, ShootId),
+            },
+            new DialogOptions { Width = "36rem" });
+        await AfterDialogAsync(changed);
     }
 
     private async Task EditExpenseAsync(int? expenseId)

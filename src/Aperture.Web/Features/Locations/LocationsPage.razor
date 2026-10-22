@@ -29,14 +29,14 @@
     private IEnumerable<LocationRow>? FilteredLocations =>
         string.IsNullOrWhiteSpace(_search)
             ? _locations
-            : _locations?.Where(v => v.Matches(_search.Trim()));
+            : _locations?.Where(l => l.Matches(_search.Trim()));
 
     protected override async Task OnInitializedAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
         _locations = await db.Locations
-            .OrderBy(v => v.Name)
-            .Select(v => new LocationRow(v.Id, v.Name, v.Street, v.City, v.Shoots.Count))
+            .OrderBy(l => l.Name)
+            .Select(l => new LocationRow(l.Id, l.Name, l.Street, l.City, l.Shoots.Count))
             .ToListAsync();
     }
 

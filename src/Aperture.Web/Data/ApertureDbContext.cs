@@ -12,6 +12,7 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
     public DbSet<Client> Clients => Set<Client>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Shoot> Shoots => Set<Shoot>();
+    public DbSet<Package> Packages => Set<Package>();
     public DbSet<Expense> Expenses => Set<Expense>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<ReferenceLink> ReferenceLinks => Set<ReferenceLink>();
@@ -73,24 +74,27 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
         modelBuilder.Entity<BusinessSettings>().HasData(new BusinessSettings());
 
         modelBuilder.Entity<Client>().HasIndex(c => c.Name);
-        modelBuilder.Entity<Location>().HasIndex(v => v.Name);
+        modelBuilder.Entity<Location>().HasIndex(l => l.Name);
+        modelBuilder.Entity<Package>().HasIndex(p => p.Name);
 
         modelBuilder.Entity<Shoot>(shoot =>
         {
-            shoot.HasIndex(g => g.Start);
+            shoot.HasIndex(s => s.Start);
 
             // Never lose a shoot's history by deleting its client or location.
-            shoot.HasOne(g => g.Client).WithMany(c => c.Shoots).OnDelete(DeleteBehavior.Restrict);
-            shoot.HasOne(g => g.Location).WithMany(v => v.Shoots).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasOne(s => s.Client).WithMany(c => c.Shoots).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasOne(s => s.Location).WithMany(l => l.Shoots).OnDelete(DeleteBehavior.Restrict);
+            // A shoot keeps what was copied from its package, so the package can go.
+            shoot.HasOne(s => s.Package).WithMany(p => p.Shoots).OnDelete(DeleteBehavior.SetNull);
 
             // Financial records block deleting a shoot; prep data goes with it.
             // Attachment rows cascade too, but their files are removed in code (see ShootDeletion).
-            shoot.HasMany(g => g.Expenses).WithOne(e => e.Shoot).OnDelete(DeleteBehavior.Restrict);
-            shoot.HasMany(g => g.Payments).WithOne(p => p.Shoot).OnDelete(DeleteBehavior.Restrict);
-            shoot.HasMany(g => g.Invoices).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Restrict);
-            shoot.HasMany(g => g.ReferenceLinks).WithOne(l => l.Shoot).OnDelete(DeleteBehavior.Cascade);
-            shoot.HasMany(g => g.ChecklistItems).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Cascade);
-            shoot.HasMany(g => g.Attachments).WithOne(a => a.Shoot).OnDelete(DeleteBehavior.Cascade);
+            shoot.HasMany(s => s.Expenses).WithOne(e => e.Shoot).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasMany(s => s.Payments).WithOne(p => p.Shoot).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasMany(s => s.Invoices).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Restrict);
+            shoot.HasMany(s => s.ReferenceLinks).WithOne(l => l.Shoot).OnDelete(DeleteBehavior.Cascade);
+            shoot.HasMany(s => s.ChecklistItems).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Cascade);
+            shoot.HasMany(s => s.Attachments).WithOne(a => a.Shoot).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Expense>(expense =>

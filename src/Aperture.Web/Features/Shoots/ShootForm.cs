@@ -18,6 +18,8 @@ public sealed class ShootForm
 
     public int? LocationId { get; set; }
 
+    public int? PackageId { get; set; }
+
     public ShootStatus Status { get; set; } = ShootStatus.Inquiry;
 
     public ShootType ShootType { get; set; } = ShootType.Other;
@@ -52,6 +54,7 @@ public sealed class ShootForm
         Title = shoot.Title,
         ClientId = shoot.ClientId,
         LocationId = shoot.LocationId,
+        PackageId = shoot.PackageId,
         Status = shoot.Status,
         ShootType = shoot.ShootType,
         Date = DateOnly.FromDateTime(shoot.Start),
@@ -75,6 +78,23 @@ public sealed class ShootForm
         }
     }
 
+    /// <summary>
+    /// Fills in what the package sets: type, quote, end time, delivery date (the package's delivery time, or
+    /// <paramref name="defaultDeliveryDays"/>) and, if there are no notes yet, what's included.
+    /// </summary>
+    public void ApplyPackage(Package package, int defaultDeliveryDays)
+    {
+        PackageId = package.Id;
+        ShootType = package.ShootType;
+        QuotedPriceChf = package.Price.Chf;
+        EndTime = StartTime.Add(TimeSpan.FromHours((double)package.Hours));
+        DeliveryDue = Date?.AddDays(package.DeliveryDays ?? defaultDeliveryDays);
+        if (string.IsNullOrWhiteSpace(Notes))
+        {
+            Notes = package.Included;
+        }
+    }
+
     public void ApplyTo(Shoot shoot)
     {
         var (start, end) = Range ?? throw new InvalidOperationException("A shoot needs a date.");
@@ -82,6 +102,7 @@ public sealed class ShootForm
         shoot.Title = Title.Trim();
         shoot.ClientId = ClientId ?? throw new InvalidOperationException("A shoot needs a client.");
         shoot.LocationId = LocationId;
+        shoot.PackageId = PackageId;
         shoot.Status = Status;
         shoot.ShootType = ShootType;
         shoot.Start = start;

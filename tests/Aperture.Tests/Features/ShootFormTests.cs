@@ -6,6 +6,40 @@ namespace Aperture.Tests.Features;
 
 public class ShootFormTests
 {
+    private static readonly Package FullDay = new()
+    {
+        Id = 4, Name = "Wedding full day", ShootType = ShootType.Wedding, Price = Money.FromChf(3800), Hours = 10.5m,
+        DeliveryDays = 42, Included = "Second shooter, 400 edited images",
+    };
+
+    [Fact]
+    public void Package_fills_in_type_quote_end_delivery_and_notes()
+    {
+        var form = new ShootForm { Date = new DateOnly(2027, 6, 5), StartTime = new TimeOnly(13, 0) };
+
+        form.ApplyPackage(FullDay, defaultDeliveryDays: 28);
+
+        Assert.Equal(4, form.PackageId);
+        Assert.Equal(ShootType.Wedding, form.ShootType);
+        Assert.Equal(3800m, form.QuotedPriceChf);
+        Assert.Equal(new TimeOnly(23, 30), form.EndTime);
+        Assert.Equal(new DateOnly(2027, 7, 17), form.DeliveryDue);
+        Assert.Equal("Second shooter, 400 edited images", form.Notes);
+    }
+
+    [Fact]
+    public void Package_keeps_existing_notes_and_falls_back_to_the_usual_delivery_time()
+    {
+        var form = new ShootForm { Date = new DateOnly(2027, 6, 5), Notes = "Ceremony at 14:00" };
+
+        form.ApplyPackage(new Package { Id = 5, Name = "Portrait", Price = Money.FromChf(450), Hours = 1.5m, Included = "20 images" },
+            defaultDeliveryDays: 28);
+
+        Assert.Equal("Ceremony at 14:00", form.Notes);
+        Assert.Equal(new DateOnly(2027, 7, 3), form.DeliveryDue);
+        Assert.Equal(new TimeOnly(11, 30), form.EndTime);
+    }
+
     [Fact]
     public void Round_trips_through_a_shoot()
     {

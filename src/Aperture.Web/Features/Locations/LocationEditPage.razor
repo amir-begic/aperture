@@ -68,10 +68,10 @@ else
         }
 
         await using var db = await DbFactory.CreateDbContextAsync();
-        _location = await db.Locations.AsNoTracking().SingleOrDefaultAsync(v => v.Id == Id);
+        _location = await db.Locations.AsNoTracking().SingleOrDefaultAsync(l => l.Id == Id);
         _notFound = _location is null;
         _title = _location?.Name ?? "";
-        _shoots = await db.Shoots.Where(g => g.LocationId == Id).OrderByDescending(g => g.Start).ToRowsAsync(db);
+        _shoots = await db.Shoots.Where(s => s.LocationId == Id).OrderByDescending(s => s.Start).ToRowsAsync(db);
     }
 
     private void OnSaved(Location location)
@@ -97,7 +97,7 @@ else
         }
 
         await using var db = await DbFactory.CreateDbContextAsync();
-        await db.Locations.Where(v => v.Id == Id).ExecuteDeleteAsync();
+        await db.Locations.Where(l => l.Id == Id).ExecuteDeleteAsync();
         Notifications.Notify(NotificationSeverity.Info, $"{_title} deleted");
         Navigation.NavigateTo("locations");
     }

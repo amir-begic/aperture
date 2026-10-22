@@ -67,7 +67,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         };
         shoot.Expenses.Add(new Expense { Description = "Light set rental", Date = new DateOnly(2026, 12, 12),
             Amount = Money.FromChf(350), BilledToClient = Money.FromChf(450) });
-        shoot.Expenses.Add(new Expense { Description = "PA top-up", Date = new DateOnly(2026, 12, 12), Amount = Money.FromChf(200) });
+        shoot.Expenses.Add(new Expense { Description = "Assistant", Date = new DateOnly(2026, 12, 12), Amount = Money.FromChf(200) });
         shoot.Payments.Add(new Payment { Date = new DateOnly(2026, 9, 1), Amount = Money.FromChf(500), Note = "Deposit" });
         db.Shoots.Add(shoot);
         await db.SaveChangesAsync();
@@ -88,6 +88,23 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         Assert.Equal(new DateOnly(2026, 11, 5), invoice.DueDate);   // 30 days payment terms
         Assert.Equal(Money.FromChf(2250), invoice.Totals.Total);
         Assert.Equal(Money.FromChf(1750), invoice.Totals.AmountDue); // deposit already paid
+    }
+
+    [Fact]
+    public async Task Draft_names_the_package_the_shoot_was_quoted_from()
+    {
+        var shoot = await AddWeddingAsync();
+        await using (var db = _database.CreateContext())
+        {
+            var package = new Package { Name = "Wedding full day", ShootType = ShootType.Wedding, Price = Money.FromChf(1800) };
+            db.Packages.Add(package);
+            await db.SaveChangesAsync();
+            await db.Shoots.Where(s => s.Id == shoot.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.PackageId, package.Id));
+        }
+
+        var (invoice, _) = await _invoices.LoadForDocumentAsync(await _invoices.CreateDraftAsync(shoot.Id));
+
+        Assert.Equal("Wedding full day: Wedding Rossi", invoice.Lines.OrderBy(l => l.SortOrder).First().Description);
     }
 
     [Fact]

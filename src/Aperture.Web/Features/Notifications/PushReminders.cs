@@ -9,9 +9,9 @@ using Microsoft.EntityFrameworkCore;
 namespace Aperture.Web.Features.Notifications;
 
 /// <summary>
-/// Turns what the dashboard flags into notifications on the phone, each once: overdue invoices, deliveries due within a
-/// week or overdue, open prep a few days before a shoot, backup problems and new versions of Aperture. Shoots to invoice
-/// or to mark as shot stay on the dashboard only.
+/// Turns what the dashboard flags into notifications, each once: overdue invoices, deliveries due within a week or
+/// overdue, inquiries waiting a week for an answer, open prep a few days before a shoot, backup problems and new
+/// versions of Aperture. Shoots to invoice or to mark as shot, and past inquiries, stay on the dashboard only.
 /// </summary>
 public sealed class PushReminders(IDbContextFactory<ApertureDbContext> dbFactory, PushService push, ILogger<PushReminders> logger)
 {

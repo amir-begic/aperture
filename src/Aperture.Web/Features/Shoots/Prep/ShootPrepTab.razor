@@ -56,9 +56,11 @@ else
             {
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-my-4">
                     <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">No tasks yet.</RadzenText>
-                    @foreach (var (name, template) in ChecklistTemplates.All)
+                    @* The one that fits the shoot type comes first, filled; the others stay available. *@
+                    @foreach (var (name, template) in ChecklistTemplates.All.OrderBy(t => t.Name != SuggestedTemplate))
                     {
-                        <RadzenButton Text="@($"{name} checklist")" Icon="playlist_add_check" Variant="Variant.Outlined" Size="ButtonSize.Small"
+                        <RadzenButton Text="@($"{name} checklist")" Icon="playlist_add_check" Size="ButtonSize.Small"
+                                      Variant="@(name == SuggestedTemplate ? Variant.Filled : Variant.Outlined)"
                                       Click="@(() => AddItemsAsync(template))" />
                     }
                 </RadzenStack>
@@ -91,6 +93,11 @@ else
 @code {
     [Parameter, EditorRequired]
     public int ShootId { get; set; }
+
+    [Parameter]
+    public ShootType ShootType { get; set; } = ShootType.Other;
+
+    private string? SuggestedTemplate => ChecklistTemplates.For(ShootType);
 
     private List<ReferenceLink>? _links;
     private List<ChecklistItem>? _items;

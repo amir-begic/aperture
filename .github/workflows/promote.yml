@@ -1,6 +1,6 @@
-# Hands a release on to laptop installations: copies it from this (private) repository's releases to the public
-# releases repository, together with latest.json, the feed Aperture reads there (Updates:FeedUrl). Run by hand once a
-# release has done well on the Mac mini for a while: Actions → Promote → Run workflow.
+# Hands a release on to the laptops: copies it from this (private) repository's releases to the public releases
+# repository, together with latest.json, the feed Aperture reads there (Updates:FeedUrl). Run by hand once you've tried
+# a release for a while: Actions → Promote → Run workflow.
 #
 # The public repository holds only these releases, no code. Its release notes are the commit subjects, so they're
 # public too.

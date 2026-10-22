@@ -52,20 +52,20 @@ public sealed record ShootRow(
 public static class ShootRowQueries
 {
     public static IQueryable<ShootRow> ToRows(this IQueryable<Shoot> shoots) =>
-        shoots.Select(g => new ShootRow(
-            g.Id,
-            g.Title,
-            g.Start,
-            g.End,
-            g.Status,
-            g.ShootType,
-            g.Client.Name,
-            g.Client.Phone,
-            g.Location == null ? null : g.Location.Name,
-            g.Location == null ? null : g.Location.City,
-            g.QuotedPrice,
-            g.DeliveryDue,
-            g.GalleryUrl));
+        shoots.Select(s => new ShootRow(
+            s.Id,
+            s.Title,
+            s.Start,
+            s.End,
+            s.Status,
+            s.ShootType,
+            s.Client.Name,
+            s.Client.Phone,
+            s.Location == null ? null : s.Location.Name,
+            s.Location == null ? null : s.Location.City,
+            s.QuotedPrice,
+            s.DeliveryDue,
+            s.GalleryUrl));
 
     /// <summary>
     /// Loads rows including what was received and billed on top per shoot (summed in C#, see <see cref="Money"/>),

@@ -3,21 +3,18 @@
 #
 #   install-laptop.sh <aperture-…-osx-arm64.tar.gz> [feed URL]
 #
-# Usually run by the installer package (deploy/macos/pkg), or by hand from the unpacked release like install.sh.
+# Usually run by the installer package (deploy/macos/pkg), or by hand from the unpacked release.
 # Installs into ~/Aperture and runs Aperture as launchd agents of your user (~/Library/LaunchAgents): the app at
 # http://localhost:5090 whenever you're logged in, the updater, and a daily backup into ~/Aperture/backups. The login
 # is created in the browser on first start. With a feed URL (latest.json, see .github/workflows/promote.yml), Aperture
 # offers new releases from it under Settings → Updates; without one, it keeps the current one. Safe to run again:
 # existing data is kept.
 set -euo pipefail
-export APERTURE_LAPTOP=1
 here="$(cd "$(dirname "$0")" && pwd)"
 source "$here/common.sh"
-templates="$here/agents"
 
 require_mac
 [[ $# -ge 1 && $# -le 2 ]] || fail "Usage: install-laptop.sh <aperture-…-osx-arm64.tar.gz> [feed URL]"
-[[ ! -f $WEB_PLIST ]] || fail "Aperture runs as a service on this Mac (install.sh). Update it with update.sh instead."
 unsafe='[[:space:]|&]'   # the folder goes into plists through sed
 [[ ! $APERTURE_HOME =~ $unsafe ]] || fail "The install folder can't contain spaces, | or &: $APERTURE_HOME"
 
@@ -48,7 +45,7 @@ for label in "$UPDATER_LABEL" "$BACKUP_LABEL"; do
 done
 for label in "$WEB_LABEL" "$UPDATER_LABEL" "$BACKUP_LABEL"; do
     sed -e "s|__APERTURE_HOME__|$APERTURE_HOME|g" -e "s|__PORT__|$port|g" -e "s|__FEED_URL__|$feed|g" \
-        "$templates/$label.plist" > "$AGENTS_DIR/$label.plist"
+        "$here/$label.plist" > "$AGENTS_DIR/$label.plist"
 done
 printf '%s\n' "$port" > "$APERTURE_HOME/port"
 start_web

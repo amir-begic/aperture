@@ -16,8 +16,8 @@ public enum AttentionLevel
 }
 
 /// <summary>
-/// Something on the dashboard that needs doing, with a link to where it's done. Items worth a notification on the
-/// phone have a <paramref name="PushKey"/>: the same key means the same news, so it's sent only once (see PushReminders).
+/// Something on the dashboard that needs doing, with a link to where it's done. Items worth a notification
+/// have a <paramref name="PushKey"/>: the same key means the same news, so it's sent only once (see PushReminders).
 /// </summary>
 public sealed record AttentionItem(AttentionLevel Level, string Icon, string Text, string Detail, string Link, string? PushKey = null);
 
@@ -29,9 +29,12 @@ public static class Attention
     /// <summary>How far ahead a delivery date is flagged.</summary>
     public const int DeliveryHorizonDays = 7;
 
+    /// <summary>An inquiry this many days old, still without a yes or no, is flagged for a follow-up.</summary>
+    public const int InquiryFollowUpDays = 7;
+
     /// <summary>
-    /// Most urgent first: backups, overdue invoices, overdue deliveries, deliveries due soon, shoots to invoice,
-    /// shoots to mark as shot, open prep, a new version of Aperture.
+    /// Most urgent first: backups, overdue invoices, overdue deliveries, deliveries due soon, inquiries waiting for an
+    /// answer, shoots to invoice, shoots to mark as shot, past inquiries to close, open prep, a new version of Aperture.
     /// Backups are only checked where they're expected (an installation, not a development machine).
     /// Open prep is flagged for shoots within <paramref name="prepHorizon"/> (default <see cref="PrepHorizon"/>).
     /// </summary>
@@ -48,15 +51,15 @@ public static class Attention
             if (backup?.LastSuccess is not { } lastSuccess)
             {
                 items.Add(new(AttentionLevel.Urgent, "backup", "No backup has run yet",
-                    "Set up the nightly backup (docs/deployment.md)", "settings", "backup-none"));
+                    "The installer sets it up. Settings → Backups shows the details.", "settings", "backup-none"));
             }
             else if (backup.IsStale(new DateTimeOffset(now)))
             {
                 items.Add(new(AttentionLevel.Urgent, "backup", $"Last backup: {lastSuccess.LocalDateTime:dd.MM.yyyy HH:mm}",
-                    "Is a backup drive connected? See Settings for details.", "settings", $"backup-stale:{lastSuccess:O}"));
+                    "Settings → Backups shows where it goes and what went wrong.", "settings", $"backup-stale:{lastSuccess:O}"));
             }
 
-            // Per nightly run: a drive that's still missing tomorrow is news again.
+            // Per backup run: a drive that's still missing next time is news again.
             foreach (var (problem, i) in (backup?.Problems ?? []).Select((p, i) => (p, i)))
             {
                 items.Add(new(AttentionLevel.Warning, "usb_off", "Backup problem", problem, "settings",
@@ -67,13 +70,13 @@ public static class Attention
         // Booked shoots that were shot or are coming up within the prep horizon, plus every shoot with an issued
         // invoice: invoices sent before the shoot (deposits, advance payment) can be overdue too.
         var shoots = await db.Shoots
-            .Where(g => g.Status == ShootStatus.Booked || g.Status == ShootStatus.Shot || g.Status == ShootStatus.Delivered)
-            .Where(g => g.End <= now || g.Start <= now + horizon || g.Invoices.Any(i => i.Status == InvoiceStatus.Issued))
-            .OrderBy(g => g.Start)
+            .Where(s => s.Status == ShootStatus.Booked || s.Status == ShootStatus.Shot || s.Status == ShootStatus.Delivered)
+            .Where(s => s.End <= now || s.Start <= now + horizon || s.Invoices.Any(i => i.Status == InvoiceStatus.Issued))
+            .OrderBy(s => s.Start)
             .ToRowsAsync(db);
         var withInvoice = (await db.Invoices.Where(i => i.Status != InvoiceStatus.Cancelled).Select(i => i.ShootId).ToListAsync()).ToHashSet();
 
-        foreach (var shoot in shoots.Where(g => g.IsPastDue(today)))
+        foreach (var shoot in shoots.Where(s => s.IsPastDue(today)))
         {
             var invoice = shoot.Invoice!;
             items.Add(new(AttentionLevel.Urgent, "assignment_late",
@@ -82,7 +85,7 @@ public static class Attention
                 $"shoots/{shoot.Id}?tab=invoice", $"invoice-overdue:{invoice.Id}"));
         }
 
-        foreach (var shoot in shoots.Where(g => g.IsDeliveryOverdue(today)))
+        foreach (var shoot in shoots.Where(s => s.IsDeliveryOverdue(today)))
         {
             items.Add(new(AttentionLevel.Urgent, "photo_library",
                 $"Delivery for {shoot.Title} is overdue",
@@ -90,7 +93,7 @@ public static class Attention
                 $"shoots/{shoot.Id}", $"delivery-overdue:{shoot.Id}:{shoot.DeliveryDue:yyyy-MM-dd}"));
         }
 
-        foreach (var shoot in shoots.Where(g => g.Status.AwaitsDelivery() && g.DeliveryDue is { } due
+        foreach (var shoot in shoots.Where(s => s.Status.AwaitsDelivery() && s.DeliveryDue is { } due
                      && due >= today && due <= today.AddDays(DeliveryHorizonDays)))
         {
             items.Add(new(AttentionLevel.Warning, "photo_library",
@@ -99,8 +102,23 @@ public static class Attention
                 $"shoots/{shoot.Id}", $"delivery-due:{shoot.Id}:{shoot.DeliveryDue:yyyy-MM-dd}"));
         }
 
-        foreach (var shoot in shoots.Where(g => g.End <= now && !withInvoice.Contains(g.Id)
-                     && g.PaymentState is PaymentState.Unpaid or PaymentState.PartiallyPaid))
+        // Inquiries: a date held for a client who hasn't decided. Followed up after a week, closed once the date is past.
+        var inquiries = await db.Shoots
+            .Where(s => s.Status == ShootStatus.Inquiry)
+            .OrderBy(s => s.Start)
+            .Select(s => new { s.Id, s.Title, s.Start, s.End, s.CreatedAt, ClientName = s.Client.Name })
+            .ToListAsync();
+        var followUpBefore = now.AddDays(-InquiryFollowUpDays);
+        foreach (var inquiry in inquiries.Where(i => i.End > now && i.CreatedAt <= followUpBefore))
+        {
+            items.Add(new(AttentionLevel.Warning, "contact_mail",
+                $"Follow up on {inquiry.Title}",
+                $"Inquiry since {inquiry.CreatedAt:dd.MM.yyyy}, for {inquiry.Start:ddd dd.MM.yyyy} · {inquiry.ClientName}",
+                $"shoots/{inquiry.Id}", $"inquiry-waiting:{inquiry.Id}"));
+        }
+
+        foreach (var shoot in shoots.Where(s => s.End <= now && !withInvoice.Contains(s.Id)
+                     && s.PaymentState is PaymentState.Unpaid or PaymentState.PartiallyPaid))
         {
             items.Add(new(AttentionLevel.Warning, "request_quote",
                 $"{shoot.Title} has no invoice yet",
@@ -108,7 +126,7 @@ public static class Attention
                 $"shoots/{shoot.Id}?tab=invoice"));
         }
 
-        foreach (var shoot in shoots.Where(g => g.End <= now && g.Status == ShootStatus.Booked))
+        foreach (var shoot in shoots.Where(s => s.End <= now && s.Status == ShootStatus.Booked))
         {
             items.Add(new(AttentionLevel.Info, "task_alt",
                 $"Mark {shoot.Title} as shot",
@@ -116,14 +134,22 @@ public static class Attention
                 $"shoots/{shoot.Id}"));
         }
 
-        var soon = shoots.Where(g => g.Start > now && g.Start <= now + horizon).ToList();
-        var soonIds = soon.Select(g => g.Id).ToList();
+        foreach (var inquiry in inquiries.Where(i => i.End <= now))
+        {
+            items.Add(new(AttentionLevel.Info, "event_busy",
+                $"{inquiry.Title} is still an inquiry",
+                $"Was on {inquiry.Start:ddd dd.MM.yyyy}: set it to Booked or Cancelled · {inquiry.ClientName}",
+                $"shoots/{inquiry.Id}"));
+        }
+
+        var soon = shoots.Where(s => s.Start > now && s.Start <= now + horizon).ToList();
+        var soonIds = soon.Select(s => s.Id).ToList();
         var openTasks = await db.ChecklistItems
             .Where(i => soonIds.Contains(i.ShootId) && !i.IsDone)
             .GroupBy(i => i.ShootId)
             .Select(g => new { ShootId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.ShootId, g => g.Count);
-        foreach (var shoot in soon.Where(g => openTasks.ContainsKey(g.Id)))
+        foreach (var shoot in soon.Where(s => openTasks.ContainsKey(s.Id)))
         {
             var count = openTasks[shoot.Id];
             items.Add(new(AttentionLevel.Info, "checklist",

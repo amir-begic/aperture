@@ -2,10 +2,10 @@ using System.Globalization;
 using System.Text;
 using Aperture.Web.Data.Entities;
 
-namespace Aperture.Web.Features.CalendarFeed;
+namespace Aperture.Web.Features.Calendar;
 
 /// <summary>One shoot as a calendar event. Times are local Swiss time, like everywhere in the app.</summary>
-public sealed record FeedEvent(
+public sealed record CalendarEvent(
     int ShootId,
     string Title,
     ShootStatus Status,
@@ -18,8 +18,9 @@ public sealed record FeedEvent(
     string? Notes);
 
 /// <summary>
-/// Writes shoots as an iCalendar (RFC 5545) subscription feed: inquiries are tentative, everything else confirmed.
-/// Times carry the Europe/Zurich time zone, so phones show them right whatever zone they're in.
+/// Writes shoots as iCalendar (RFC 5545), to open in a calendar app (Add to calendar on a shoot). Inquiries are
+/// tentative, everything else confirmed. Times carry the Europe/Zurich time zone, so calendars show them right whatever
+/// zone they're in. No calendar name: the calendar app adds the shoot to a calendar of the user's choosing.
 /// </summary>
 public static class IcsCalendar
 {
@@ -49,7 +50,7 @@ public static class IcsCalendar
 
     /// <param name="appUrl">Base URL of the app ending in "/", for the link back to each shoot.</param>
     /// <param name="now">For DTSTAMP, in UTC.</param>
-    public static string Write(IEnumerable<FeedEvent> events, string appUrl, DateTime now)
+    public static string Write(IEnumerable<CalendarEvent> events, string appUrl, DateTime now)
     {
         var ics = new StringBuilder();
         void Line(string line) => AppendFolded(ics, line);
@@ -59,11 +60,6 @@ public static class IcsCalendar
         Line("PRODID:-//Aperture//Photo office//EN");
         Line("CALSCALE:GREGORIAN");
         Line("METHOD:PUBLISH");
-        Line("X-WR-CALNAME:Aperture shoots");
-        Line("X-WR-TIMEZONE:Europe/Zurich");
-        // Hints for how often to refresh; Apple and Google mostly decide themselves.
-        Line("REFRESH-INTERVAL;VALUE=DURATION:PT1H");
-        Line("X-PUBLISHED-TTL:PT1H");
         foreach (var line in ZurichTimeZone.Split('\n'))
         {
             Line(line.TrimEnd('\r'));
@@ -95,7 +91,7 @@ public static class IcsCalendar
         return ics.ToString();
     }
 
-    private static string Description(FeedEvent e, string url)
+    private static string Description(CalendarEvent e, string url)
     {
         var lines = new List<string>
         {

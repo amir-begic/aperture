@@ -3,7 +3,8 @@ using Aperture.Web.Components;
 using Aperture.Web.Configuration;
 using Aperture.Web.Data;
 using Aperture.Web.Features.Attachments;
-using Aperture.Web.Features.CalendarFeed;
+using Aperture.Web.Features.Backup;
+using Aperture.Web.Features.Calendar;
 using Aperture.Web.Features.Finance;
 using Aperture.Web.Features.Invoices;
 using Aperture.Web.Features.Notifications;
@@ -13,63 +14,40 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
-
-if (args is ["hash-password", ..])
-{
-    return HashPasswordCommand.Run();
-}
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Data
 var paths = AperturePaths.From(builder.Configuration, builder.Environment);
 builder.Services.AddSingleton(paths);
-var hosting = Hosting.From(builder.Configuration);
-builder.Services.AddSingleton(hosting);
 // A factory rather than a scoped DbContext: a Blazor Server circuit lives as long as the
 // browser tab, so pages create a short-lived context per operation instead.
 builder.Services.AddDbContextFactory<ApertureDbContext>(options => options.UseSqlite(paths.ConnectionString));
 builder.Services.AddSingleton<AttachmentStore>();
 builder.Services.AddSingleton<InvoiceService>();
 builder.Services.AddSingleton<TaxExport>();
+builder.Services.AddSingleton<BackupDownload>();
 
-// Updates (Settings → Updates): from GitHub releases, off unless install.sh configured a repository and token, or
-// from the public feed a laptop installation is given.
+// Updates (Settings → Updates): from the public release feed install-laptop.sh configures; off without one.
 var updateOptions = builder.Configuration.GetSection("Updates").Get<UpdateOptions>() ?? new UpdateOptions();
 builder.Services.AddSingleton(updateOptions);
-builder.Services.AddHttpClient(nameof(GitHubReleases), http => GitHubReleases.Configure(http, updateOptions));
 builder.Services.AddHttpClient(nameof(ReleaseFeed), ReleaseFeed.Configure);
 builder.Services.AddSingleton<UpdateService>();
 builder.Services.AddHostedService<UpdateCheckWorker>();
 
-// Notifications on the phone (Settings → Notifications), sent through the browser's push service. Not on a laptop
-// installation: no phone can reach it to sign up.
+// Notifications in the browser on this Mac (Settings → Notifications), sent through the browser's push service.
 builder.Services.AddHttpClient(nameof(PushService), http => http.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddSingleton<PushService>();
 builder.Services.AddSingleton<PushReminders>();
-if (!hosting.LocalOnly)
-{
-    builder.Services.AddHostedService<PushReminderWorker>();
-}
+builder.Services.AddHostedService<PushReminderWorker>();
 
 // Free for individuals and businesses under USD 1M annual revenue (questpdf.com/license).
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
-// Auth: one user, cookie login, everything requires sign-in unless marked [AllowAnonymous]. The login is configured,
-// except on a laptop installation, where the first visit creates it (see LoginStore).
-var authOptions = builder.Services.AddOptions<AuthOptions>()
-    .Bind(builder.Configuration.GetSection(AuthOptions.SectionName));
-if (!hosting.LocalOnly)
-{
-    authOptions
-        .Validate(
-            o => !string.IsNullOrWhiteSpace(o.Username) && CredentialValidator.IsWellFormedHash(o.PasswordHash),
-            "Login is not configured. Run `dotnet run --project src/Aperture.Web -- hash-password` and follow the instructions.")
-        .ValidateOnStart();
-}
+// Auth: one user, cookie login, everything requires sign-in unless marked [AllowAnonymous]. The first visit creates
+// the login (see LoginStore).
 builder.Services.AddSingleton<LoginStore>();
 builder.Services.AddSingleton<CredentialValidator>();
 
@@ -92,11 +70,6 @@ builder.Services.AddDataProtection()
     .SetApplicationName("Aperture")
     .PersistKeysToFileSystem(new DirectoryInfo(paths.KeysDirectory));
 
-// On the Mac mini, `tailscale serve` terminates HTTPS on the same machine and forwards to the app.
-// Trusting its headers (from localhost only, the default) keeps redirects and cookies on https.
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto);
-
 // UI
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -106,14 +79,11 @@ var app = builder.Build();
 
 await app.InitializeDatabaseAsync();
 
-app.UseForwardedHeaders();
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
 }
-// No HTTPS redirection or HSTS: on the LAN the app is plain HTTP, and HTTPS
-// is terminated in front of it by Tailscale (see phase 6).
+// No HTTPS redirection or HSTS: Aperture is plain HTTP on localhost, which browsers treat as secure.
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
 // English texts with Swiss formats: dates as 31.12.2026, Monday as first day of the week.
@@ -138,10 +108,8 @@ app.MapGet("/health", async (IDbContextFactory<ApertureDbContext> dbFactory) =>
 app.MapAttachmentEndpoints();
 app.MapInvoiceEndpoints();
 app.MapTaxExportEndpoints();
-if (!hosting.LocalOnly)
-{
-    app.MapCalendarFeedEndpoints();
-}
+app.MapShootCalendarEndpoints();
+app.MapBackupDownloadEndpoints();
 
 app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {
@@ -156,4 +124,3 @@ app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 });
 
 app.Run();
-return 0;

@@ -9,9 +9,11 @@
 <RadzenFieldset Text="Notifications" class="settings-form rz-mt-6" id="notifications">
     <RadzenStack Gap="1rem">
         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-            Aperture can tell your phone when an invoice becomes overdue, when prep is still open @PrepDays days before a shoot,
-            when a backup fails and when a new version is available. Each only once, between
-            @PushReminders.DayStarts.ToString("HH:mm") and @PushReminders.DayEnds.ToString("HH:mm").
+            Aperture can let you know on this Mac when an invoice becomes overdue, when a delivery is due within a week or
+            overdue, when an inquiry has waited @InquiryDays days for an answer, when prep is still open @PrepDays days
+            before a shoot, when a backup fails and when a new version is available. Each only once, between
+            @PushReminders.DayStarts.ToString("HH:mm") and @PushReminders.DayEnds.ToString("HH:mm"), and only while this
+            Mac is awake: Aperture sends them itself.
         </RadzenText>
 
         @if (_device is null)
@@ -21,7 +23,7 @@
         else if (!HasEmail)
         {
             <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                Add your email under Contact above and save first. Push services (Apple's, for the iPhone) only deliver
+                Add your email under Contact above and save first. Push services (Apple's, Google's, …) only deliver
                 notifications from senders with a contact address.
             </RadzenAlert>
         }
@@ -30,14 +32,7 @@
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                 @if (!_device.Secure)
                 {
-                    <text>Notifications need the Tailscale address (https://….ts.net). Open Aperture through it on this device.</text>
-                }
-                else if (_device.Apple && !_device.Standalone)
-                {
-                    <text>
-                        On the iPhone, notifications work in the Aperture app on the home screen: in Safari, tap
-                        <em>Share → Add to Home Screen</em>, open Aperture from its icon and come back here.
-                    </text>
+                    <text>Notifications need Aperture's own address on this Mac. Open it at http://localhost:5090.</text>
                 }
                 else
                 {
@@ -48,10 +43,8 @@
         else if (_device.Permission == "denied")
         {
             <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                Notifications from Aperture are blocked on this device.
-                @(_device.Apple
-                    ? "Allow them under iPhone Settings → Notifications → Aperture."
-                    : "Allow them in the browser's site settings for this address.")
+                Notifications from Aperture are blocked in this browser. Allow them in its settings for this address (Safari:
+                Settings → Websites → Notifications).
             </RadzenAlert>
         }
         else if (_thisDevice is { } current)
@@ -88,7 +81,7 @@
                     @foreach (var device in OtherDevices)
                     {
                         <li class="list-row">
-                            <RadzenIcon Icon="smartphone" />
+                            <RadzenIcon Icon="devices" />
                             <span class="list-row-text">
                                 <span>@device.Device</span>
                                 <span class="push-device-detail">
@@ -112,6 +105,8 @@
 
     private static readonly int PrepDays = (int)PushReminders.PrepHorizon.TotalDays;
 
+    private static readonly int InquiryDays = Aperture.Web.Features.Dashboard.Attention.InquiryFollowUpDays;
+
     private IJSObjectReference? _module;
     private DotNetObjectReference<NotificationSettings>? _self;
     private DeviceState? _device;
@@ -123,8 +118,7 @@
     private IEnumerable<PushSubscription> OtherDevices => _subscriptions.Where(s => s.Id != _thisDevice?.Id);
 
     /// <summary>What wwwroot/push.js reports about this browser.</summary>
-    public sealed record DeviceState(
-        bool Supported, bool Secure, bool Standalone, bool Apple, string Permission, BrowserSubscription? Subscription, string Device);
+    public sealed record DeviceState(bool Supported, bool Secure, string Permission, BrowserSubscription? Subscription, string Device);
 
     protected override Task OnInitializedAsync() => LoadSubscriptionsAsync();
 
@@ -210,7 +204,7 @@
         else
         {
             Notifications.Notify(NotificationSeverity.Warning, "Couldn't send the notification",
-                "The push service didn't take it. Is the Mac online? Details are in the log.");
+                "The push service didn't take it. Is this Mac online? Details are in the log.");
         }
         await RefreshDeviceAsync();
     }

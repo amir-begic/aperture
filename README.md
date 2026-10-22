@@ -1,8 +1,8 @@
 # Aperture
 
 A small ERP for running a photography business: shoots, clients, deliveries, costs, invoices (Swiss QR-bill) and tax exports.
-Single user, CHF, English, self-hosted on a Mac mini and used from any browser at home or through Tailscale, or
-installed on someone's own laptop.
+Single user, CHF, English. It runs on the photographer's own Mac, installed from a package and used in the browser
+there.
 
 **Stack:** .NET 10 · Blazor Web App (Interactive Server) · Radzen.Blazor · EF Core + SQLite
 
@@ -11,15 +11,17 @@ installed on someone's own laptop.
 | Area | |
 |---|---|
 | **Shoots** | Client, location, date and time (several shoots per day, shoots past midnight), status *Inquiry → Booked → Shot → Delivered* or *Cancelled*, shoot type, quote. |
-| **Shoot finances** | Costs such as gear rental, either covered by the quote or billed on top (at cost or with your margin). Payments received, with the payslip attached. Margin and what's still open. |
+| **Packages** | Your price list (e.g. *Wedding full day*, CHF 3'800, 10 hours, delivery in 6 weeks). Picking one on a shoot fills in type, quote, end time, delivery date and what's included; the invoice names it. |
+| **Shoot finances** | Costs such as gear rental, either covered by the quote or billed on top (at cost or with your margin). *Add train trip* enters the SBB ticket there and back, with the fare you paid last time to the same location. Payments received, with the payslip attached. Margin and what's still open. |
 | **Delivery** | A delivery date per shoot, suggested from your usual delivery time (Settings), and a link to the client gallery. |
-| **Prep** | Moodboard and reference links (Pinterest, Google Drive, …), notes, a checklist (wedding, portrait and commercial templates included), files. |
-| **Calendar** | Month, week and year view. Hovering over a shoot shows a card with the details. A private link (Settings) puts your shoots in the iPhone's calendar. |
+| **Prep** | Moodboard and reference links (Pinterest, Google Drive, …), notes, a checklist (wedding, portrait, event and commercial templates, the one for the shoot type offered first), files. |
+| **Calendar** | Month, week and year view. Hovering over a shoot shows a card with the details. *Add to calendar* on a shoot puts it in Calendar on the Mac (and through iCloud on the iPhone). |
 | **Invoices** | Created from a shoot: quote plus billed costs, optional VAT, rounded to 5 Rappen, Swiss QR-bill. Numbered `2026-001` once issued, then frozen and archived as PDF. |
 | **Finance** | Income statement per year on a cash basis, business costs that don't belong to a shoot, equipment with depreciation. |
 | **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |
-| **Dashboard** | Year figures and a to-do list: overdue invoices, deliveries due or overdue, shoots without an invoice, open prep, backup problems. |
-| **On the go** | Installable on the phone's home screen (PWA), with a full-screen menu on small screens. Notifications on the phone for overdue invoices, deliveries due within a week or overdue, open prep three days before a shoot, backup problems and new versions. |
+| **Dashboard** | Year figures and a to-do list: overdue invoices, deliveries due or overdue, inquiries waiting a week for an answer or whose date has passed, shoots without an invoice, open prep, backup problems. |
+| **Notifications** | In the browser on the Mac: overdue invoices, deliveries due within a week or overdue, inquiries waiting a week, open prep three days before a shoot, backup problems and new versions. |
+| **Backups** | Daily into `~/Aperture/backups` (and any external drive you add), picked up by Time Machine. *Download a backup* in Settings gets everything as one ZIP, e.g. to move to a new Mac. |
 
 How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
 
@@ -28,58 +30,46 @@ How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
 Needs the .NET 10 SDK.
 
 ```bash
-# 1. Create your login (prints the commands to store it as user-secrets)
-dotnet run --project src/Aperture.Web -- hash-password
-
-# 2. Run the app → http://localhost:5090
+# Run the app → http://localhost:5090
 dotnet run --project src/Aperture.Web
 
 # Tests
 dotnet test
 ```
 
-The database is created and migrated automatically on startup. Then fill in your business details under
-**Settings**: address and IBAN appear on invoices.
+The database is created and migrated automatically on startup. The first visit asks for a username and password and
+keeps them, hashed, in `data/keys/login.json`; delete that file to start over. Then fill in your business details
+under **Settings**: address and IBAN appear on invoices.
 
-## Running it on the Mac mini
+## Installing it
 
 See [docs/deployment.md](docs/deployment.md):
-- `deploy/publish.sh` builds a self-contained release for Apple silicon.
-- `deploy/macos/install.sh` sets it up as a service with nightly backups to your external drives.
-- `deploy/deploy.sh` installs updates and goes back to the previous version if the new one doesn't start.
-- Pushing to `main` on GitHub builds a release (`.github/workflows/release.yml`); Aperture offers it under
-  **Settings → Updates** and installs it with the same rollback.
-
-For someone running it on their own Mac laptop, see [On a laptop](docs/deployment.md#on-a-laptop-for-someone-else):
+- Pushing to `main` on GitHub builds a release in this private repository (`.github/workflows/release.yml`, with
+  `deploy/publish.sh`: self-contained, for Apple silicon).
+- `.github/workflows/promote.yml` copies a release you've tried to a public releases repository, whose `latest.json`
+  the Mac checks for updates. Aperture offers it under **Settings → Updates** and goes back to the previous version if
+  the new one doesn't start.
 - `deploy/macos/pkg/build-pkg.sh` builds an installer package that installs the newest promoted release for the person
   logged in (`deploy/macos/install-laptop.sh`), without admin rights or a token; the login is created in the browser.
-- `.github/workflows/promote.yml` copies a release you've tried to a public releases repository, whose `latest.json`
-  the laptop checks for updates.
 
 ## Configuration
 
 | Setting | Default | Notes |
 |---|---|---|
-| `Aperture:DataDirectory` | `data` (relative to `src/Aperture.Web`) | All business data. `~` is expanded; the Mac mini uses `~/Aperture/data`. |
-| `Aperture:LocalOnly` | `false` | Laptop installation: the login is created in the browser on first start (kept in `keys/login.json`), and the phone features are off. |
-| `Auth:Username` | – | Required, except with `LocalOnly`. |
-| `Auth:PasswordHash` | – | Required, except with `LocalOnly`. Generate with `hash-password`; never commit it. |
-| `Updates:Repository` | – | `owner/name` on GitHub; with the token, enables Settings → Updates. |
-| `Updates:GitHubToken` | – | Fine-grained token, *Contents: Read-only* on that repository. |
-| `Updates:FeedUrl` | – | Instead of the two above: the `latest.json` of a public releases repository (https). Needs no token. |
+| `Aperture:DataDirectory` | `data` (relative to `src/Aperture.Web`) | All business data. `~` is expanded; the installer uses `~/Aperture/data`. |
+| `Updates:FeedUrl` | – | The `latest.json` of the public releases repository (https). Enables Settings → Updates. |
 
-In production, use environment variables (`Aperture__DataDirectory`, `Auth__Username`, `Auth__PasswordHash`,
-`Updates__Repository`, `Updates__GitHubToken`; on a laptop `Aperture__LocalOnly` and `Updates__FeedUrl`).
-The installer puts them in the service definition, which only root can read.
+The installer sets them as environment variables (`Aperture__DataDirectory`, `Updates__FeedUrl`) in the launchd
+agent, `~/Library/LaunchAgents/ch.aperture.web.plist`.
 
 The data directory holds:
 
 ```
 aperture.db               the database (SQLite, WAL mode)
 attachments/YYYY/     receipts, payslips, invoice PDFs, under generated names
-keys/                 keys that sign the login cookie, so a restart doesn't log you out, the
-                      key pair that signs notifications (push-vapid.json), and on a laptop the login (login.json)
-backup-status.json    written by the nightly backup, shown under Settings and on the dashboard
+keys/                 the login (login.json), keys that sign the login cookie, so a restart doesn't log you out,
+                      and the key pair that signs notifications (push-vapid.json)
+backup-status.json    written by the backup, shown under Settings and on the dashboard
 ```
 
 ## Database migrations
@@ -95,18 +85,18 @@ A test fails if the model changes without a migration.
 
 ```
 src/Aperture.Web/
-  Auth/            single-user cookie login, hash-password command
+  Auth/            single-user cookie login, created in the browser on first start
   Components/      app shell, layouts, routing
   Configuration/   data paths, app version
   Data/            DbContext, entities, migrations, value converters
   Domain/          the rules, without UI or database: Money (CHF in Rappen), invoice totals,
                    depreciation, shoot financials, categories, IBAN and contact validation
   Features/        one folder per area, pages and their logic together:
-                   Shoots, Clients, Locations, Calendar, Attachments, Invoices, Finance, Dashboard, Backup,
-                   Notifications, Settings
+                   Shoots, Packages, Clients, Locations, Calendar, Attachments, Invoices, Finance, Dashboard,
+                   Backup, Notifications, Updates, Settings
 tests/Aperture.Tests/  xUnit; database tests run against in-memory SQLite
-deploy/            release build, Mac mini and laptop install/update/backup scripts, service definitions (agents/ for
-                   the laptop) and the laptop installer package (macos/pkg)
+deploy/            release build, install/update/backup scripts, launchd agent definitions and the installer
+                   package (macos/pkg)
 docs/              deployment guide, accounting rules
 ```
 

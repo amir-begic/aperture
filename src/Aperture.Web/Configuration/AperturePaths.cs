@@ -21,7 +21,7 @@ public sealed record AperturePaths(string DataDirectory)
     /// <summary>The login created in the browser on a laptop installation (see LoginStore). Delete it to set a new one.</summary>
     public string LoginFile => Path.Combine(KeysDirectory, "login.json");
 
-    /// <summary>Written by the nightly backup script (deploy/macos/backup.sh).</summary>
+    /// <summary>Written by the backup script (deploy/macos/backup.sh).</summary>
     public string BackupStatusFile => Path.Combine(DataDirectory, "backup-status.json");
 
     /// <summary>Downloaded releases and the hand-over to the updater (deploy/macos/auto-update.sh).</summary>
@@ -40,7 +40,7 @@ public sealed record AperturePaths(string DataDirectory)
     {
         var configured = configuration["Aperture:DataDirectory"] ?? "data";
 
-        // Allow "~/aperture-data" in the Mac mini config.
+        // Allow "~/Aperture/data" in a hand-written config (the installers write the full path).
         if (configured.StartsWith('~'))
         {
             configured = Path.Join(

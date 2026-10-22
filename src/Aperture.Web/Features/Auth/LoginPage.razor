@@ -64,7 +64,7 @@
     protected override void OnInitialized()
     {
         Input ??= new();
-        // First start of a laptop installation: there's no login to sign in with yet.
+        // First start: there's no login to sign in with yet.
         if (Logins.CanSetUpFrom(HttpContext.Connection.RemoteIpAddress))
         {
             Navigation.NavigateTo("setup");

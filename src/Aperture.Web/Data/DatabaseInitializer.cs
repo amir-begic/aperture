@@ -15,7 +15,7 @@ public static class DatabaseInitializer
         await using var db = await factory.CreateDbContextAsync();
         await db.Database.MigrateAsync();
 
-        // WAL lets the nightly backup read the database while the app writes to it.
+        // WAL lets the backup read the database while the app writes to it.
         // The mode is stored in the database file, so this only changes something once.
         await db.Database.ExecuteSqlRawAsync("PRAGMA journal_mode=WAL;");
     }

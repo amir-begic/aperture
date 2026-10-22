@@ -58,15 +58,15 @@ public sealed class ApertureDbContextTests : IAsyncLifetime
 
         await using (var db = _database.CreateContext())
         {
-            (await db.Shoots.SingleAsync(g => g.Id == priced.Id)).QuotedPrice = Money.FromChf(1850.50m);
+            (await db.Shoots.SingleAsync(s => s.Id == priced.Id)).QuotedPrice = Money.FromChf(1850.50m);
             await db.SaveChangesAsync();
         }
 
         Assert.Equal(185050L, await _database.ScalarAsync($"SELECT QuotedPrice FROM Shoots WHERE Id = {priced.Id}"));
         await using (var db = _database.CreateContext())
         {
-            Assert.Equal(Money.FromChf(1850.50m), (await db.Shoots.SingleAsync(g => g.Id == priced.Id)).QuotedPrice);
-            Assert.Null((await db.Shoots.SingleAsync(g => g.Id == unpriced.Id)).QuotedPrice);
+            Assert.Equal(Money.FromChf(1850.50m), (await db.Shoots.SingleAsync(s => s.Id == priced.Id)).QuotedPrice);
+            Assert.Null((await db.Shoots.SingleAsync(s => s.Id == unpriced.Id)).QuotedPrice);
         }
     }
 
@@ -88,7 +88,7 @@ public sealed class ApertureDbContextTests : IAsyncLifetime
 
         await using var db = _database.CreateContext();
         await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => db.Clients.Where(c => c.Id == client.Id).ExecuteDeleteAsync());
-        await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => db.Locations.Where(v => v.Id == location.Id).ExecuteDeleteAsync());
+        await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(() => db.Locations.Where(l => l.Id == location.Id).ExecuteDeleteAsync());
     }
 
     [Fact]

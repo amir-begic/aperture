@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Nightly backup at 03:30 (run at wake-up if the Mac was asleep). Installed by install.sh.
+  Daily backup: at login and at 13:00 (run at wake-up if the Mac was asleep then). A laptop is rarely awake at night.
+  Installed by install-laptop.sh.
 -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>ch.aperture.backup</string>
-    <key>UserName</key>
-    <string>__USER__</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
@@ -19,12 +18,14 @@
         <key>APERTURE_HOME</key>
         <string>__APERTURE_HOME__</string>
     </dict>
+    <key>RunAtLoad</key>
+    <true/>
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
-        <integer>3</integer>
+        <integer>13</integer>
         <key>Minute</key>
-        <integer>30</integer>
+        <integer>0</integer>
     </dict>
     <key>StandardOutPath</key>
     <string>__APERTURE_HOME__/logs/backup.log</string>

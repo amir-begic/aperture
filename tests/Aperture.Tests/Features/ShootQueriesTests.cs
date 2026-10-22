@@ -69,7 +69,7 @@ public sealed class ShootQueriesTests : IAsyncLifetime
     private async Task<List<int>> OverlapsAsync(DateTime start, DateTime end, int? excludeShootId = null)
     {
         await using var db = _database.CreateContext();
-        return await db.Shoots.Overlapping(start, end, excludeShootId).Select(g => g.Id).ToListAsync();
+        return await db.Shoots.Overlapping(start, end, excludeShootId).Select(s => s.Id).ToListAsync();
     }
 
     // ---- InRange (calendar) ----
@@ -86,7 +86,7 @@ public sealed class ShootQueriesTests : IAsyncLifetime
 
         await using var db = _database.CreateContext();
         var ids = await db.Shoots.InRange(At(12, 1, 0), new DateTime(2027, 1, 1), includeCancelled: false)
-            .OrderBy(g => g.Start).Select(g => g.Id).ToListAsync();
+            .OrderBy(s => s.Start).Select(s => s.Id).ToListAsync();
 
         Assert.Equal([lateNovember.Id, newYearsEve.Id], ids);
     }
@@ -156,6 +156,6 @@ public sealed class ShootQueriesTests : IAsyncLifetime
     private async Task<List<int>> FilterAsync(ShootPeriod period, ShootStatus[]? statuses = null, string? search = null)
     {
         await using var db = _database.CreateContext();
-        return await db.Shoots.Filter(period, statuses ?? [], search, Now).Select(g => g.Id).ToListAsync();
+        return await db.Shoots.Filter(period, statuses ?? [], search, Now).Select(s => s.Id).ToListAsync();
     }
 }

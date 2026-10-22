@@ -90,10 +90,10 @@
         _statement = await IncomeStatement.LoadAsync(db, now.Year);
 
         // Open amounts of issued invoices, from all years.
-        var invoiced = await db.Shoots.Where(g => g.Invoices.Any(i => i.Status == InvoiceStatus.Issued)).ToRowsAsync(db);
-        var open = invoiced.Where(g => g.Financials.Outstanding > Money.Zero).ToList();
-        _openInvoices = open.Sum(g => g.Financials.Outstanding!.Value);
-        _overdueCount = open.Count(g => g.IsPastDue(today));
+        var invoiced = await db.Shoots.Where(s => s.Invoices.Any(i => i.Status == InvoiceStatus.Issued)).ToRowsAsync(db);
+        var open = invoiced.Where(s => s.Financials.Outstanding > Money.Zero).ToList();
+        _openInvoices = open.Sum(s => s.Financials.Outstanding!.Value);
+        _overdueCount = open.Count(s => s.IsPastDue(today));
 
         _attention = await Attention.ItemsAsync(db, now,
             Aperture.Web.Features.Backup.BackupStatus.Read(Paths), expectBackups: !Environment.IsDevelopment(), update: Updates.Available);

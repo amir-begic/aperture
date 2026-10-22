@@ -24,7 +24,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
             throw new InvalidOperationException("This shoot already has an invoice. Cancel it first to create a new one.");
         }
 
-        var shoot = await db.Shoots.SingleAsync(g => g.Id == shootId);
+        var shoot = await db.Shoots.Include(s => s.Package).SingleAsync(s => s.Id == shootId);
         var billedCosts = await db.Expenses
             .Where(e => e.ShootId == shootId && e.BilledToClient != null)
             .OrderBy(e => e.Date).ThenBy(e => e.Id)
@@ -39,7 +39,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         };
         invoice.Lines.Add(new InvoiceLine
         {
-            Description = $"Photography: {shoot.Title}",
+            Description = shoot.Package is { } package ? $"{package.Name}: {shoot.Title}" : $"Photography: {shoot.Title}",
             UnitPrice = shoot.QuotedPrice ?? Money.Zero,
         });
         invoice.Lines.AddRange(billedCosts.Select(cost => new InvoiceLine
@@ -83,8 +83,8 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         await using var db = await dbFactory.CreateDbContextAsync();
         var invoice = await db.Invoices.AsNoTracking()
             .Include(i => i.Lines)
-            .Include(i => i.Shoot).ThenInclude(g => g.Client)
-            .Include(i => i.Shoot).ThenInclude(g => g.Location)
+            .Include(i => i.Shoot).ThenInclude(s => s.Client)
+            .Include(i => i.Shoot).ThenInclude(s => s.Location)
             .SingleAsync(i => i.Id == invoiceId);
 
         if (invoice.Status == InvoiceStatus.Draft)
@@ -149,7 +149,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         await using var db = await dbFactory.CreateDbContextAsync();
         await using var transaction = await db.Database.BeginTransactionAsync();
 
-        var invoice = await db.Invoices.Include(i => i.Lines).Include(i => i.Shoot).ThenInclude(g => g.Client)
+        var invoice = await db.Invoices.Include(i => i.Lines).Include(i => i.Shoot).ThenInclude(s => s.Client)
             .SingleAsync(i => i.Id == invoiceId);
         EnsureDraft(invoice);
 
@@ -160,8 +160,8 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         invoice.IssuedAt = time.GetLocalNow().DateTime;
 
         var shoot = invoice.Shoot;
-        var location = await db.Locations.Where(v => v.Id == shoot.LocationId)
-            .Select(v => v.City == null ? v.Name : v.Name + ", " + v.City).SingleOrDefaultAsync();
+        var location = await db.Locations.Where(l => l.Id == shoot.LocationId)
+            .Select(l => l.City == null ? l.Name : l.Name + ", " + l.City).SingleOrDefaultAsync();
         var pdf = new InvoiceDocument(invoice, new InvoiceShootInfo(shoot.Title, shoot.Start, shoot.End, location)).GeneratePdf();
         var attachment = await store.SaveAsync(new MemoryStream(pdf), $"Invoice {invoice.Number}.pdf", invoice.ShootId);
         invoice.Pdf = attachment;

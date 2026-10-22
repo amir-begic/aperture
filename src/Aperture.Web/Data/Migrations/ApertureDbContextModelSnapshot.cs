@@ -117,10 +117,6 @@ namespace Aperture.Web.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("CalendarFeedToken")
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("City")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -520,6 +516,42 @@ namespace Aperture.Web.Data.Migrations
                     b.ToTable("Locations");
                 });
 
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Package", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DeliveryDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Hours")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Included")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("Price")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ShootType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Packages");
+                });
+
             modelBuilder.Entity("Aperture.Web.Data.Entities.Payment", b =>
                 {
                     b.Property<int>("Id")
@@ -666,6 +698,9 @@ namespace Aperture.Web.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("PackageId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long?>("QuotedPrice")
                         .HasColumnType("INTEGER");
 
@@ -692,6 +727,8 @@ namespace Aperture.Web.Data.Migrations
                     b.HasIndex("ClientId");
 
                     b.HasIndex("LocationId");
+
+                    b.HasIndex("PackageId");
 
                     b.HasIndex("Start");
 
@@ -817,9 +854,16 @@ namespace Aperture.Web.Data.Migrations
                         .HasForeignKey("LocationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("Aperture.Web.Data.Entities.Package", "Package")
+                        .WithMany("Shoots")
+                        .HasForeignKey("PackageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Client");
 
                     b.Navigation("Location");
+
+                    b.Navigation("Package");
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Client", b =>
@@ -833,6 +877,11 @@ namespace Aperture.Web.Data.Migrations
                 });
 
             modelBuilder.Entity("Aperture.Web.Data.Entities.Location", b =>
+                {
+                    b.Navigation("Shoots");
+                });
+
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Package", b =>
                 {
                     b.Navigation("Shoots");
                 });

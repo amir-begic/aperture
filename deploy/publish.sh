@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds Aperture for Apple silicon (the Mac mini, or a laptop) and packs it, scripts included:
+# Builds Aperture for Apple silicon and packs it, scripts included:
 #
 #   deploy/publish.sh            -> artifacts/aperture-<date>-<build>-<commit>-osx-arm64.tar.gz
 #
@@ -18,9 +18,10 @@ out="artifacts/$name"
 rm -rf "$out"
 "$dotnet" publish src/Aperture.Web -c Release -r osx-arm64 --self-contained \
     -p:InformationalVersion="$version" -o "$out" --nologo -v quiet >&2
-mkdir -p "$out/deploy/macos/agents"
+# Releases end up public (promote.yml): never with the development data, login or keys.
+[[ ! -e $out/data ]] || { echo "The build contains a data folder; check the Content items in Aperture.Web.csproj." >&2; exit 1; }
+mkdir -p "$out/deploy/macos"
 cp deploy/macos/*.sh deploy/macos/*.plist "$out/deploy/macos/"
-cp deploy/macos/agents/*.plist "$out/deploy/macos/agents/"
 chmod +x "$out"/deploy/macos/*.sh
 
 tar -C artifacts -czf "artifacts/$name-osx-arm64.tar.gz" "$name"

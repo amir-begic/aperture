@@ -5,8 +5,8 @@ using Aperture.Web.Configuration;
 namespace Aperture.Web.Features.Backup;
 
 /// <summary>
-/// The result of the last nightly backup, as written by deploy/macos/backup.sh. The app only reads it:
-/// backups run outside the app, so they still happen when the app itself is broken.
+/// The result of the last daily backup, as written by deploy/macos/backup.sh.
+/// The app only reads it: backups run outside the app, so they still happen when the app itself is broken.
 /// </summary>
 public sealed record BackupStatus(
     [property: JsonPropertyName("lastRun")] DateTimeOffset? LastRun,
@@ -14,7 +14,7 @@ public sealed record BackupStatus(
     [property: JsonPropertyName("destinations")] IReadOnlyList<string> Destinations,
     [property: JsonPropertyName("problems")] IReadOnlyList<string> Problems)
 {
-    /// <summary>A day and a half: one missed nightly run is noticed the next morning.</summary>
+    /// <summary>A day and a half: one missed daily run is noticed the next day.</summary>
     public static readonly TimeSpan MaxAge = TimeSpan.FromHours(36);
 
     /// <summary>Null when no backup has run yet (or the file can't be read).</summary>

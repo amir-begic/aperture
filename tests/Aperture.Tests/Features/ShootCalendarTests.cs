@@ -1,11 +1,10 @@
 using System.Text;
 using Aperture.Web.Data.Entities;
-using Aperture.Web.Features.CalendarFeed;
-using Microsoft.EntityFrameworkCore;
+using Aperture.Web.Features.Calendar;
 
 namespace Aperture.Tests.Features;
 
-public class CalendarFeedTests : IAsyncLifetime
+public class ShootCalendarTests : IAsyncLifetime
 {
     private readonly TestDatabase _db = new();
 
@@ -15,14 +14,14 @@ public class CalendarFeedTests : IAsyncLifetime
 
     private static readonly DateTime Now = new(2026, 10, 20, 12, 0, 0);
 
-    private static FeedEvent Event(
+    private static CalendarEvent Event(
         ShootStatus status = ShootStatus.Booked, string title = "Wedding Rossi", string? notes = null,
         ShootType type = ShootType.Wedding, string? location = "Schloss Laufen, 8447 Laufen-Uhwiesen") =>
         new(7, title, status, type, new DateTime(2026, 12, 12, 20, 0, 0), new DateTime(2026, 12, 13, 2, 0, 0),
             "Anna & Marco Rossi", "+41 79 123 45 67", location, notes);
 
-    private static string Write(params FeedEvent[] events) =>
-        IcsCalendar.Write(events, "https://mini.example.ts.net/", new DateTime(2026, 10, 20, 10, 0, 0, DateTimeKind.Utc));
+    private static string Write(params CalendarEvent[] events) =>
+        IcsCalendar.Write(events, "http://localhost:5090/", new DateTime(2026, 10, 20, 10, 0, 0, DateTimeKind.Utc));
 
     /// <summary>Undoes line folding, so assertions can look at whole properties.</summary>
     private static string[] Unfolded(string ics) => ics.Replace("\r\n ", "").Split("\r\n");
@@ -48,7 +47,7 @@ public class CalendarFeedTests : IAsyncLifetime
         Assert.Contains("DTSTAMP:20261020T100000Z", lines);
         Assert.Contains("DTSTART;TZID=Europe/Zurich:20261212T200000", lines);
         Assert.Contains("DTEND;TZID=Europe/Zurich:20261213T020000", lines);
-        Assert.Contains("URL:https://mini.example.ts.net/shoots/7", lines);
+        Assert.Contains("URL:http://localhost:5090/shoots/7", lines);
         Assert.Contains("STATUS:CONFIRMED", lines);
         Assert.Contains("SUMMARY:Wedding Rossi", lines);
         Assert.Contains("LOCATION:Schloss Laufen\\, 8447 Laufen-Uhwiesen", lines);
@@ -61,7 +60,7 @@ public class CalendarFeedTests : IAsyncLifetime
             .Single(l => l.StartsWith("DESCRIPTION:"));
 
         Assert.Equal(
-            "DESCRIPTION:Booked · Wedding\\nAnna & Marco Rossi · +41 79 123 45 67\\n\\nCeremony 14:00\\; couple shoot at \"the old bridge\"\\n\\nhttps://mini.example.ts.net/shoots/7",
+            "DESCRIPTION:Booked · Wedding\\nAnna & Marco Rossi · +41 79 123 45 67\\n\\nCeremony 14:00\\; couple shoot at \"the old bridge\"\\n\\nhttp://localhost:5090/shoots/7",
             description);
     }
 
@@ -79,6 +78,15 @@ public class CalendarFeedTests : IAsyncLifetime
     public void Shoot_without_location_leaves_LOCATION_out()
     {
         Assert.DoesNotContain("LOCATION:", Write(Event(location: null)));
+    }
+
+    [Fact]
+    public void Leaves_the_choice_of_calendar_to_the_calendar_app()
+    {
+        var ics = Write(Event());
+
+        Assert.DoesNotContain("X-WR-CALNAME", ics);
+        Assert.DoesNotContain("REFRESH-INTERVAL", ics);
     }
 
     [Theory]
@@ -101,52 +109,20 @@ public class CalendarFeedTests : IAsyncLifetime
     }
 
     [Fact]
-    public void Tokens_are_long_random_and_url_safe()
-    {
-        var a = CalendarFeedToken.New();
-        var b = CalendarFeedToken.New();
-
-        Assert.NotEqual(a, b);
-        Assert.Equal(43, a.Length);
-        Assert.Matches("^[A-Za-z0-9_-]+$", a);
-        Assert.True(a.Length <= CalendarFeedToken.MaxLength);
-    }
-
-    [Theory]
-    [InlineData("secret", "secret", true)]
-    [InlineData("secret", "Secret", false)]
-    [InlineData("secret", "secre", false)]
-    [InlineData(null, "", false)]
-    [InlineData(null, null, false)]
-    [InlineData("", "", false)]
-    public void Token_must_match_exactly_and_an_unset_token_never_matches(string? stored, string? given, bool matches) =>
-        Assert.Equal(matches, CalendarFeedToken.Matches(stored, given));
-
-    [Fact]
-    public async Task Feed_has_shoots_from_the_last_year_on_without_cancelled_ones()
+    public async Task Event_has_the_client_and_the_location_address()
     {
         var client = await _db.AddClientAsync();
         var location = await _db.AddLocationAsync();
-        await _db.AddShootAsync(client, Now.AddDays(-400), Now.AddDays(-400).AddHours(5), ShootStatus.Shot, title: "Too old");
-        await _db.AddShootAsync(client, Now.AddDays(-30), Now.AddDays(-30).AddHours(5), ShootStatus.Shot, title: "Shot");
-        await _db.AddShootAsync(client, Now.AddDays(10), Now.AddDays(10).AddHours(5), ShootStatus.Cancelled, title: "Cancelled");
-        await _db.AddShootAsync(client, Now.AddDays(20), Now.AddDays(20).AddHours(5), ShootStatus.Inquiry, title: "Asked");
-        await _db.AddShootAsync(client, Now.AddDays(5), Now.AddDays(5).AddHours(5), location: location, title: "Booked");
+        var booked = await _db.AddShootAsync(client, Now.AddDays(5), Now.AddDays(5).AddHours(5), location: location, title: "Booked");
+        var other = await _db.AddShootAsync(client, Now.AddDays(6), Now.AddDays(6).AddHours(5), title: "Other");
 
         await using var db = _db.CreateContext();
-        var events = await CalendarFeedEndpoints.LoadAsync(db, Now);
+        var shoot = Assert.Single(await db.Shoots.Where(s => s.Id == booked.Id).ToCalendarEventsAsync());
+        var withoutLocation = Assert.Single(await db.Shoots.Where(s => s.Id == other.Id).ToCalendarEventsAsync());
 
-        Assert.Equal(["Shot", "Booked", "Asked"], events.Select(e => e.Title));
-        var booked = events.Single(e => e.Title == "Booked");
-        Assert.Equal("Schloss Laufen, Laufen-Uhwiesen", booked.Location);
-        Assert.Equal("Anna & Marco Rossi", booked.ClientName);
-        Assert.Null(events.Single(e => e.Title == "Shot").Location);
-    }
-
-    [Fact]
-    public async Task Token_is_off_until_created()
-    {
-        await using var db = _db.CreateContext();
-        Assert.Null(await db.BusinessSettings.Select(s => s.CalendarFeedToken).SingleAsync());
+        Assert.Equal("Booked", shoot.Title);
+        Assert.Equal("Schloss Laufen, Laufen-Uhwiesen", shoot.Location);
+        Assert.Equal("Anna & Marco Rossi", shoot.ClientName);
+        Assert.Null(withoutLocation.Location);
     }
 }

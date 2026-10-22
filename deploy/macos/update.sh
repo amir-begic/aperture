@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs a new version of Aperture on the Mac mini, or on a laptop (install-laptop.sh).
+# Installs a new version of Aperture (installed by install-laptop.sh). Usually run by auto-update.sh.
 #
 #   ~/Aperture/app/deploy/macos/update.sh ~/Downloads/aperture-2026.10.06-b0d6009-osx-arm64.tar.gz
 #
@@ -10,7 +10,7 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 require_mac
 [[ $# -eq 1 ]] || fail "Usage: update.sh <aperture-…-osx-arm64.tar.gz>"
-is_installed || fail "Aperture isn't installed yet. Run install.sh (or install-laptop.sh) first."
+is_installed || fail "Aperture isn't installed yet. Run install-laptop.sh first."
 
 say "Unpacking"
 release="$(unpack_release "$1")"
@@ -23,7 +23,7 @@ echo "Old: ${previous##*/}"
 port="$(web_port)"
 port="${port:-5090}"
 
-say "Stopping Aperture (sudo password may be needed)"
+say "Stopping Aperture"
 stop_web
 if ! snapshot="$(snapshot_database "${release##*/}")"; then
     start_web
@@ -34,7 +34,6 @@ fi
 say "Starting the new version"
 switch_to "$release"
 rotate_log
-allow_through_firewall "$release/Aperture.Web"
 start_web
 
 if wait_until_healthy "$port"; then
@@ -51,7 +50,6 @@ say "Going back to ${previous##*/}"
 stop_web
 [[ -n $snapshot ]] && restore_database "$snapshot"
 switch_to "$previous"
-allow_through_firewall "$previous/Aperture.Web"
 start_web
 if wait_until_healthy "$port"; then
     fail "Update failed; ${previous##*/} is running again with the database as it was before."

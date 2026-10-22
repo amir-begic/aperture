@@ -1,7 +1,8 @@
 // Aperture's service worker. Aperture runs on the server (Blazor Server), so it can't work offline; this only replaces the
-// browser's error page with a branded "no connection" page when a page can't be loaded (e.g. Tailscale is off),
-// and shows notifications (Settings → Notifications). Everything else goes straight to the network, uncached.
-const CACHE = "aperture-offline-v3";
+// browser's error page with a branded "no connection" page when a page can't be loaded (Aperture is restarting after an
+// update), and shows notifications (Settings → Notifications).
+// Everything else goes straight to the network, uncached.
+const CACHE = "aperture-offline-v5";
 const OFFLINE_PAGE = "offline.html";
 const OFFLINE_ASSETS = [OFFLINE_PAGE, "fonts/brand-font.woff2", "icon-192.png"];
 
@@ -34,7 +35,7 @@ self.addEventListener("push", event => {
     } catch {
         message = { body: event.data?.text() };
     }
-    // Every push has to show a notification (iPhones stop delivering otherwise), so there's always a title.
+    // Every push has to show a notification (Safari stops delivering otherwise), so there's always a title.
     event.waitUntil(self.registration.showNotification(message.title || "Aperture", {
         body: message.body || "",
         icon: "icon-192.png",

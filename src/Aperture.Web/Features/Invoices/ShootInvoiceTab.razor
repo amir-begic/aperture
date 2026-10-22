@@ -180,7 +180,7 @@ else
         await using var db = await DbFactory.CreateDbContextAsync();
         _invoices = await db.Invoices.AsNoTracking().Include(i => i.Lines)
             .Where(i => i.ShootId == ShootId).OrderByDescending(i => i.Id).ToListAsync();
-        _clientId = await db.Shoots.Where(g => g.Id == ShootId).Select(g => g.ClientId).SingleAsync();
+        _clientId = await db.Shoots.Where(s => s.Id == ShootId).Select(s => s.ClientId).SingleAsync();
 
         if (Active is { Status: InvoiceStatus.Draft } draft)
         {

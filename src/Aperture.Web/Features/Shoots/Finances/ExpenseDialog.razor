@@ -107,6 +107,10 @@
     [Parameter]
     public DateOnly DefaultDate { get; set; }
 
+    /// <summary>Pre-filled values for a new cost, e.g. a train trip (see TrainTrips).</summary>
+    [Parameter]
+    public ExpensePreset? Preset { get; set; }
+
     private static readonly List<Option> Categories = ExpenseCategories.All.Select(c => new Option(c.Text, c.Value)).ToList();
 
     private ExpenseForm? _form;
@@ -137,7 +141,14 @@
     {
         if (ExpenseId is null)
         {
-            _form = new ExpenseForm { Date = DefaultDate };
+            _form = new ExpenseForm
+            {
+                Date = DefaultDate,
+                Category = Preset?.Category ?? ExpenseCategory.GearRental,
+                Description = Preset?.Description ?? "",
+                Vendor = Preset?.Vendor,
+                AmountChf = Preset?.Amount?.Chf,
+            };
             return;
         }
 

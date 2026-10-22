@@ -1,5 +1,5 @@
 // Notifications on this device, for Settings → Notifications (Features/Notifications/NotificationSettings.razor).
-// Imported as a module. Turning them on happens here in the browser, inside the tap itself: iPhones only ask for
+// Imported as a module. Turning them on happens here in the browser, inside the click itself: Safari only asks for
 // permission during the user's gesture, and a round trip to the server (Blazor) would be too late.
 
 let component = null;
@@ -52,8 +52,6 @@ export async function state(key) {
     const result = {
         supported: supported(),
         secure: window.isSecureContext,
-        standalone: window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true,
-        apple: /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1),
         permission: "default",
         subscription: null,
         device: deviceName(),
@@ -84,7 +82,7 @@ document.addEventListener("click", async event => {
     event.preventDefault();
     button.disabled = true;
     try {
-        // Called first, before anything else is awaited, so it still counts as part of the tap.
+        // Called first, before anything else is awaited, so it still counts as part of the click.
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
             await component?.invokeMethodAsync("PermissionChanged", permission);

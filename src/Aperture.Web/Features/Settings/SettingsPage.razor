@@ -2,7 +2,6 @@
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NotificationService Notifications
 @inject Aperture.Web.Configuration.AperturePaths Paths
-@inject Aperture.Web.Configuration.Hosting Hosting
 
 <PageTitle>Settings · Aperture</PageTitle>
 
@@ -172,19 +171,21 @@ else
         </RadzenStack>
     </RadzenTemplateForm>
 
-    @* Both need a phone that can reach Aperture, which a laptop installation can't offer. *@
-    @if (!Hosting.LocalOnly)
-    {
-        <Aperture.Web.Features.CalendarFeed.CalendarFeedSettings />
+    <RadzenFieldset Text="Calendar" class="settings-form rz-mt-6">
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+            To put a shoot in your calendar, open it, click <em>Add to calendar</em> and open the downloaded file. It goes
+            into Calendar on this Mac, and with iCloud onto your iPhone too. If the date or time changes later, change it
+            in Calendar as well.
+        </RadzenText>
+    </RadzenFieldset>
 
-        <Aperture.Web.Features.Notifications.NotificationSettings HasEmail="_hasSavedEmail" />
-    }
+    <Aperture.Web.Features.Notifications.NotificationSettings HasEmail="_hasSavedEmail" />
 
-    <RadzenFieldset Text="Backups" class="settings-form rz-mt-6">
+    <RadzenFieldset Text="Backups" class="settings-form rz-mt-6" id="backups">
         @if (_backup is null)
         {
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                No backup has run on this machine yet. The installer sets up the nightly backup (see docs/deployment.md).
+                No backup has run on this computer yet. The installer sets it up, and the first one runs right away.
             </RadzenText>
         }
         else
@@ -202,6 +203,18 @@ else
                 <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-mt-2 rz-mb-0">@problem</RadzenAlert>
             }
         }
+        <RadzenStack Gap="0.5rem" class="rz-mt-4">
+            <div>
+                @* "download" keeps Blazor from treating it as page navigation. *@
+                <a href="backup.zip" download class="rz-button rz-button-md rz-variant-outlined rz-primary export-button">
+                    <RadzenIcon Icon="download" /> Download a backup
+                </a>
+            </div>
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                Everything in one ZIP: the database and all uploaded files, with a note on how to restore it. For a copy
+                somewhere else, or to move Aperture to a new Mac. Your login isn't in it.
+            </RadzenText>
+        </RadzenStack>
     </RadzenFieldset>
 
     <Aperture.Web.Features.Updates.UpdatesSettings />
@@ -230,8 +243,6 @@ else
 
             await using var db = await DbFactory.CreateDbContextAsync();
             db.BusinessSettings.Update(settings);
-            // The feed link has its own buttons; a form loaded before "New link" mustn't bring the old one back.
-            db.Entry(settings).Property(s => s.CalendarFeedToken).IsModified = false;
             await db.SaveChangesAsync();
             _hasSavedEmail = !string.IsNullOrWhiteSpace(settings.Email);
 

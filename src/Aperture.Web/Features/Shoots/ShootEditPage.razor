@@ -58,6 +58,8 @@ else
                 {
                     <RadzenLink Path="@_summary.GalleryUrl" Target="_blank" Icon="photo_library" Text="Gallery" />
                 }
+                @* Downloads the shoot as an .ics file for the calendar app ("download" keeps Blazor from treating it as a page). *@
+                <a href="@($"shoots/{Id}.ics")" download class="rz-link export-link"><RadzenIcon Icon="event" /> Add to calendar</a>
             </RadzenStack>
         }
 
@@ -73,7 +75,7 @@ else
                     <ShootInvoiceTab ShootId="Id!.Value" Changed="LoadSummaryAsync" />
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Moodboard & prep" Icon="palette">
-                    <ShootPrepTab ShootId="Id!.Value" />
+                    <ShootPrepTab ShootId="Id!.Value" ShootType="@(_summary?.ShootType ?? ShootType.Other)" />
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="Files" Icon="folder">
                     <ShootFilesTab ShootId="Id!.Value" />
@@ -93,6 +95,18 @@ else
     private RenderFragment DetailsCard => @<RadzenCard class="form-card">
     <RadzenTemplateForm @ref="_editForm" TItem="ShootForm" Data="Form" Submit="SaveAsync">
         <RadzenStack Gap="1rem">
+            @if (_packages.Count > 0)
+            {
+                <RadzenFormField Text="Package (optional)" class="w-full">
+                    <ChildContent>
+                        <RadzenDropDown TValue="int?" Name="PackageId" @bind-Value="Form.PackageId" @bind-Value:after="ApplyPackageAsync"
+                                        Data="_packageItems" TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
+                                        AllowClear="true" />
+                    </ChildContent>
+                    <Helper><RadzenText TextStyle="TextStyle.Caption">Fills in type, quote, end time, delivery date and notes</RadzenText></Helper>
+                </RadzenFormField>
+            }
+
             <RadzenRow>
                 <RadzenColumn Size="12" SizeMD="8">
                     <RadzenFormField Text="Title" class="w-full">
@@ -201,7 +215,7 @@ else
                             <RadzenDatePicker TValue="DateOnly?" Name="DeliveryDue" @bind-Value="Form.DeliveryDue" DateFormat="ddd dd.MM.yyyy"
                                               AllowClear="true" />
                         </ChildContent>
-                        <Helper><RadzenText TextStyle="TextStyle.Caption">@_deliveryDays days after the shoot unless you change it</RadzenText></Helper>
+                        <Helper><RadzenText TextStyle="TextStyle.Caption">@DeliveryDays days after the shoot unless you change it</RadzenText></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="8">
@@ -259,6 +273,8 @@ else
     private string _title = "";
     private List<LookupItem> _clients = [];
     private List<LookupItem> _locations = [];
+    private Dictionary<int, Package> _packages = [];
+    private List<LookupItem> _packageItems = [];
     private List<ShootRow> _overlaps = [];
     private int _deliveryDays;
     private DateOnly? _lastDate;
@@ -279,7 +295,7 @@ else
         if (IsNew)
         {
             _form = new ShootForm { ClientId = InitialClientId, LocationId = InitialLocationId, Date = InitialDate };
-            _form.SuggestDeliveryDue(previousDate: null, _deliveryDays);
+            _form.SuggestDeliveryDue(previousDate: null, DeliveryDays);
             _lastDate = _form.Date;
             if (InitialStart is { } start)
             {
@@ -290,7 +306,7 @@ else
         else
         {
             await using var db = await DbFactory.CreateDbContextAsync();
-            var shoot = await db.Shoots.AsNoTracking().SingleOrDefaultAsync(g => g.Id == Id);
+            var shoot = await db.Shoots.AsNoTracking().SingleOrDefaultAsync(s => s.Id == Id);
             _notFound = shoot is null;
             _form = shoot is null ? null : ShootForm.From(shoot);
             _title = shoot?.Title ?? "";
@@ -305,7 +321,7 @@ else
     private async Task LoadSummaryAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
-        _summary = (await db.Shoots.Where(g => g.Id == Id).ToRowsAsync(db)).SingleOrDefault();
+        _summary = (await db.Shoots.Where(s => s.Id == Id).ToRowsAsync(db)).SingleOrDefault();
         _hasFinancialRecords = await db.HasFinancialRecordsAsync(Id!.Value);
     }
 
@@ -317,15 +333,30 @@ else
             .Select(c => new LookupItem(c.Id, c.Company == null ? c.Name : c.Name + " (" + c.Company + ")"))
             .ToListAsync();
         _locations = await db.Locations
-            .OrderBy(v => v.Name)
-            .Select(v => new LookupItem(v.Id, v.City == null ? v.Name : v.Name + ", " + v.City))
+            .OrderBy(l => l.Name)
+            .Select(l => new LookupItem(l.Id, l.City == null ? l.Name : l.Name + ", " + l.City))
             .ToListAsync();
         _deliveryDays = await db.BusinessSettings.Select(s => s.DeliveryDays).SingleAsync();
+        _packages = await db.Packages.AsNoTracking().ToDictionaryAsync(p => p.Id);
+        _packageItems = _packages.Values.OrderBy(p => p.Name).Select(p => new LookupItem(p.Id, $"{p.Name} · {p.Price}")).ToList();
+    }
+
+    /// <summary>The chosen package's delivery time, or the usual one from Settings.</summary>
+    private int DeliveryDays =>
+        _form?.PackageId is { } id && _packages.GetValueOrDefault(id)?.DeliveryDays is { } days ? days : _deliveryDays;
+
+    private async Task ApplyPackageAsync()
+    {
+        if (_form!.PackageId is { } id && _packages.TryGetValue(id, out var package))
+        {
+            _form.ApplyPackage(package, _deliveryDays);
+            await CheckOverlapsAsync();
+        }
     }
 
     private async Task OnDateChangedAsync()
     {
-        _form!.SuggestDeliveryDue(_lastDate, _deliveryDays);
+        _form!.SuggestDeliveryDue(_lastDate, DeliveryDays);
         _lastDate = _form.Date;
         await CheckOverlapsAsync();
     }
@@ -340,7 +371,7 @@ else
 
         var (start, end) = range;
         await using var db = await DbFactory.CreateDbContextAsync();
-        _overlaps = await db.Shoots.Overlapping(start, end, Id).OrderBy(g => g.Start).ToRows().ToListAsync();
+        _overlaps = await db.Shoots.Overlapping(start, end, Id).OrderBy(s => s.Start).ToRows().ToListAsync();
     }
 
     private async Task NewClientAsync()
@@ -378,7 +409,7 @@ else
             }
             else
             {
-                shoot = await db.Shoots.SingleAsync(g => g.Id == Id);
+                shoot = await db.Shoots.SingleAsync(s => s.Id == Id);
             }
 
             form.ApplyTo(shoot);

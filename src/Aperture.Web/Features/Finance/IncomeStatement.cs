@@ -67,7 +67,7 @@ public sealed record IncomeStatement(
 
         var payments = await db.Payments.AsNoTracking()
             .Include(p => p.Proof)
-            .Include(p => p.Shoot).ThenInclude(g => g.Client)
+            .Include(p => p.Shoot).ThenInclude(s => s.Client)
             .Where(p => p.Date >= from && p.Date < until)
             .OrderBy(p => p.Date).ThenBy(p => p.Id)
             .ToListAsync();
@@ -101,9 +101,9 @@ public sealed record IncomeStatement(
             .ToList();
 
         var shootRows = await db.Shoots
-            .Where(g => g.Start >= from.ToDateTime(TimeOnly.MinValue) && g.Start < until.ToDateTime(TimeOnly.MinValue)
-                && g.Status != ShootStatus.Cancelled)
-            .OrderBy(g => g.Start)
+            .Where(s => s.Start >= from.ToDateTime(TimeOnly.MinValue) && s.Start < until.ToDateTime(TimeOnly.MinValue)
+                && s.Status != ShootStatus.Cancelled)
+            .OrderBy(s => s.Start)
             .ToRowsAsync(db);
         var shootIds = shootRows.Select(r => r.Id).ToList();
         var shootCosts = (await db.Expenses.Where(e => e.ShootId != null && shootIds.Contains(e.ShootId.Value))
@@ -124,7 +124,7 @@ public sealed record IncomeStatement(
         years.UnionWith(await db.Payments.Select(p => p.Date.Year).Distinct().ToListAsync());
         years.UnionWith(await db.Expenses.Select(e => e.Date.Year).Distinct().ToListAsync());
         years.UnionWith(await db.Assets.Select(a => a.PurchaseDate.Year).Distinct().ToListAsync());
-        years.UnionWith(await db.Shoots.Select(g => g.Start.Year).Distinct().ToListAsync());
+        years.UnionWith(await db.Shoots.Select(s => s.Start.Year).Distinct().ToListAsync());
         return years.OrderDescending().ToList();
     }
 }

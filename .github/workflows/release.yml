@@ -1,5 +1,5 @@
-# Every push to main: run the tests, build the Mac mini release and publish it as a GitHub release.
-# Aperture on the Mac finds it under Settings → Updates (and on the dashboard) and installs it from there.
+# Every push to main: run the tests, build the release and publish it as a GitHub release of this (private)
+# repository. Laptops don't see it yet: promote.yml hands a release you've tried on to the public feed they read.
 #
 # Kept small for the free plan: no workflow artifacts or caches (the package goes to Releases, which don't count
 # towards Actions storage), no run for changes that are only docs, a newer push cancels the older run, and only

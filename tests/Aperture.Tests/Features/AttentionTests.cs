@@ -117,7 +117,36 @@ public sealed class AttentionTests : IAsyncLifetime
         await AddAsync("Favour for a friend", new DateTime(2026, 9, 5, 20, 0, 0), ShootStatus.Shot, quote: null);
         await AddAsync("Old inquiry", new DateTime(2026, 9, 12, 20, 0, 0), ShootStatus.Inquiry);
 
-        Assert.Empty(await ItemsAsync());
+        // Only the reminder to close the inquiry: it was never booked, so there's nothing to invoice.
+        Assert.Equal(["Old inquiry is still an inquiry"], (await ItemsAsync()).Select(i => i.Text));
+    }
+
+    [Fact]
+    public async Task Inquiry_without_an_answer_after_a_week_needs_a_follow_up()
+    {
+        await AddAsync("Wedding Keller", new DateTime(2027, 6, 5, 13, 0, 0), ShootStatus.Inquiry,
+            configure: shoot => shoot.CreatedAt = Now.AddDays(-Attention.InquiryFollowUpDays));
+        await AddAsync("Fresh inquiry", new DateTime(2027, 6, 12, 13, 0, 0), ShootStatus.Inquiry,
+            configure: shoot => shoot.CreatedAt = Now.AddDays(-2));
+
+        var item = Assert.Single(await ItemsAsync());
+
+        Assert.Equal(AttentionLevel.Warning, item.Level);
+        Assert.Equal("Follow up on Wedding Keller", item.Text);
+        Assert.Equal("Inquiry since 29.09.2026, for Sat 05.06.2027 · Client of Wedding Keller", item.Detail);
+        Assert.NotNull(item.PushKey);
+    }
+
+    [Fact]
+    public async Task Past_inquiry_is_to_be_booked_or_cancelled_without_a_notification()
+    {
+        await AddAsync("Portrait Meier", new DateTime(2026, 10, 1, 10, 0, 0), ShootStatus.Inquiry,
+            configure: shoot => shoot.CreatedAt = new DateTime(2026, 9, 1));
+
+        var item = Assert.Single(await ItemsAsync());
+
+        Assert.Equal("Portrait Meier is still an inquiry", item.Text);
+        Assert.Null(item.PushKey);
     }
 
     [Fact]

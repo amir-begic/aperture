@@ -1,16 +1,35 @@
 using Aperture.Web.Auth;
 using Aperture.Web.Configuration;
-using Microsoft.Extensions.Options;
 
 namespace Aperture.Tests.Auth;
 
-public class CredentialValidatorTests
+public class CredentialValidatorTests : IDisposable
 {
-    private readonly CredentialValidator _validator = new(new LoginStore(Options.Create(new AuthOptions
+    private readonly string _dataDirectory = Directory.CreateTempSubdirectory("aperture-credentials-").FullName;
+    private readonly CredentialValidator _validator;
+
+    public CredentialValidatorTests()
     {
-        Username = "studio",
-        PasswordHash = CredentialValidator.HashPassword("correct horse"),
-    }), new AperturePaths(Path.Combine(Path.GetTempPath(), "aperture-no-data")), new Hosting(LocalOnly: false)));
+        var logins = new LoginStore(new AperturePaths(_dataDirectory));
+        logins.TrySetUp("studio", "correct horse");
+        _validator = new CredentialValidator(logins);
+    }
+
+    public void Dispose() => Directory.Delete(_dataDirectory, recursive: true);
+
+    [Fact]
+    public void Nobody_can_sign_in_before_the_login_is_created()
+    {
+        var empty = Directory.CreateTempSubdirectory("aperture-credentials-").FullName;
+        try
+        {
+            Assert.False(new CredentialValidator(new LoginStore(new AperturePaths(empty))).IsValid("studio", "correct horse"));
+        }
+        finally
+        {
+            Directory.Delete(empty, recursive: true);
+        }
+    }
 
     [Theory]
     [InlineData("studio")]

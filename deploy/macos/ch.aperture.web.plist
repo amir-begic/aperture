@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  Aperture as a launchd daemon: starts at boot (no login needed), restarts if it stops, runs as your user.
-  install.sh fills in the __PLACEHOLDERS__ and installs it to /Library/LaunchDaemons (root-only readable:
-  it contains your password hash and the GitHub token for updates).
+  Aperture as a launchd agent: runs while you're logged in, restarts if it stops, and only answers on this Mac
+  (localhost). The login is created in the browser on first start. install-laptop.sh fills in the __PLACEHOLDERS__ and
+  installs it to ~/Library/LaunchAgents.
 -->
 <plist version="1.0">
 <dict>
     <key>Label</key>
     <string>ch.aperture.web</string>
-    <key>UserName</key>
-    <string>__USER__</string>
     <key>ProgramArguments</key>
     <array>
         <string>__APERTURE_HOME__/app/Aperture.Web</string>
@@ -22,17 +20,11 @@
         <key>ASPNETCORE_ENVIRONMENT</key>
         <string>Production</string>
         <key>ASPNETCORE_URLS</key>
-        <string>http://0.0.0.0:__PORT__</string>
+        <string>http://localhost:__PORT__</string>
         <key>Aperture__DataDirectory</key>
         <string>__APERTURE_HOME__/data</string>
-        <key>Auth__Username</key>
-        <string>__LOGIN__</string>
-        <key>Auth__PasswordHash</key>
-        <string>__HASH__</string>
-        <key>Updates__Repository</key>
-        <string>__REPO__</string>
-        <key>Updates__GitHubToken</key>
-        <string>__TOKEN__</string>
+        <key>Updates__FeedUrl</key>
+        <string>__FEED_URL__</string>
         <key>DOTNET_gcServer</key>
         <string>0</string>
     </dict>

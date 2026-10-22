@@ -30,6 +30,10 @@ public class Shoot
     public int? LocationId { get; set; }
     public Location? Location { get; set; }
 
+    /// <summary>The package the shoot was quoted from, if any; its details were copied in and can be changed per shoot.</summary>
+    public int? PackageId { get; set; }
+    public Package? Package { get; set; }
+
     [MaxLength(4000)]
     public string? Notes { get; set; }
 

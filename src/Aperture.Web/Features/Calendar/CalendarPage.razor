@@ -62,10 +62,10 @@
         await using var db = await DbFactory.CreateDbContextAsync();
         var shoots = await db.Shoots
             .InRange(args.Start, args.End, _showCancelled)
-            .OrderBy(g => g.Start)
+            .OrderBy(s => s.Start)
             .ToRowsAsync(db);
 
-        var ids = shoots.Select(g => g.Id).ToList();
+        var ids = shoots.Select(s => s.Id).ToList();
         _prep = await db.ChecklistItems
             .Where(i => ids.Contains(i.ShootId))
             .GroupBy(i => i.ShootId)
