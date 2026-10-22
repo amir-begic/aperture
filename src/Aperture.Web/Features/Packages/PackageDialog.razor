@@ -1,0 +1,155 @@
+@* Adds or edits a package. Closes with true when something changed. *@
+@using System.ComponentModel.DataAnnotations
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject DialogService Dialogs
+
+@if (_form is not null)
+{
+    <RadzenTemplateForm TItem="PackageForm" Data="_form" Submit="SaveAsync">
+        <RadzenStack Gap="1rem">
+            <RadzenRow>
+                <RadzenColumn Size="12" SizeMD="8">
+                    <RadzenFormField Text="Name" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Name" @bind-Value="_form.Name" Placeholder="Wedding full day" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Name" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Shoot type" class="w-full">
+                        <RadzenDropDown TValue="ShootType" Name="ShootType" @bind-Value="_form.ShootType" Data="Enum.GetValues<ShootType>()" />
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenFormField Text="Price (CHF)" class="w-full">
+                        <ChildContent><RadzenNumeric TValue="decimal?" Name="PriceChf" @bind-Value="_form.PriceChf" Format="#,##0.00" ShowUpDown="false" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="PriceChf" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="4">
+                    <RadzenFormField Text="Hours on site" class="w-full">
+                        <ChildContent><RadzenNumeric TValue="decimal" Name="Hours" @bind-Value="_form.Hours" Min="0.5m" Max="24" Step="0.5" Format="0.#" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Hours" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="4">
+                    <RadzenFormField Text="Delivery (days)" class="w-full">
+                        <ChildContent><RadzenNumeric TValue="int?" Name="DeliveryDays" @bind-Value="_form.DeliveryDays" Min="0" Max="365" Placeholder="usual" /></ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="DeliveryDays" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="What's included (optional)" class="w-full">
+                        <ChildContent>
+                            <RadzenTextArea Name="Included" @bind-Value="_form.Included" Rows="3"
+                                            Placeholder="10 hours, second shooter, 400 edited images, online gallery" />
+                        </ChildContent>
+                        <Helper><RadzenDataAnnotationValidator Component="Included" /></Helper>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                Leave the delivery empty to use your usual delivery time from Settings.
+            </RadzenText>
+
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_busy" BusyText="Saving…" />
+                <RadzenButton Text="Cancel" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(false))" />
+                @if (PackageId is not null)
+                {
+                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                                  Click="DeleteAsync" Disabled="_busy" class="rz-ms-auto"
+                                  title="Shoots quoted from it keep their details." />
+                }
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenTemplateForm>
+}
+
+@code {
+    /// <summary>Null to add a new package.</summary>
+    [Parameter]
+    public int? PackageId { get; set; }
+
+    private PackageForm? _form;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PackageId is null)
+        {
+            _form = new PackageForm();
+            return;
+        }
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        var package = await db.Packages.AsNoTracking().SingleAsync(p => p.Id == PackageId);
+        _form = new PackageForm
+        {
+            Name = package.Name,
+            ShootType = package.ShootType,
+            PriceChf = package.Price.Chf,
+            Hours = package.Hours,
+            DeliveryDays = package.DeliveryDays,
+            Included = package.Included,
+        };
+    }
+
+    private async Task SaveAsync(PackageForm form)
+    {
+        _busy = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            var package = PackageId is null
+                ? db.Packages.Add(new Package()).Entity
+                : await db.Packages.SingleAsync(p => p.Id == PackageId);
+
+            package.Name = form.Name.Trim();
+            package.ShootType = form.ShootType;
+            package.Price = Money.FromChf(form.PriceChf!.Value);
+            package.Hours = form.Hours;
+            package.DeliveryDays = form.DeliveryDays;
+            package.Included = string.IsNullOrWhiteSpace(form.Included) ? null : form.Included.Trim();
+            await db.SaveChangesAsync();
+
+            Dialogs.Close(true);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        _busy = true;
+        await using var db = await DbFactory.CreateDbContextAsync();
+        // Shoots quoted from it keep what was copied in; their link to it is cleared (see ApertureDbContext).
+        var package = await db.Packages.Include(p => p.Shoots).SingleAsync(p => p.Id == PackageId);
+        db.Packages.Remove(package);
+        await db.SaveChangesAsync();
+        Dialogs.Close(true);
+    }
+
+    private sealed class PackageForm
+    {
+        [Required, MaxLength(100)]
+        public string Name { get; set; } = "";
+
+        public ShootType ShootType { get; set; } = ShootType.Wedding;
+
+        [Required(ErrorMessage = "Enter a price.")]
+        [Range(typeof(decimal), "0", "1000000", ParseLimitsInInvariantCulture = true)]
+        public decimal? PriceChf { get; set; }
+
+        [Range(typeof(decimal), "0.5", "24", ParseLimitsInInvariantCulture = true, ErrorMessage = "Between half an hour and 24 hours.")]
+        public decimal Hours { get; set; } = 4;
+
+        [Range(0, 365)]
+        public int? DeliveryDays { get; set; }
+
+        [MaxLength(500)]
+        public string? Included { get; set; }
+    }
+}

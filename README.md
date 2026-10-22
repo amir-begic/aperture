@@ -105,11 +105,11 @@ A few conventions:
 - **Times** are local Swiss time. Code that needs "now" takes a `TimeProvider`, so tests can fix the date.
 - **Enums** are stored as text, so the database stays readable.
 - **Issued invoices** never change; they keep a frozen copy of both addresses.
-- **Look:** black frame, white working surface, gray panels, 1px rules, square
-  corners, one weight, the ring as logo, light only. Labels, navigation, buttons and tags are uppercase; what people
-  typed keeps its case. No accent color: red only for danger and overdue, amber for warnings. The tokens (`--ss-*`)
-  and Radzen overrides live in `wwwroot/brand.css` on top of Radzen's *standard* theme; `app.css` holds the app's
-  own components. The typeface is the brand typeface, self-hosted in `wwwroot/fonts`.
+- **Look:** black frame, white working surface, gray panels, 1px rules, square corners, one weight, the ring as logo,
+  light only. Labels, navigation, buttons and tags are uppercase; what people typed keeps its case. No accent color:
+  red only for danger and overdue, amber for warnings. The tokens (`--ap-*`) and Radzen overrides live in
+  `wwwroot/brand.css` on top of Radzen's *standard* theme; `app.css` holds the app's own components. The typeface is
+  Space Grotesk Regular, self-hosted in `wwwroot/fonts`.
 
 ## Third-party components
 
@@ -120,4 +120,4 @@ A few conventions:
 | Codecrete.SwissQRBill.Generator | QR-bill | MIT |
 | ClosedXML | Excel export | MIT |
 | Liberation Sans | font embedded in PDFs | SIL Open Font License |
-| Brand typeface | app font, self-hosted in `wwwroot/fonts` | Commercial license (paid); keep the repository private |
+| Space Grotesk Regular | app font, self-hosted in `wwwroot/fonts` | SIL Open Font License |

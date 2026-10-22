@@ -5,84 +5,97 @@
    Contrast (WCAG): black on white 21:1, black on gray 15:1, white on black 21:1, gray on black 14:1,
    dark gray on white 13.6:1. Red stays only for danger/overdue, amber for warnings. */
 
-/* The brand typeface: a licensed copy, one weight only. */
+/* Space Grotesk (SIL Open Font License, fonts/LICENSE-SpaceGrotesk.txt). One weight only, in two files: the
+   browser loads Latin Extended (ć, ł, ř, …) only for text that needs it. */
 @font-face {
-    font-family: "Brand";
-    src: url("fonts/brand-font.woff2") format("woff2");
+    font-family: "Space Grotesk";
+    src: url("fonts/SpaceGrotesk-Regular-latin.woff2") format("woff2");
     font-weight: 400;
     font-style: normal;
     font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+        U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: "Space Grotesk";
+    src: url("fonts/SpaceGrotesk-Regular-latin-ext.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF,
+        U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
 :root {
     color-scheme: light;
 
-    --ss-black: #000000;
-    --ss-white: #FFFFFF;
-    --ss-gray: #DBDBDB;
-    --ss-dark-gray: #2D2D2D;
-    /* Not on the site: a lighter gray for hover and selection on white surfaces. */
-    --ss-gray-soft: #F0F0F0;
-    --ss-bad: #C62828;
-    --ss-warn: #B45309;
+    --ap-black: #000000;
+    --ap-white: #FFFFFF;
+    --ap-gray: #DBDBDB;
+    --ap-dark-gray: #2D2D2D;
+    /* A lighter gray for hover and selection on white surfaces. */
+    --ap-gray-soft: #F0F0F0;
+    --ap-bad: #C62828;
+    --ap-warn: #B45309;
 
-    --ss-rule: 1px solid var(--ss-black);
-    --ss-rule-dark: 1px solid var(--ss-dark-gray);
-    --ss-rule-light: 1px solid var(--ss-gray);
-    /* The site's own fallback after it, while the font loads. */
-    --ss-font: "Brand", Arial, Helvetica, sans-serif;
-    /* The site's type is 13px (0.8125rem) for everything that isn't a big title. */
-    --ss-size: 0.8125rem;
-    --ss-size-data: 0.875rem;
-    --ss-size-title: 3rem;
-    --ss-speed: 200ms;
+    --ap-rule: 1px solid var(--ap-black);
+    --ap-rule-dark: 1px solid var(--ap-dark-gray);
+    --ap-rule-light: 1px solid var(--ap-gray);
+    /* Arial while the font loads. */
+    --ap-font: "Space Grotesk", Arial, Helvetica, sans-serif;
+    /* 13px (0.8125rem) for everything that isn't a big title. */
+    --ap-size: 0.8125rem;
+    --ap-size-data: 0.875rem;
+    --ap-size-title: 3rem;
+    --ap-speed: 200ms;
 
     /* Radzen: colors */
-    --rz-primary: var(--ss-black);
-    --rz-primary-light: var(--ss-dark-gray);
-    --rz-primary-lighter: var(--ss-gray-soft);
-    --rz-primary-dark: var(--ss-black);
-    --rz-primary-darker: var(--ss-black);
-    --rz-on-primary: var(--ss-white);
-    --rz-on-primary-lighter: var(--ss-black);
-    --rz-secondary: var(--ss-dark-gray);
-    --rz-secondary-dark: var(--ss-black);
-    --rz-danger: var(--ss-bad);
+    --rz-primary: var(--ap-black);
+    --rz-primary-light: var(--ap-dark-gray);
+    --rz-primary-lighter: var(--ap-gray-soft);
+    --rz-primary-dark: var(--ap-black);
+    --rz-primary-darker: var(--ap-black);
+    --rz-on-primary: var(--ap-white);
+    --rz-on-primary-lighter: var(--ap-black);
+    --rz-secondary: var(--ap-dark-gray);
+    --rz-secondary-dark: var(--ap-black);
+    --rz-danger: var(--ap-bad);
     --rz-danger-dark: #A31F1F;
-    /* Alerts and notifications: gray panels like the site's, the level in the icon and a colored edge
+    /* Alerts and notifications: gray panels, the level in the icon and a colored edge
        (see Alerts below), never a pastel fill. */
-    --rz-danger-lighter: var(--ss-gray-soft);
-    --rz-on-danger-lighter: var(--ss-black);
-    --rz-info: var(--ss-black);
-    --rz-info-lighter: var(--ss-gray-soft);
-    --rz-on-info-lighter: var(--ss-black);
-    --rz-warning: var(--ss-warn);
-    --rz-warning-lighter: var(--ss-gray-soft);
-    --rz-on-warning-lighter: var(--ss-black);
-    --rz-success: var(--ss-black);
-    --rz-success-lighter: var(--ss-gray-soft);
-    --rz-on-success-lighter: var(--ss-black);
-    --rz-white: var(--ss-white);
-    --rz-base-background-color: var(--ss-white);
-    --rz-body-background-color: var(--ss-white);
-    --rz-outline-color: var(--ss-black);
+    --rz-danger-lighter: var(--ap-gray-soft);
+    --rz-on-danger-lighter: var(--ap-black);
+    --rz-info: var(--ap-black);
+    --rz-info-lighter: var(--ap-gray-soft);
+    --rz-on-info-lighter: var(--ap-black);
+    --rz-warning: var(--ap-warn);
+    --rz-warning-lighter: var(--ap-gray-soft);
+    --rz-on-warning-lighter: var(--ap-black);
+    --rz-success: var(--ap-black);
+    --rz-success-lighter: var(--ap-gray-soft);
+    --rz-on-success-lighter: var(--ap-black);
+    --rz-white: var(--ap-white);
+    --rz-base-background-color: var(--ap-white);
+    --rz-body-background-color: var(--ap-white);
+    --rz-outline-color: var(--ap-black);
     --rz-outline-width: 2px;
     --rz-outline-offset: 2px;
 
-    /* Radzen: type. One weight everywhere, as on the site. */
-    --rz-text-font-family: var(--ss-font);
-    --rz-body-font-size: var(--ss-size-data);
-    --rz-text-h4-color: var(--ss-black);
-    --rz-text-h4-font-size: clamp(1.75rem, 3.4vw, var(--ss-size-title));
+    /* Radzen: type. One weight everywhere. */
+    --rz-text-font-family: var(--ap-font);
+    --rz-body-font-size: var(--ap-size-data);
+    --rz-text-h4-color: var(--ap-black);
+    --rz-text-h4-font-size: clamp(1.75rem, 3.4vw, var(--ap-size-title));
     --rz-text-h4-font-weight: 400;
-    --rz-text-h5-font-size: var(--ss-size);
+    --rz-text-h5-font-size: var(--ap-size);
     --rz-text-h5-font-weight: 400;
-    --rz-text-h6-font-size: var(--ss-size);
+    --rz-text-h6-font-size: var(--ap-size);
     --rz-text-h6-font-weight: 400;
-    --rz-text-overline-font-size: var(--ss-size);
+    --rz-text-overline-font-size: var(--ap-size);
     --rz-text-overline-font-weight: 400;
     --rz-text-overline-letter-spacing: 0;
-    /* The font's own spacing, as on the site: Radzen tracks captions out and body text in. */
+    /* The font's own spacing: Radzen tracks captions out and body text in. */
     --rz-text-caption-letter-spacing: 0;
     --rz-text-body1-letter-spacing: 0;
     --rz-text-body2-letter-spacing: 0;
@@ -90,23 +103,23 @@
     /* Radzen: shapes */
     --rz-border-radius: 0;
     --rz-card-border-radius: 0;
-    --rz-card-border: var(--ss-rule);
+    --rz-card-border: var(--ap-rule);
     --rz-card-shadow: none;
     --rz-card-padding: 1.25rem;
-    --rz-input-border: var(--ss-rule);
-    --rz-input-hover-border: var(--ss-rule);
-    --rz-input-focus-border: var(--ss-rule);
-    --rz-input-border-block-end: var(--ss-rule);
-    --rz-input-hover-border-block-end: var(--ss-rule);
-    --rz-input-focus-border-block-end: var(--ss-rule);
-    --rz-input-focus-shadow: 0 0 0 1px var(--ss-black);
+    --rz-input-border: var(--ap-rule);
+    --rz-input-hover-border: var(--ap-rule);
+    --rz-input-focus-border: var(--ap-rule);
+    --rz-input-border-block-end: var(--ap-rule);
+    --rz-input-hover-border-block-end: var(--ap-rule);
+    --rz-input-focus-border-block-end: var(--ap-rule);
+    --rz-input-focus-shadow: 0 0 0 1px var(--ap-black);
     --rz-input-border-radius: 0;
-    --rz-dropdown-panel-border: var(--ss-rule);
-    --rz-dropdown-item-hover-background-color: var(--ss-black);
-    --rz-dropdown-item-hover-color: var(--ss-white);
-    --rz-dropdown-item-selected-background-color: var(--ss-gray);
-    --rz-dropdown-item-selected-color: var(--ss-black);
-    --rz-dropdown-item-selected-hover-background-color: var(--ss-black);
+    --rz-dropdown-panel-border: var(--ap-rule);
+    --rz-dropdown-item-hover-background-color: var(--ap-black);
+    --rz-dropdown-item-hover-color: var(--ap-white);
+    --rz-dropdown-item-selected-background-color: var(--ap-gray);
+    --rz-dropdown-item-selected-color: var(--ap-black);
+    --rz-dropdown-item-selected-hover-background-color: var(--ap-black);
     --rz-dialog-border-radius: 0;
     --rz-dialog-shadow: none;
     --rz-dialog-mask-background-color: rgba(0, 0, 0, 0.7);
@@ -114,17 +127,17 @@
     --rz-badge-font-weight: 400;
     --rz-badge-letter-spacing: 0;
 
-    --rz-text-color: var(--ss-black);
-    --rz-text-title-color: var(--ss-black);
-    --rz-text-secondary-color: var(--ss-dark-gray);
-    --rz-text-tertiary-color: var(--ss-dark-gray);
-    --rz-link-color: var(--ss-black);
-    --rz-link-hover-color: var(--ss-dark-gray);
+    --rz-text-color: var(--ap-black);
+    --rz-text-title-color: var(--ap-black);
+    --rz-text-secondary-color: var(--ap-dark-gray);
+    --rz-text-tertiary-color: var(--ap-dark-gray);
+    --rz-link-color: var(--ap-black);
+    --rz-link-hover-color: var(--ap-dark-gray);
 }
 
 ::selection {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 a {
@@ -132,17 +145,16 @@ a {
 }
 
 body {
-    font-family: var(--ss-font);
+    font-family: var(--ap-font);
     font-weight: 400;
-    accent-color: var(--ss-black);
-    background: var(--ss-black);
-    color: var(--ss-black);
+    accent-color: var(--ap-black);
+    background: var(--ap-black);
+    color: var(--ap-black);
 }
 
-/* No tabular figures (font-variant-numeric: tabular-nums): the font's widen the space, full stop and colon to a
-   digit's width too, so "10.10.2026 · 10:00" falls apart. The site uses proportional figures as well. */
+/* No tabular figures (font-variant-numeric: tabular-nums): proportional ones keep "10.10.2026 · 10:00" tight. */
 
-/* Type: chrome (titles, labels, navigation, buttons, tags) is uppercase like the site. What people typed —
+/* Type: chrome (titles, labels, navigation, buttons, tags) is uppercase. What people typed —
    names, emails, addresses, notes — keeps its own case, so it reads back exactly as entered. */
 
 .rz-text-h4 {
@@ -156,7 +168,7 @@ body {
     font-weight: 400;
 }
 
-/* Frame: header and sidebar are the black bars of the site, split by dark-gray rules. */
+/* Frame: header and sidebar are black bars, split by dark-gray rules. */
 
 /* Installed on the iPhone (Add to Home Screen), the page runs up behind the status bar and around the notch:
    the safe-area insets keep content clear of them. They're 0 everywhere else. */
@@ -167,10 +179,10 @@ body {
     min-height: 3rem;
     padding-top: env(safe-area-inset-top);
     padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
-    background: var(--ss-black);
-    color: var(--ss-white);
-    border-bottom: var(--ss-rule-dark);
-    font-size: var(--ss-size);
+    background: var(--ap-black);
+    color: var(--ap-white);
+    border-bottom: var(--ap-rule-dark);
+    font-size: var(--ap-size);
     text-transform: uppercase;
 }
 
@@ -179,24 +191,24 @@ body {
 }
 
 .rz-sidebar {
-    background: var(--ss-black);
-    color: var(--ss-white);
-    border-inline-end: var(--ss-rule-dark);
+    background: var(--ap-black);
+    color: var(--ap-white);
+    border-inline-end: var(--ap-rule-dark);
 }
 
 .rz-sidebar-toggle, .rz-sidebar-toggle:hover {
     background: transparent;
-    color: var(--ss-white);
+    color: var(--ap-white);
     border: none;
 }
 
 .rz-body {
-    background: var(--ss-white);
+    background: var(--ap-white);
     padding-bottom: env(safe-area-inset-bottom);
     padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }
 
-/* Navigation: numbered rows like the site's project list (01, 02, …), each over a dark-gray rule. Hover and
+/* Navigation: numbered rows (01, 02, …), each over a dark-gray rule. Hover and
    the current page invert to white. The numbers stand in for the icons while the sidebar is open; collapsed,
    the icons come back. */
 
@@ -213,17 +225,17 @@ body {
 }
 
 .rz-sidebar .rz-navigation-item-wrapper {
-    border-bottom: var(--ss-rule-dark);
+    border-bottom: var(--ap-rule-dark);
     border-radius: 0;
     background: transparent;
-    color: var(--ss-white);
-    transition: background-color var(--ss-speed) ease, color var(--ss-speed) ease;
+    color: var(--ap-white);
+    transition: background-color var(--ap-speed) ease, color var(--ap-speed) ease;
 }
 
 .rz-sidebar .rz-navigation-item-link {
     padding: 0.5rem 1.25rem 0.375rem;
     color: inherit;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     font-weight: 400;
     text-transform: uppercase;
 }
@@ -259,8 +271,8 @@ body {
 .rz-sidebar .rz-navigation-item-wrapper:hover,
 .rz-sidebar .rz-navigation-item-wrapper-active,
 .rz-sidebar .rz-navigation-item-wrapper-active:hover {
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
 }
 
 .rz-sidebar .rz-navigation-item-wrapper-active::before,
@@ -275,8 +287,8 @@ body {
 .rz-card.rz-variant-flat,
 .rz-card.rz-variant-filled,
 .rz-card.rz-variant-text {
-    background: var(--ss-white);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    border: var(--ap-rule);
     border-radius: 0;
     box-shadow: none;
 }
@@ -284,80 +296,80 @@ body {
 /* Fieldsets: the legend is a black bar label on the rule. */
 
 .rz-fieldset {
-    background: var(--ss-white);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    border: var(--ap-rule);
     border-radius: 0;
     padding: 1.25rem;
 }
 
 .rz-fieldset-legend {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
     border-radius: 0;
     padding: 0.3125rem 0.75rem 0.1875rem;
     margin-inline-start: 0.5rem;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     font-weight: 400;
     text-transform: uppercase;
 }
 
 .rz-fieldset-legend .rz-fieldset-legend-text {
-    color: var(--ss-white);
+    color: var(--ap-white);
 }
 
-/* Buttons: square, 1px rule, uppercase. Primary is black and inverts to white on hover, like the site's
-   "close" bar; outlined is the reverse. */
+/* Buttons: square, 1px rule, uppercase. Primary is black and inverts to white on hover; outlined is the
+   reverse. */
 
 .rz-button {
     border-radius: 0;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0;
     box-shadow: none;
-    transition: background-color var(--ss-speed) ease, color var(--ss-speed) ease;
+    transition: background-color var(--ap-speed) ease, color var(--ap-speed) ease;
 }
 
 .rz-button.rz-variant-filled.rz-primary,
 .rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
-    background: var(--ss-black);
-    color: var(--ss-white);
-    border: var(--ss-rule);
+    background: var(--ap-black);
+    color: var(--ap-white);
+    border: var(--ap-rule);
 }
 
 .rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat):not(:disabled):hover {
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
 }
 
 .rz-button.rz-variant-outlined,
 .rz-button.rz-variant-outlined:is(.rz-primary, .rz-secondary, .rz-base, .rz-info, .rz-success, .rz-light, .rz-dark):is(.rz-shade-default, .rz-shade-lighter, .rz-shade-light, .rz-shade-dark, .rz-shade-darker) {
-    background: var(--ss-white);
-    color: var(--ss-black);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    color: var(--ap-black);
+    border: var(--ap-rule);
     box-shadow: none;
 }
 
 .rz-button.rz-variant-outlined:not(:disabled):hover {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 .rz-button.rz-variant-flat {
-    background: var(--ss-gray);
-    color: var(--ss-black);
-    border: var(--ss-rule);
+    background: var(--ap-gray);
+    color: var(--ap-black);
+    border: var(--ap-rule);
 }
 
 .rz-button.rz-variant-flat:not(:disabled):hover {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 .rz-button.rz-danger:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
-    background: var(--ss-bad);
-    color: var(--ss-white);
-    border: 1px solid var(--ss-bad);
+    background: var(--ap-bad);
+    color: var(--ap-white);
+    border: 1px solid var(--ap-bad);
 }
 
 .rz-button.rz-variant-text {
@@ -366,7 +378,7 @@ body {
 }
 
 .rz-button.rz-variant-text.rz-primary {
-    color: var(--ss-black);
+    color: var(--ap-black);
     text-decoration: underline;
     text-underline-offset: 0.2em;
 }
@@ -376,17 +388,17 @@ body {
 }
 
 .rz-header .rz-button.rz-variant-text {
-    color: var(--ss-white);
+    color: var(--ap-white);
 }
 
 /* Inputs */
 
 .rz-form-field .rz-form-field-label {
-    color: var(--ss-black);
+    color: var(--ap-black);
 }
 
 .rz-textbox, .rz-textarea, .rz-dropdown, .rz-numeric, .rz-datepicker, .rz-multiselect {
-    background-color: var(--ss-white);
+    background-color: var(--ap-white);
     border-radius: 0;
 }
 
@@ -401,33 +413,33 @@ body {
     gap: 0;
     padding-bottom: 0;
     border: none;
-    border-bottom: var(--ss-rule);
+    border-bottom: var(--ap-rule);
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li {
     border: none;
     border-radius: 0;
     background: transparent;
-    color: var(--ss-black);
+    color: var(--ap-black);
     margin: 0;
-    transition: background-color var(--ss-speed) ease, color var(--ss-speed) ease;
+    transition: background-color var(--ap-speed) ease, color var(--ap-speed) ease;
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li a,
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li button {
     padding: 0.5rem 1rem 0.375rem;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     font-weight: 400;
     text-transform: uppercase;
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li:hover:not(.rz-tabview-selected) {
-    background: var(--ss-gray);
+    background: var(--ap-gray);
 }
 
 .rz-tabview.rz-tabview-top > .rz-tabview-nav li.rz-tabview-selected {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
     margin: 0;
 }
 
@@ -438,8 +450,8 @@ body {
 
 .rz-tabview-panels,
 .rz-tabview.rz-tabview-top > .rz-tabview-panels {
-    background: var(--ss-white);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    border: var(--ap-rule);
     border-top: none;
     border-radius: 0;
     padding: 1.25rem;
@@ -453,32 +465,32 @@ body {
 }
 
 .rz-dialog .rz-card {
-    border: var(--ss-rule);
-    background: var(--ss-gray-soft);
+    border: var(--ap-rule);
+    background: var(--ap-gray-soft);
 }
 
 .rz-tabview-panel {
     padding: 0;
 }
 
-/* Data grids: the header row is a black bar like the site's list headers; light rules between rows,
+/* Data grids: the header row is a black bar; light rules between rows,
    gray on hover. */
 
 .rz-data-grid {
-    background: var(--ss-white);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    border: var(--ap-rule);
     border-radius: 0;
     overflow: hidden;
-    --rz-grid-header-background-color: var(--ss-black);
-    --rz-grid-header-color: var(--ss-white);
-    --rz-grid-header-sorted-background-color: var(--ss-dark-gray);
-    --rz-grid-stripe-background-color: var(--ss-white);
-    --rz-grid-hover-background-color: var(--ss-gray);
-    --rz-grid-hover-color: var(--ss-black);
-    --rz-grid-cell-border: var(--ss-rule-light);
+    --rz-grid-header-background-color: var(--ap-black);
+    --rz-grid-header-color: var(--ap-white);
+    --rz-grid-header-sorted-background-color: var(--ap-dark-gray);
+    --rz-grid-stripe-background-color: var(--ap-white);
+    --rz-grid-hover-background-color: var(--ap-gray);
+    --rz-grid-hover-color: var(--ap-black);
+    --rz-grid-cell-border: var(--ap-rule-light);
     --rz-grid-header-cell-border: none;
     --rz-grid-header-cell-border-bottom: none;
-    --rz-grid-header-font-size: var(--ss-size);
+    --rz-grid-header-font-size: var(--ap-size);
     --rz-grid-header-font-weight: 400;
     --rz-grid-header-text-transform: uppercase;
 }
@@ -486,7 +498,7 @@ body {
 .rz-data-grid .rz-grid-table thead th,
 .rz-data-grid .rz-grid-table thead th .rz-column-title,
 .rz-data-grid .rz-grid-table thead th .rzi {
-    color: var(--ss-white);
+    color: var(--ap-white);
 }
 
 .rz-data-grid .rz-column-title-content {
@@ -508,108 +520,108 @@ body {
 }
 
 .rz-data-grid .rz-pager {
-    background: var(--ss-white);
-    border-top: var(--ss-rule);
+    background: var(--ap-white);
+    border-top: var(--ap-rule);
 }
 
 /* Tags: small square labels with a 1px rule. Shoot and payment states set their own fill (app.css). */
 
 .rz-badge {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
     border-radius: 0;
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
     padding: 0.1875rem 0.375rem 0.0625rem;
     font-size: 0.6875rem;
     text-transform: uppercase;
 }
 
 .rz-badge.rz-badge-base {
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
 }
 
 .rz-badge.rz-badge-info {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 .rz-badge.rz-badge-warning {
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
     border-style: dashed;
 }
 
 .rz-badge.rz-badge-success {
-    background: var(--ss-gray);
-    color: var(--ss-black);
+    background: var(--ap-gray);
+    color: var(--ap-black);
 }
 
 .rz-badge.rz-badge-danger {
-    background: var(--ss-bad);
-    color: var(--ss-white);
-    border-color: var(--ss-bad);
+    background: var(--ap-bad);
+    color: var(--ap-white);
+    border-color: var(--ap-bad);
 }
 
 .rz-badge.rz-badge-secondary {
-    background: var(--ss-gray);
-    color: var(--ss-black);
+    background: var(--ap-gray);
+    color: var(--ap-black);
 }
 
 .rz-badge.badge-cancelled {
-    background: var(--ss-white);
-    color: var(--ss-dark-gray);
-    border-color: var(--ss-gray);
+    background: var(--ap-white);
+    color: var(--ap-dark-gray);
+    border-color: var(--ap-gray);
     text-decoration: line-through;
 }
 
 /* Two-way switches (chart / table) */
 
 .rz-selectbar {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
     border-radius: 0;
     overflow: hidden;
-    background: var(--ss-white);
+    background: var(--ap-white);
 }
 
 .rz-selectbar .rz-button {
     border: none;
     border-radius: 0;
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
 }
 
 .rz-selectbar .rz-button.rz-state-active {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 /* Dialogs: a black title bar over a white body. */
 
 .rz-dialog {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
     overflow: hidden;
 }
 
 .rz-dialog-titlebar {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 .rz-dialog-titlebar .rz-dialog-title {
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     font-weight: 400;
     text-transform: uppercase;
 }
 
 .rz-dialog-titlebar .rz-dialog-titlebar-close {
-    color: var(--ss-white);
+    color: var(--ap-white);
 }
 
 /* Alerts and notifications: a 1px rule; alerts add a colored edge for warnings and errors, like the dashboard. */
 
 .rz-alert, .rz-notification-item {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
     border-radius: 0;
 }
 
@@ -618,45 +630,45 @@ body {
 }
 
 .rz-alert.rz-warning.rz-shade-lighter {
-    border-left-color: var(--ss-warn);
-    --rz-alert-icon-color: var(--ss-warn);
+    border-left-color: var(--ap-warn);
+    --rz-alert-icon-color: var(--ap-warn);
 }
 
 .rz-alert.rz-danger.rz-shade-lighter {
-    border-left-color: var(--ss-bad);
-    --rz-alert-icon-color: var(--ss-bad);
+    border-left-color: var(--ap-bad);
+    --rz-alert-icon-color: var(--ap-bad);
 }
 
 /* Switches: a square track that fills black when on. */
 
 .rz-switch .rz-switch-circle {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
     border-radius: 0;
-    background: var(--ss-white);
+    background: var(--ap-white);
 }
 
 .rz-switch .rz-switch-circle::before {
     border-radius: 0;
-    background: var(--ss-black);
+    background: var(--ap-black);
 }
 
 .rz-switch.rz-switch-checked .rz-switch-circle {
-    background: var(--ss-black);
+    background: var(--ap-black);
 }
 
 .rz-switch.rz-switch-checked .rz-switch-circle::before {
-    background: var(--ss-white);
+    background: var(--ap-white);
 }
 
 /* Breadcrumb */
 
 .rz-breadcrumb-item, .rz-breadcrumb-item .rz-link {
-    color: var(--ss-black);
-    font-size: var(--ss-size);
+    color: var(--ap-black);
+    font-size: var(--ap-size);
     text-transform: uppercase;
 }
 
-/* Links are underlined everywhere, as on the site, so they don't depend on color. */
+/* Links are underlined everywhere, so they don't depend on color. */
 
 .rz-link, .rz-breadcrumb-item .rz-link {
     text-decoration: underline;
@@ -666,20 +678,20 @@ body {
 /* Calendar (RadzenScheduler) */
 
 .rz-scheduler {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
     border-radius: 0;
     overflow: hidden;
-    --rz-scheduler-toolbar-background-color: var(--ss-white);
-    --rz-scheduler-header-background-color: var(--ss-white);
-    --rz-scheduler-header-color: var(--ss-black);
-    --rz-scheduler-border-color: var(--ss-gray);
-    --rz-scheduler-other-month-background-color: var(--ss-gray-soft);
-    --rz-scheduler-weekend-background-color: var(--ss-white);
-    --rz-scheduler-highlight-background-color: var(--ss-gray);
-    --rz-scheduler-view-selected-background-color: var(--ss-black);
-    --rz-scheduler-view-selected-color: var(--ss-white);
-    --rz-scheduler-view-button-border: var(--ss-rule);
-    --rz-scheduler-toolbar-title-font-size: var(--ss-size);
+    --rz-scheduler-toolbar-background-color: var(--ap-white);
+    --rz-scheduler-header-background-color: var(--ap-white);
+    --rz-scheduler-header-color: var(--ap-black);
+    --rz-scheduler-border-color: var(--ap-gray);
+    --rz-scheduler-other-month-background-color: var(--ap-gray-soft);
+    --rz-scheduler-weekend-background-color: var(--ap-white);
+    --rz-scheduler-highlight-background-color: var(--ap-gray);
+    --rz-scheduler-view-selected-background-color: var(--ap-black);
+    --rz-scheduler-view-selected-color: var(--ap-white);
+    --rz-scheduler-view-button-border: var(--ap-rule);
+    --rz-scheduler-toolbar-title-font-size: var(--ap-size);
     --rz-scheduler-toolbar-title-font-weight: 400;
 }
 
@@ -691,10 +703,10 @@ body {
    later rule wins and only the current view stays black. */
 .rz-scheduler .rz-scheduler-nav .rz-button,
 .rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary:not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat) {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
     border-radius: 0;
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
 }
 
 .rz-scheduler .rz-scheduler-nav-views {
@@ -703,12 +715,12 @@ body {
 
 .rz-scheduler .rz-scheduler-nav .rz-button:not(.rz-state-active):hover,
 .rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary:not(.rz-state-active):not(.rz-variant-outlined):not(.rz-variant-text):not(.rz-variant-flat):not(:disabled):hover {
-    background: var(--ss-gray);
+    background: var(--ap-gray);
 }
 
 .rz-scheduler .rz-scheduler-nav-views .rz-button.rz-primary.rz-state-active:not(.rz-variant-outlined):not(.rz-variant-text) {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 /* Logo: the ring. */
@@ -723,7 +735,7 @@ body {
     box-sizing: border-box;
 }
 
-/* Sidebar decoration: the site's loader, slowed down. Two white discs slide past each other; where they
+/* Sidebar decoration: two white discs slowly slide past each other; where they
    overlap, difference blending turns them black. Never in front of content. */
 
 .sidebar-shapes {
@@ -744,7 +756,7 @@ body {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 50%;
-    background: var(--ss-white);
+    background: var(--ap-white);
 }
 
 .sidebar-shapes::before {
@@ -772,18 +784,18 @@ body {
     }
 }
 
-/* Wordmark: ring + name, the size of the site's header text. */
+/* Wordmark: ring + name. */
 
 .wordmark {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     margin: 0;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     font-weight: 400;
     line-height: 1;
     text-transform: uppercase;
-    color: var(--ss-white);
+    color: var(--ap-white);
 }
 
 .header-wordmark {
@@ -791,7 +803,7 @@ body {
 }
 
 .header-wordmark:hover {
-    color: var(--ss-gray);
+    color: var(--ap-gray);
 }
 
 /* Phones: the sidebar opens as a full-screen black menu below the header, with big rows. It closes again

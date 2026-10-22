@@ -47,11 +47,11 @@ h1:focus {
     flex-direction: column;
     gap: 0.25rem;
     padding: 1rem 1.25rem;
-    background: var(--ss-gray);
+    background: var(--ap-gray);
 }
 
 .kpi-label {
-    color: var(--ss-black);
+    color: var(--ap-black);
     margin: 0;
 }
 
@@ -99,7 +99,7 @@ h1:focus {
     margin: 0;
     padding: 0;
     list-style: none;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     text-transform: uppercase;
 }
 
@@ -118,7 +118,7 @@ h1:focus {
 /* Same fills as the status tags: inquiry white and dashed, booked black, shot white, delivered gray,
    cancelled struck through. */
 .shoot-event, .shoot-swatch {
-    border: var(--ss-rule);
+    border: var(--ap-rule);
 }
 
 .rz-event.shoot-event, .rz-event .shoot-event {
@@ -126,36 +126,36 @@ h1:focus {
 }
 
 .shoot-event.shoot-inquiry, .shoot-swatch.shoot-inquiry {
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
     border-style: dashed;
 }
 
 .shoot-event.shoot-booked, .shoot-swatch.shoot-booked {
-    background: var(--ss-black);
-    color: var(--ss-white);
+    background: var(--ap-black);
+    color: var(--ap-white);
 }
 
 .shoot-event.shoot-shot, .shoot-swatch.shoot-shot {
-    background: var(--ss-white);
-    color: var(--ss-black);
+    background: var(--ap-white);
+    color: var(--ap-black);
 }
 
 .shoot-event.shoot-delivered, .shoot-swatch.shoot-delivered {
-    background: var(--ss-gray);
-    color: var(--ss-black);
+    background: var(--ap-gray);
+    color: var(--ap-black);
 }
 
 .shoot-event.shoot-cancelled, .shoot-swatch.shoot-cancelled {
-    background: var(--ss-white);
-    color: var(--ss-dark-gray);
-    border-color: var(--ss-dark-gray);
+    background: var(--ap-white);
+    color: var(--ap-dark-gray);
+    border-color: var(--ap-dark-gray);
     text-decoration: line-through;
 }
 
 /* The swatch has no text to strike through, so it's crossed out. */
 .shoot-swatch.shoot-cancelled {
-    background: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--ss-dark-gray) 50%, transparent calc(50% + 0.5px));
+    background: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--ap-dark-gray) 50%, transparent calc(50% + 0.5px));
 }
 
 /* Hover card on calendar shoots: Radzen's tooltip restyled as a card in the theme's surface colors.
@@ -168,9 +168,9 @@ h1:focus {
 .rz-tooltip.shoot-tooltip .rz-tooltip-content {
     max-width: 22rem;
     padding: 0;
-    background: var(--ss-white);
-    color: var(--ss-black);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    color: var(--ap-black);
+    border: var(--ap-rule);
     border-radius: 0;
     box-shadow: none;
 }
@@ -180,12 +180,12 @@ h1:focus {
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.875rem 1rem;
-    font-size: var(--ss-size-data);
+    font-size: var(--ap-size-data);
     line-height: 1.4;
 }
 
 .shoot-card-title {
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     text-transform: uppercase;
     line-height: 1.2;
 }
@@ -222,7 +222,7 @@ h1:focus {
 
 /* A delivery date that has passed. Always said in words too; color only reinforces it. */
 .delivery-overdue {
-    color: var(--ss-bad);
+    color: var(--ap-bad);
 }
 
 /* Invoices */
@@ -238,15 +238,15 @@ h1:focus {
 .invoice-lines th {
     text-align: left;
     font-weight: 400;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     text-transform: uppercase;
     padding: 0.375rem 0.5rem;
-    border-bottom: var(--ss-rule);
+    border-bottom: var(--ap-rule);
 }
 
 .invoice-lines td {
     padding: 0.25rem 0.5rem;
-    border-bottom: var(--ss-rule-light);
+    border-bottom: var(--ap-rule-light);
     vertical-align: middle;
 }
 
@@ -287,7 +287,7 @@ h1:focus {
 }
 
 .invoice-totals tr.sum th {
-    border-top: var(--ss-rule);
+    border-top: var(--ap-rule);
     text-transform: uppercase;
 }
 
@@ -312,29 +312,29 @@ h1:focus {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    background: var(--ss-white);
-    color: var(--ss-black);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    color: var(--ap-black);
+    border: var(--ap-rule);
     overflow: hidden;
 }
 
 .finance-table td, .finance-table th {
     padding: 0.5rem 1.25rem;
-    border-bottom: var(--ss-rule-light);
+    border-bottom: var(--ap-rule-light);
     font-weight: 400;
     text-align: left;
 }
 
 .finance-table thead th {
-    background: var(--ss-black);
-    color: var(--ss-white);
-    font-size: var(--ss-size);
+    background: var(--ap-black);
+    color: var(--ap-white);
+    font-size: var(--ap-size);
     text-transform: uppercase;
     border-bottom: none;
 }
 
 .finance-table tfoot th {
-    border-top: var(--ss-rule);
+    border-top: var(--ap-rule);
     border-bottom: none;
     text-transform: uppercase;
 }
@@ -344,13 +344,13 @@ h1:focus {
 }
 
 .finance-table .rz-link {
-    color: var(--ss-black);
+    color: var(--ap-black);
     text-decoration: underline;
 }
 
 .finance-table .share {
     width: 4rem;
-    color: var(--ss-dark-gray);
+    color: var(--ap-dark-gray);
 }
 
 .export-button, .export-link {
@@ -359,25 +359,25 @@ h1:focus {
     gap: 0.375rem;
 }
 
-/* Dashboard: numbered-list rows like the site's; level is shown by icon color and a colored edge, the text says
+/* Dashboard: numbered-list rows like the navigation; level is shown by icon color and a colored edge, the text says
    what's wrong. Hovering a row inverts it. */
 .plain-list.attention-list {
     max-width: 48rem;
-    background: var(--ss-white);
-    color: var(--ss-black);
-    border: var(--ss-rule);
+    background: var(--ap-white);
+    color: var(--ap-black);
+    border: var(--ap-rule);
 }
 
 .attention-list .list-row {
     align-items: flex-start;
     padding: 0.625rem 1.25rem 0.625rem 1rem;
     border-left: 4px solid transparent;
-    border-bottom: var(--ss-rule-light);
-    transition: background-color var(--ss-speed) ease;
+    border-bottom: var(--ap-rule-light);
+    transition: background-color var(--ap-speed) ease;
 }
 
 .attention-list .list-row:hover {
-    background: var(--ss-gray);
+    background: var(--ap-gray);
 }
 
 .attention-list .list-row:last-child {
@@ -388,7 +388,7 @@ h1:focus {
     display: flex;
     flex-direction: column;
     text-decoration: none;
-    color: var(--ss-black);
+    color: var(--ap-black);
 }
 
 .attention-list a:hover .attention-text {
@@ -396,28 +396,28 @@ h1:focus {
 }
 
 .attention-detail {
-    font-size: var(--ss-size);
-    color: var(--ss-dark-gray);
+    font-size: var(--ap-size);
+    color: var(--ap-dark-gray);
 }
 
 .attention-urgent {
-    border-left-color: var(--ss-bad) !important;
+    border-left-color: var(--ap-bad) !important;
 }
 
 .attention-urgent .rzi {
-    color: var(--ss-bad);
+    color: var(--ap-bad);
 }
 
 .attention-warning {
-    border-left-color: var(--ss-warn) !important;
+    border-left-color: var(--ap-warn) !important;
 }
 
 .attention-warning .rzi {
-    color: var(--ss-warn);
+    color: var(--ap-warn);
 }
 
 .attention-info .rzi {
-    color: var(--ss-black);
+    color: var(--ap-black);
 }
 
 /* Files */
@@ -468,19 +468,19 @@ h1:focus {
     align-items: center;
     gap: 0.5rem;
     padding: 0.375rem 0;
-    border-bottom: var(--ss-rule-light);
+    border-bottom: var(--ap-rule-light);
 }
 
-/* Same shape as the status tags, filled gray like the site's panels. */
+/* Same shape as the status tags, filled gray like the panels. */
 .provider-tag {
     flex: none;
     padding: 0.1875rem 0.375rem 0.0625rem;
-    border: var(--ss-rule);
-    background: var(--ss-gray);
+    border: var(--ap-rule);
+    background: var(--ap-gray);
     font-size: 0.6875rem;
     text-transform: uppercase;
     line-height: 1.2;
-    color: var(--ss-black);
+    color: var(--ap-black);
 }
 
 .list-row-text {
@@ -499,7 +499,7 @@ h1:focus {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     text-transform: uppercase;
 }
 
@@ -509,8 +509,8 @@ h1:focus {
 }
 
 .push-device-detail {
-    font-size: var(--ss-size);
-    color: var(--ss-dark-gray);
+    font-size: var(--ap-size);
+    color: var(--ap-dark-gray);
 }
 
 /* Updates (Settings) */
@@ -519,8 +519,8 @@ h1:focus {
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem 1.25rem;
-    background: var(--ss-gray);
-    border: var(--ss-rule);
+    background: var(--ap-gray);
+    border: var(--ap-rule);
 }
 
 .update-notes {
@@ -532,16 +532,16 @@ h1:focus {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     text-transform: uppercase;
 }
 
 .version-text {
-    color: var(--ss-dark-gray);
-    font-size: var(--ss-size);
+    color: var(--ap-dark-gray);
+    font-size: var(--ap-size);
 }
 
-/* Login: the black frame with a big wordmark and a white card, like the site's info panel. */
+/* Login: the black frame with a big wordmark and a white card. */
 
 .auth-layout {
     display: grid;
@@ -549,7 +549,7 @@ h1:focus {
     min-height: 100vh;
     padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
     box-sizing: border-box;
-    background: var(--ss-black);
+    background: var(--ap-black);
 }
 
 .login-stack {
@@ -568,8 +568,8 @@ h1:focus {
 
 .login-tagline {
     margin: 0 0 1rem;
-    color: var(--ss-gray);
-    font-size: var(--ss-size);
+    color: var(--ap-gray);
+    font-size: var(--ap-size);
     text-transform: uppercase;
 }
 
@@ -581,7 +581,7 @@ h1:focus {
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
-    font-size: var(--ss-size);
+    font-size: var(--ap-size);
     text-transform: uppercase;
 }
 
@@ -596,13 +596,13 @@ h1:focus {
 }
 
 .validation-message {
-    color: var(--ss-bad);
+    color: var(--ap-bad);
 }
 
 /* Blazor error UI */
 
 .blazor-error-boundary {
-    background: var(--ss-bad);
+    background: var(--ap-bad);
     padding: 1rem;
     color: white;
 }

@@ -2,9 +2,9 @@
 // browser's error page with a branded "no connection" page when a page can't be loaded (Aperture is restarting after an
 // update), and shows notifications (Settings → Notifications).
 // Everything else goes straight to the network, uncached.
-const CACHE = "aperture-offline-v5";
+const CACHE = "aperture-offline-v6";
 const OFFLINE_PAGE = "offline.html";
-const OFFLINE_ASSETS = [OFFLINE_PAGE, "fonts/brand-font.woff2", "icon-192.png"];
+const OFFLINE_ASSETS = [OFFLINE_PAGE, "fonts/SpaceGrotesk-Regular-latin.woff2", "icon-192.png"];
 
 self.addEventListener("install", event => {
     event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(OFFLINE_ASSETS)).then(() => self.skipWaiting()));
