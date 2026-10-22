@@ -14,7 +14,7 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
     /// </summary>
     public const string FeedFile = "feed.url";
 
-    public async Task<int> InstallAsync(string? feed, int? port, bool openBrowser)
+    public async Task<int> InstallAsync(string? feed, int? port, bool openApp, bool desktopShortcut = false)
     {
         platform.CheckHome(home);
         var release = Release();
@@ -63,16 +63,24 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
         }
 
         await platform.StartBackupsAsync(home);
+        try
+        {
+            await platform.CreateLauncherAsync(home, settings.Port, desktopShortcut);
+        }
+        catch (Exception e) when (e is InstallationException or IOException or UnauthorizedAccessException)
+        {
+            log.Write($"Couldn't add Aperture to the menu ({e.Message}). Open {settings.Url} in your browser.");
+        }
         log.Write($"Aperture is running: {settings.Url}");
         log.Write(feed is null ? "No update feed: Aperture won't look for new versions." : $"Updates from: {feed}");
         log.Write($"Data: {home.Data}. Backups: {string.Join(", ", new BackupJob(home, TimeProvider.System, log).Folders())}");
-        if (openBrowser)
+        if (openApp)
         {
             try
             {
-                platform.OpenBrowser(settings.Url);
+                await platform.OpenAppAsync(home, settings.Port);
             }
-            catch (Exception e) when (e is InvalidOperationException or System.ComponentModel.Win32Exception or AggregateException)
+            catch (Exception e) when (e is InvalidOperationException or System.ComponentModel.Win32Exception)
             {
                 log.Write($"Open {settings.Url} in your browser.");
             }

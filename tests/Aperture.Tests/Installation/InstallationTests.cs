@@ -219,6 +219,8 @@ public sealed class InstallationTests : IDisposable
         public override Task UnregisterAsync(ApertureHome home) => Task.CompletedTask;
         public override Task StartWebAsync(ApertureHome home) => Task.CompletedTask;
         protected override Task StopWebServiceAsync(ApertureHome home) => Task.CompletedTask;
+        public override Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut) => Task.CompletedTask;
+        public override Task OpenAppAsync(ApertureHome home, int port) => Task.CompletedTask;
     }
 
     /// <summary>An installation as the install command leaves it, with data, plus a file Aperture didn't make.</summary>
@@ -269,5 +271,38 @@ public sealed class InstallationTests : IDisposable
         await Assert.ThrowsAsync<InstallationException>(() => Installer(new ApertureHome(folder)).UninstallAsync(removeData: true));
 
         Assert.True(File.Exists(Path.Combine(folder, "data", "important.txt")));
+    }
+
+    [Fact]
+    public void Mac_launcher_opens_a_Chromium_browser_in_app_mode_or_the_default_browser()
+    {
+        var script = MacPlatform.LauncherScript(5191);
+
+        Assert.StartsWith("#!/bin/bash\n", script);
+        Assert.Contains("url=\"http://localhost:5191\"", script);
+        Assert.Contains("exec open -na \"$folder/$browser.app\" --args --app=\"$url\"", script);
+        Assert.EndsWith("exec open \"$url\"\n", script);
+        var plist = XDocument.Parse(MacPlatform.LauncherInfoPlist).ToString();
+        Assert.Contains("<string>Aperture</string>", plist); // CFBundleExecutable: the script's name
+    }
+
+    [Fact]
+    public void Linux_menu_entry_uses_the_browser_found_or_the_default_one()
+    {
+        Assert.Contains("Exec=\"/usr/bin/chromium\" --app=http://localhost:5090\n",
+            LinuxPlatform.DesktopEntryText(Home, 5090, "/usr/bin/chromium"));
+        Assert.Contains("Exec=xdg-open http://localhost:5090\n", LinuxPlatform.DesktopEntryText(Home, 5090, null));
+    }
+
+    [Fact]
+    public void Windows_shortcut_script_quotes_paths_for_PowerShell()
+    {
+        var script = WindowsPlatform.ShortcutScript(@"C:\Users\Anna O'Neil\Start Menu\Aperture.lnk",
+            @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", "--app=http://localhost:5090",
+            @"C:\Users\Anna O'Neil\AppData\Local\Aperture\app\Aperture.Web.exe");
+
+        Assert.Contains(@"CreateShortcut('C:\Users\Anna O''Neil\Start Menu\Aperture.lnk')", script);
+        Assert.Contains("$s.Arguments = '--app=http://localhost:5090'", script);
+        Assert.Contains(@"$s.IconLocation = 'C:\Users\Anna O''Neil\AppData\Local\Aperture\app\Aperture.Web.exe,0'", script);
     }
 }

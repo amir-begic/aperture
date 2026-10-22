@@ -13,6 +13,8 @@
     <!-- No console window: scheduled tasks start Aperture at logon, and a window would stay open. It logs to a file
          instead (Aperture:LogFile, set by the install command). -->
     <OutputType>WinExe</OutputType>
+    <!-- Shown for the program, its shortcuts and in Settings → Apps. Made by deploy/icons/make_icons.py. -->
+    <ApplicationIcon>..\..\deploy\icons\aperture.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

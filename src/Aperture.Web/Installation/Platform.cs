@@ -123,7 +123,32 @@ public abstract class Platform(ICommandRunner run)
         return app.Exists && app.LinkTarget is { } target ? Path.GetFullPath(target, home.Root) : null;
     }
 
-    public virtual void OpenBrowser(string url) =>
+    /// <summary>
+    /// Creates what opens Aperture in its own window: a Start menu entry (with <paramref name="desktopShortcut"/>, also
+    /// one on the desktop), an app in Applications, or an entry in the applications menu. The window is a Chromium
+    /// browser's app mode (no tabs, no address bar); without such a browser, Aperture opens in the default one.
+    /// </summary>
+    public abstract Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut);
+
+    /// <summary>Opens Aperture in its own window, as the launcher does.</summary>
+    public abstract Task OpenAppAsync(ApertureHome home, int port);
+
+    /// <summary>The argument that opens Aperture in a Chromium browser's app mode.</summary>
+    public static string AppArgument(int port) => $"--app=http://localhost:{port}";
+
+    /// <summary>Starts a program without waiting for it: a browser window stays open long after the install command ends.</summary>
+    protected static void Start(string file, params string[] args)
+    {
+        var start = new ProcessStartInfo(file) { UseShellExecute = false };
+        foreach (var arg in args)
+        {
+            start.ArgumentList.Add(arg);
+        }
+        Process.Start(start)?.Dispose();
+    }
+
+    /// <summary>Opens a web address in the default browser.</summary>
+    protected static void OpenInDefaultBrowser(string url) =>
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true })?.Dispose();
 
     /// <summary>Removes app/ if it's a link. A real folder there is left alone: it isn't ours to delete.</summary>
@@ -266,6 +291,11 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
             await Run.RunAsync("launchctl", "bootout", $"{Domain}/{label}");
             File.Delete(Agent(label));
         }
+
+        if (Directory.Exists(LauncherApp))
+        {
+            Directory.Delete(LauncherApp, recursive: true);
+        }
     }
 
     public override async Task StartWebAsync(ApertureHome home)
@@ -292,7 +322,89 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
         }
     }
 
-    public override void OpenBrowser(string url) => Run.RunAsync("open", url).Wait();
+    /// <summary>~/Applications/Aperture.app: in Launchpad and Spotlight, and can be kept in the Dock.</summary>
+    private static string LauncherApp =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Applications", "Aperture.app");
+
+    public override async Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut)
+    {
+        if (Directory.Exists(LauncherApp))
+        {
+            Directory.Delete(LauncherApp, recursive: true);
+        }
+
+        var contents = Path.Combine(LauncherApp, "Contents");
+        Directory.CreateDirectory(Path.Combine(contents, "MacOS"));
+        Directory.CreateDirectory(Path.Combine(contents, "Resources"));
+        File.WriteAllText(Path.Combine(contents, "Info.plist"), LauncherInfoPlist);
+        var script = Path.Combine(contents, "MacOS", "Aperture");
+        File.WriteAllText(script, LauncherScript(port));
+        if (!OperatingSystem.IsWindows()) // always so here; the analyzer can't know
+        {
+            File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
+                | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+        }
+        var icon = Path.Combine(home.App, "deploy", "macos", "Aperture.icns");
+        if (File.Exists(icon))
+        {
+            File.Copy(icon, Path.Combine(contents, "Resources", "Aperture.icns"), overwrite: true);
+        }
+
+        // So Launchpad and the Dock know it, with its icon, right away.
+        await Run.RunAsync(
+            "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister", "-f", LauncherApp);
+    }
+
+    public override Task OpenAppAsync(ApertureHome home, int port) =>
+        Run.RunAsync("open", Directory.Exists(LauncherApp) ? LauncherApp : $"http://localhost:{port}");
+
+    /// <summary>
+    /// The launcher: a script, so it needs no signing. Safari has no app mode, so it looks for a Chromium browser
+    /// first; Safari users can still use File → Add to Dock.
+    /// </summary>
+    public static string LauncherScript(int port) => $$"""
+        #!/bin/bash
+        # Opens Aperture in its own window: a Chromium browser's app mode (no tabs, no address bar), or the default
+        # browser if there's none. Written by "Aperture.Web install".
+        url="http://localhost:{{port}}"
+        for browser in "Google Chrome" "Microsoft Edge" "Brave Browser" "Chromium"; do
+            for folder in /Applications "$HOME/Applications"; do
+                if [[ -d "$folder/$browser.app" ]]; then
+                    # -n: a new instance, so a running browser still gets the --app argument (it hands it over).
+                    exec open -na "$folder/$browser.app" --args --app="$url"
+                fi
+            done
+        done
+        exec open "$url"
+
+        """;
+
+    /// <summary>LSUIElement: the launcher itself never shows in the Dock, only Aperture's window does.</summary>
+    public const string LauncherInfoPlist = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleName</key>
+            <string>Aperture</string>
+            <key>CFBundleDisplayName</key>
+            <string>Aperture</string>
+            <key>CFBundleIdentifier</key>
+            <string>ch.aperture.window</string>
+            <key>CFBundleExecutable</key>
+            <string>Aperture</string>
+            <key>CFBundleIconFile</key>
+            <string>Aperture</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0</string>
+            <key>LSUIElement</key>
+            <true/>
+        </dict>
+        </plist>
+
+        """;
 
     /// <summary>
     /// The three agents. The backup runs through /bin/bash (deploy/macos/backup.sh): Full Disk Access for external
@@ -411,22 +523,50 @@ public sealed class LinuxPlatform(ICommandRunner run) : Platform(run)
         await RequireAsync("Enabling Aperture", "systemctl", "--user", "enable", WebUnit);
         // The path unit starts the updater when Aperture asks for it.
         await RequireAsync("Enabling the updater", "systemctl", "--user", "enable", "--now", "aperture-updater.path");
-
-        // In the applications menu: opens Aperture in the browser.
-        var port = HomeSettings.Read(home)?.Port ?? ApertureHome.DefaultPort;
-        Directory.CreateDirectory(ApplicationsDirectory);
-        File.WriteAllText(DesktopEntry, $"""
-            [Desktop Entry]
-            Type=Application
-            Name=Aperture
-            Comment=Photo office: shoots, invoices and finances
-            Exec=xdg-open http://localhost:{port}
-            Icon={Path.Combine(home.App, "wwwroot", "icon-512.png")}
-            Categories=Office;
-            Terminal=false
-
-            """);
     }
+
+    /// <summary>Chromium browsers, which have an app mode, in the order they're preferred.</summary>
+    private static readonly string[] Browsers =
+        ["microsoft-edge", "microsoft-edge-stable", "google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "brave-browser"];
+
+    /// <summary>The first Chromium browser on the PATH, or null.</summary>
+    private static string? Browser() =>
+        (Environment.GetEnvironmentVariable("PATH") ?? "").Split(':', StringSplitOptions.RemoveEmptyEntries)
+            .SelectMany(folder => Browsers.Select(name => Path.Combine(folder, name)))
+            .FirstOrDefault(File.Exists);
+
+    /// <summary>The entry in the applications menu. The browser is looked for when installing; install again after adding one.</summary>
+    public override Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut)
+    {
+        Directory.CreateDirectory(ApplicationsDirectory);
+        File.WriteAllText(DesktopEntry, DesktopEntryText(home, port, Browser()));
+        return Task.CompletedTask;
+    }
+
+    public override Task OpenAppAsync(ApertureHome home, int port)
+    {
+        if (Browser() is { } browser)
+        {
+            Start(browser, AppArgument(port));
+        }
+        else
+        {
+            Start("xdg-open", $"http://localhost:{port}");
+        }
+        return Task.CompletedTask;
+    }
+
+    public static string DesktopEntryText(ApertureHome home, int port, string? browser) => $"""
+        [Desktop Entry]
+        Type=Application
+        Name=Aperture
+        Comment=Photo office: shoots, invoices and finances
+        Exec={(browser is null ? $"xdg-open http://localhost:{port}" : $"\"{browser}\" {AppArgument(port)}")}
+        Icon={Path.Combine(home.App, "wwwroot", "icon-512.png")}
+        Categories=Office;
+        Terminal=false
+
+        """;
 
     public override async Task StartBackupsAsync(ApertureHome home)
     {
@@ -458,8 +598,6 @@ public sealed class LinuxPlatform(ICommandRunner run) : Platform(run)
         RequireAsync("Starting Aperture", "systemctl", "--user", "restart", WebUnit);
 
     protected override Task StopWebServiceAsync(ApertureHome home) => Run.RunAsync("systemctl", "--user", "stop", WebUnit);
-
-    public override void OpenBrowser(string url) => Run.RunAsync("xdg-open", url).Wait();
 
     public static IEnumerable<(string Name, string Unit)> UnitFiles(ApertureHome home)
     {
@@ -593,6 +731,8 @@ public sealed class WindowsPlatform(ICommandRunner run) : Platform(run)
             await Run.RunAsync("schtasks", "/End", "/TN", name);
             await Run.RunAsync("schtasks", "/Delete", "/TN", name, "/F");
         }
+
+        RemoveLaunchers();
     }
 
     public override Task StartWebAsync(ApertureHome home) => RequireAsync("Starting Aperture", "schtasks", "/Run", "/TN", WebTask);
@@ -601,6 +741,77 @@ public sealed class WindowsPlatform(ICommandRunner run) : Platform(run)
 
     public override Task StartUpdaterAsync(ApertureHome home) =>
         RequireAsync("Starting the updater", "schtasks", "/Run", "/TN", UpdaterTask);
+
+    private static string StartMenuFolder => Environment.GetFolderPath(Environment.SpecialFolder.Programs);
+    private static string DesktopFolder => Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+
+    /// <summary>Edge first: it's on every Windows 10 and 11. Chrome if Edge isn't there.</summary>
+    private static string? Browser()
+    {
+        var places = new[]
+        {
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        };
+        return new[] { @"Microsoft\Edge\Application\msedge.exe", @"Google\Chrome\Application\chrome.exe" }
+            .SelectMany(browser => places.Select(place => Path.Combine(place, browser)))
+            .FirstOrDefault(File.Exists);
+    }
+
+    /// <summary>Start menu entry, and with <paramref name="desktopShortcut"/> one on the desktop, with Aperture's icon.</summary>
+    public override async Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut)
+    {
+        RemoveLaunchers();
+        var icon = Path.Combine(home.App, ExecutableName);
+        var folders = desktopShortcut ? new[] { StartMenuFolder, DesktopFolder } : [StartMenuFolder];
+        if (Browser() is not { } browser)
+        {
+            foreach (var folder in folders)
+            {
+                File.WriteAllText(Path.Combine(folder, "Aperture.url"),
+                    $"[InternetShortcut]\r\nURL=http://localhost:{port}\r\nIconFile={icon}\r\nIconIndex=0\r\n");
+            }
+            return;
+        }
+
+        foreach (var folder in folders)
+        {
+            await RequireAsync("Creating the Aperture shortcut", "powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
+                ShortcutScript(Path.Combine(folder, "Aperture.lnk"), browser, AppArgument(port), icon));
+        }
+    }
+
+    public override Task OpenAppAsync(ApertureHome home, int port)
+    {
+        if (Browser() is { } browser)
+        {
+            Start(browser, AppArgument(port));
+        }
+        else
+        {
+            OpenInDefaultBrowser($"http://localhost:{port}");
+        }
+        return Task.CompletedTask;
+    }
+
+    /// <summary>A shortcut through Windows' own shortcut object; PowerShell strings in single quotes, quotes doubled.</summary>
+    public static string ShortcutScript(string shortcut, string target, string arguments, string icon)
+    {
+        static string Quote(string text) => "'" + text.Replace("'", "''") + "'";
+        return $"$s = (New-Object -ComObject WScript.Shell).CreateShortcut({Quote(shortcut)}); "
+            + $"$s.TargetPath = {Quote(target)}; $s.Arguments = {Quote(arguments)}; $s.IconLocation = {Quote(icon + ",0")}; "
+            + "$s.Description = 'Aperture'; $s.Save()";
+    }
+
+    private static void RemoveLaunchers()
+    {
+        foreach (var folder in new[] { StartMenuFolder, DesktopFolder })
+        {
+            File.Delete(Path.Combine(folder, "Aperture.lnk"));
+            File.Delete(Path.Combine(folder, "Aperture.url"));
+        }
+    }
 
     public override async Task LinkAppAsync(ApertureHome home, string releaseDirectory)
     {

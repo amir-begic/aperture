@@ -1,6 +1,6 @@
 # Installing Aperture
 
-Aperture runs on the photographer's own computer and is used in the browser there, at `http://localhost:5090`,
+Aperture runs on the photographer's own computer and opens in its own window there, at `http://localhost:5090`,
 reachable from that computer only. It runs while they're logged in, backs up daily and updates itself. You, whoever
 looks after Aperture, publish the releases it installs: a feed that you fill by hand, so computers only get versions
 you've tried.
@@ -60,10 +60,12 @@ and start `Aperture.Web install`.
    needed once, and not at all once the installer is signed (see *Signing the installers*).
 3. **Click through the installer:** welcome, license, *Install*. The Mac password it asks for is the Installer's usual
    one. It refuses Macs without Apple silicon or older than macOS 15, which .NET 10 needs.
-4. It installs the release it carries (`deploy/macos/install.sh`, then `Aperture.Web install`) and opens
-   `http://localhost:5090`.
+4. It installs the release it carries (`deploy/macos/install.sh`, then `Aperture.Web install`), adds *Aperture* to
+   your Applications folder and opens it.
 
-To give Aperture its own window and a place in the Dock: *File → Add to Dock* in Safari.
+*Aperture* in Applications (and Launchpad) opens Aperture in its own window, without tabs or address bar, using
+Chrome, Edge, Brave or Chromium if one is installed; drag it into the Dock to keep it there. Safari has no such mode:
+without one of those browsers, Aperture opens in Safari, and *File → Add to Dock* gives it its own window.
 
 ### Windows
 
@@ -71,11 +73,11 @@ To give Aperture its own window and a place in the Dock: *File → Add to Dock* 
 2. **Unsigned, Windows SmartScreen warns the first time** ("Windows protected your PC"). Click *More info*, then *Run
    anyway*. This goes away once the setup is signed (see *Signing the installers*).
 3. **Click through the setup:** welcome, license, *Install*. It needs no administrator rights.
-4. It installs into `%LOCALAPPDATA%\Aperture`, runs `Aperture.Web install`, adds *Aperture* to the Start menu and opens
-   `http://localhost:5090`.
+4. It installs into `%LOCALAPPDATA%\Aperture`, runs `Aperture.Web install`, adds *Aperture* to the Start menu (and
+   to the desktop, if ticked) and opens it.
 
-To give Aperture its own window: in Edge or Chrome, *⋯ → Apps → Install this site as an app*. To remove Aperture:
-*Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
+*Aperture* in the Start menu opens Aperture in its own window, without tabs or address bar: Edge's app mode, which
+every Windows 10 and 11 has. To remove Aperture: *Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
 keeps them.
 
 ### Linux
@@ -86,13 +88,14 @@ tar -xzf aperture-…-linux-x64.tar.gz
 ```
 
 It copies the release into `~/.local/share/aperture`, sets up systemd user units, adds *Aperture* to the
-applications menu and opens `http://localhost:5090`. It needs systemd's user manager, which every desktop session
+applications menu and opens it: in its own window with Edge, Chrome, Chromium or Brave, if one is installed (run
+`install.sh` again after installing one), otherwise in the default browser. It needs systemd's user manager, which every desktop session
 has. Aperture runs while you're logged in; for it to run without a login session too, enable lingering once:
 `loginctl enable-linger`.
 
 ### Then, everywhere
 
-The browser opens on the first start, in two steps:
+Aperture opens on the first start, in two steps:
 
 1. **Your login:** a username and password for Aperture, kept hashed in `data/keys/login.json`.
 2. **Your business:** name, address, contact and IBAN, which go on every invoice; the email is also what
@@ -196,7 +199,7 @@ e.g. to repair an installation or to restore a backup. The program is `app/Apert
 
 | Command | What it does |
 |---|---|
-| `install [--feed <url>] [--port <port>] [--no-open]` | Sets up the release it belongs to in the install folder, and the services that start Aperture at login, run the daily backup and install updates. Safe to run again: it keeps all data, and repairs an installation or changes its settings. |
+| `install [--feed <url>] [--port <port>] [--no-open] [--desktop-shortcut]` | Sets up the release it belongs to in the install folder, the services that start Aperture at login, run the daily backup and install updates, and the *Aperture* entry that opens it in its own window. Safe to run again: it keeps all data, and repairs an installation or changes its settings. |
 | `update [<package>]` | Installs a release package (`aperture-…-<system>.tar.gz`), or without one the update Aperture downloaded. Goes back to the previous version if the new one doesn't start. |
 | `backup` | Runs the daily backup now. |
 | `restore <backup>` | Puts a backup in place: a downloaded ZIP, its unpacked folder, or a daily copy (`…/Aperture Backup/database/aperture-YYYY-MM-DD.db`). The current database is kept in `backups/before-restore`. |
@@ -207,7 +210,8 @@ e.g. to repair an installation or to restore a backup. The program is `app/Apert
 | `--home <folder>` | all | The install folder, if it's not the usual one (see the table at the top). `APERTURE_HOME` does the same. |
 | `--feed <url>` | `install` | Where to look for updates: the `latest.json` of the latest release. Default: the installation's current one, else the one the release was built with. |
 | `--port <port>` | `install` | The port Aperture listens on, on this computer only. Default: the installation's current one, else the first free one from 5090. An installation never moves to another port by itself: its login, notifications, shortcuts and calendar feeds belong to that address. |
-| `--no-open` | `install` | Don't open the browser afterwards. `APERTURE_NO_OPEN=1` does the same. |
+| `--no-open` | `install` | Don't open Aperture afterwards. `APERTURE_NO_OPEN=1` does the same. |
+| `--desktop-shortcut` | `install` | On Windows, also put *Aperture* on the desktop (the setup asks). |
 | `--remove-data` | `uninstall` | Also delete the data, uploaded files, login, backups, logs and settings in the install folder. It can't be undone. Only what Aperture created there is deleted, and only in a folder that is an Aperture installation; backups in other folders listed in `backup.conf` stay. On Windows, the uninstaller in *Settings → Apps* asks instead. |
 
 On Windows the program has no console window, so it writes what it does to `logs/<command>.log` instead.
@@ -219,7 +223,7 @@ On Windows the program has no console window, so it writes what it does to `logs
 | The installer failed | macOS: *Console → Log Reports → install.log*, search for `Aperture`. Windows: `%LOCALAPPDATA%\Aperture\logs\install.log`. Linux: the terminal shows it. |
 | Aperture isn't reachable | `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
 | "Port … is in use by another program" | Another program listens on Aperture's port. Close it and install again, or install again with `--port <port>` to move Aperture: then log in again, turn notifications on again and add the calendar feed again. |
-| Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open `http://localhost:5090` and create a new login. All data stays. |
+| Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open Aperture and create a new login. All data stays. |
 | Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. Backups in other folders listed in `backup.conf` stay. |
 | Restoring a backup | See [Restoring](#restoring). |
 

@@ -3,8 +3,8 @@
 ;   iscc /DReleaseDir=<unpacked aperture-… folder> /DVersion=2026.10.20.58 /DOutputDir=<folder> deploy\windows\aperture.iss
 ;
 ; Installs for the person logged in, without administrator rights, into %LOCALAPPDATA%\Aperture\releases, then runs
-; "Aperture.Web install": scheduled tasks for Aperture at logon, the updater and the daily backup, and the browser opens
-; on Aperture. Its uninstaller (Settings → Apps) runs "Aperture.Web uninstall"; it asks whether to remove the data and
+; "Aperture.Web install": scheduled tasks for Aperture at logon, the updater and the daily backup, Aperture in the Start
+; menu (and on the desktop, if ticked), and Aperture opens in its own window (Edge's app mode). Its uninstaller (Settings → Apps) runs "Aperture.Web uninstall"; it asks whether to remove the data and
 ; backups too, and keeps them unless told to. Installing a newer one over it keeps all data.
 
 #ifndef ReleaseDir
@@ -39,34 +39,39 @@ SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName=Aperture
 UninstallDisplayIcon={app}\releases\{#ReleaseName}\Aperture.Web.exe
+SetupIconFile=..\icons\aperture.ico
 ; Aperture is stopped by its own install command, not by Windows' restart manager.
 CloseApplications=no
 
 [Messages]
-WelcomeLabel2=This installs Aperture, the office for your photography business, for you on this PC.%n%nIt runs in the background while you're logged in and opens in your browser. Only this PC can reach it, and your data stays in your user folder. It backs up your data every day, and updates itself when you click Install update in its settings.%n%nInstalling again later keeps all your data.
-FinishedLabel=Aperture is installed and opened in your browser. Choose a username and password there, then fill in your business details under Settings.%n%nNext time, open Aperture from the Start menu.
+WelcomeLabel2=This installs Aperture, the office for your photography business, for you on this PC.%n%nIt runs in the background while you're logged in and opens in its own window from the Start menu. Only this PC can reach it, and your data stays in your user folder. It backs up your data every day, and updates itself when you click Install update in its settings.%n%nInstalling again later keeps all your data.
+FinishedLabel=Aperture is installed and open in its own window. Choose a username and password there, then fill in your business details.%n%nNext time, open Aperture from the Start menu.
+
+[Tasks]
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Shortcuts:"
 
 [Files]
 Source: "{#ReleaseDir}\*"; DestDir: "{app}\releases\{#ReleaseName}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-[INI]
-; In the Start menu: opens Aperture in the browser.
-Filename: "{userprograms}\Aperture.url"; Section: "InternetShortcut"; Key: "URL"; String: "http://localhost:5090"
-
 [UninstallDelete]
 ; Also the releases installed by updates since. The data, logs and backups stay unless the person chose to remove them.
 Type: filesandordirs; Name: "{app}\releases"
-Type: files; Name: "{userprograms}\Aperture.url"
 
 [Code]
+// "Aperture.Web install" sets up the tasks and the Start menu entry (and the desktop shortcut, if chosen), and opens
+// Aperture in its own window.
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   ResultCode: Integer;
+  Parameters: String;
 begin
   if CurStep = ssPostInstall then
   begin
     WizardForm.StatusLabel.Caption := 'Starting Aperture...';
-    if not Exec(ExpandConstant('{app}\releases\{#ReleaseName}\Aperture.Web.exe'), ExpandConstant('install --home "{app}"'),
+    Parameters := ExpandConstant('install --home "{app}"');
+    if WizardIsTaskSelected('desktopicon') then
+      Parameters := Parameters + ' --desktop-shortcut';
+    if not Exec(ExpandConstant('{app}\releases\{#ReleaseName}\Aperture.Web.exe'), Parameters,
       '', SW_HIDE, ewWaitUntilTerminated, ResultCode) or (ResultCode <> 0) then
       MsgBox('Aperture was installed but didn''t start. The details are in ' + ExpandConstant('{app}\logs\install.log') + '.',
         mbError, MB_OK);

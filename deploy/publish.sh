@@ -32,7 +32,7 @@ cp -R LICENSE THIRD-PARTY-NOTICES.md licenses "$out/"
 case "$runtime" in
     osx-*)
         mkdir -p "$out/deploy/macos"
-        cp deploy/macos/*.sh "$out/deploy/macos/"
+        cp deploy/macos/*.sh deploy/icons/Aperture.icns "$out/deploy/macos/"   # the icon for the Aperture app
         chmod +x "$out"/deploy/macos/*.sh
         ;;
     linux-*)

@@ -2,7 +2,7 @@
 
 A small ERP for running a photography business: shoots, clients, deliveries, costs, invoices (Swiss QR-bill) and tax exports.
 Single user, CHF, English. It runs on the photographer's own computer (macOS, Windows or Linux), installed with a
-double-click and used in the browser there.
+double-click; it opens in its own window there, a browser's app mode without tabs or address bar.
 
 **Install:**
 - **macOS** (Apple silicon, macOS 15 or newer): [Aperture-Installer.pkg](../../releases/latest/download/Aperture-Installer.pkg)

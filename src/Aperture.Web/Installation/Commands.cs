@@ -4,7 +4,7 @@ namespace Aperture.Web.Installation;
 /// The program's commands besides running the web app. They're the same on every system; Platform covers the
 /// differences.
 /// <code>
-/// Aperture.Web install [--feed &lt;latest.json URL&gt;] [--port &lt;port&gt;] [--no-open]
+/// Aperture.Web install [--feed &lt;latest.json URL&gt;] [--port &lt;port&gt;] [--no-open] [--desktop-shortcut]
 /// Aperture.Web update [&lt;aperture-…-&lt;runtime&gt;.tar.gz&gt;]   (without one: the update Aperture downloaded)
 /// Aperture.Web backup
 /// Aperture.Web restore &lt;backup ZIP, its folder, or a daily aperture-YYYY-MM-DD.db&gt;
@@ -36,7 +36,8 @@ public static class Commands
                 "install" => await installer.InstallAsync(
                     Option(args, "--feed"),
                     Option(args, "--port") is { } port ? int.Parse(port) : null,
-                    openBrowser: !args.Contains("--no-open") && Environment.GetEnvironmentVariable("APERTURE_NO_OPEN") != "1"),
+                    openApp: !args.Contains("--no-open") && Environment.GetEnvironmentVariable("APERTURE_NO_OPEN") != "1",
+                    desktopShortcut: args.Contains("--desktop-shortcut")),
                 "update" => await new Updater(home, platform, TimeProvider.System, log).RunAsync(Positional(args)),
                 "backup" => new BackupJob(home, TimeProvider.System, log).Run(),
                 "restore" => Positional(args) is { } source
@@ -66,7 +67,7 @@ public static class Commands
         {
             if (args[i].StartsWith("--"))
             {
-                i += args[i] is "--no-open" or "--remove-data" ? 0 : 1;
+                i += args[i] is "--no-open" or "--remove-data" or "--desktop-shortcut" ? 0 : 1;
                 continue;
             }
 
