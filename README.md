@@ -44,11 +44,11 @@ under **Settings**: address and IBAN appear on invoices.
 ## Installing it
 
 See [docs/deployment.md](docs/deployment.md):
-- Pushing to `main` on GitHub builds a release in this private repository (`.github/workflows/release.yml`, with
+- Pushing to `main` on GitHub publishes a pre-release of this repository (`.github/workflows/release.yml`, with
   `deploy/publish.sh`: self-contained, for Apple silicon).
-- `.github/workflows/promote.yml` copies a release you've tried to a public releases repository, whose `latest.json`
-  the Mac checks for updates. Aperture offers it under **Settings → Updates** and goes back to the previous version if
-  the new one doesn't start.
+- `.github/workflows/promote.yml` makes a release you've tried the latest one; its `latest.json` is what the Mac checks
+  for updates. Aperture offers it under **Settings → Updates** and goes back to the previous version if the new one
+  doesn't start.
 - `deploy/macos/pkg/build-pkg.sh` builds an installer package that installs the newest promoted release for the person
   logged in (`deploy/macos/install-laptop.sh`), without admin rights or a token; the login is created in the browser.
 
@@ -57,7 +57,7 @@ See [docs/deployment.md](docs/deployment.md):
 | Setting | Default | Notes |
 |---|---|---|
 | `Aperture:DataDirectory` | `data` (relative to `src/Aperture.Web`) | All business data. `~` is expanded; the installer uses `~/Aperture/data`. |
-| `Updates:FeedUrl` | – | The `latest.json` of the public releases repository (https). Enables Settings → Updates. |
+| `Updates:FeedUrl` | – | `https://github.com/<owner>/aperture/releases/latest/download/latest.json`. Enables Settings → Updates. |
 
 The installer sets them as environment variables (`Aperture__DataDirectory`, `Updates__FeedUrl`) in the launchd
 agent, `~/Library/LaunchAgents/ch.aperture.web.plist`.
@@ -116,8 +116,17 @@ A few conventions:
 | Component | Used for | License |
 |---|---|---|
 | Radzen.Blazor | UI components | MIT |
-| QuestPDF | invoice and statement PDFs | Community license: free below USD 1M annual revenue |
+| QuestPDF | invoice and statement PDFs | QuestPDF Community License: free for open-source projects, individuals and businesses below USD 1M annual revenue |
 | Codecrete.SwissQRBill.Generator | QR-bill | MIT |
 | ClosedXML | Excel export | MIT |
 | Liberation Sans | font embedded in PDFs | SIL Open Font License |
 | Space Grotesk Regular | app font, self-hosted in `wwwroot/fonts` | SIL Open Font License |
+
+All of them, with their transitive dependencies and copyright notices: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+Releases include it, together with the license texts in `licenses/`.
+
+## License
+
+Aperture is under the [MIT License](LICENSE). It covers Aperture's own code only: the components above keep their own
+licenses. QuestPDF in particular isn't MIT; if you build on Aperture in an organisation with USD 1M or more annual
+revenue, you need a QuestPDF license (see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)).

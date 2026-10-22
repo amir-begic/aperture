@@ -7,14 +7,14 @@ namespace Aperture.Web.Features.Updates;
 /// <summary>Where releases come from: set by install-laptop.sh. Without it, Aperture doesn't look for updates.</summary>
 public sealed class UpdateOptions
 {
-    /// <summary>The address of the release feed's latest.json, on the public repository that holds only releases.</summary>
+    /// <summary>The latest.json of the repository's latest release: …/releases/latest/download/latest.json.</summary>
     public string? FeedUrl { get; set; }
 
     public bool IsConfigured => Uri.TryCreate(FeedUrl, UriKind.Absolute, out var feed) && feed.Scheme == Uri.UriSchemeHttps;
 }
 
 /// <summary>
-/// A release built by .github/workflows/release.yml and promoted to the feed, with its Mac package: downloaded from
+/// A release built by .github/workflows/release.yml and promoted by promote.yml, with its Mac package: downloaded from
 /// <paramref name="DownloadUrl"/> and checked against <paramref name="Sha256"/>.
 /// </summary>
 public sealed record Release(
@@ -22,8 +22,9 @@ public sealed record Release(
     Uri DownloadUrl, string Sha256);
 
 /// <summary>
-/// Reads releases from the public feed: latest.json, written by .github/workflows/promote.yml next to the package it
-/// describes. Nothing to sign in to; the SHA-256 in it is checked before a download is installed.
+/// Reads the promoted release from the feed: latest.json, which .github/workflows/release.yml attaches to each release
+/// next to the package it describes; promote.yml makes one release the latest. Nothing to sign in to; the SHA-256 in it
+/// is checked before a download is installed.
 /// </summary>
 public sealed partial class ReleaseFeed(HttpClient http, UpdateOptions options)
 {

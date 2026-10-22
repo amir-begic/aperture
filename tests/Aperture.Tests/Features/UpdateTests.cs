@@ -21,9 +21,9 @@ public class UpdateTests : IAsyncLifetime, IDisposable
     private const string Package = "aperture-2026.10.20-58-ed1231e-osx-arm64.tar.gz";
     private static readonly byte[] PackageBytes = Encoding.UTF8.GetBytes("pretend this is a tarball");
 
-    // The public feed (.github/workflows/promote.yml writes it).
-    private const string FeedUrl = "https://github.example.test/me/aperture-releases/releases/latest/download/latest.json";
-    private const string DownloadUrl = "https://github.example.test/me/aperture-releases/releases/download/v2026.10.20-58-ed1231e/" + Package;
+    // The feed: latest.json of the latest release (.github/workflows/release.yml attaches it, promote.yml promotes it).
+    private const string FeedUrl = "https://github.example.test/me/aperture/releases/latest/download/latest.json";
+    private const string DownloadUrl = "https://github.example.test/me/aperture/releases/download/v2026.10.20-58-ed1231e/" + Package;
     private static readonly string PackageSha256 = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(PackageBytes));
 
     private static string FeedJson(string? sha256 = null, string download = DownloadUrl, string file = Package, long? size = null) => $$"""
@@ -31,7 +31,7 @@ public class UpdateTests : IAsyncLifetime, IDisposable
           "version": "2026.10.20-58-ed1231e",
           "published": "2026-10-20T08:00:00Z",
           "notes": "- Add the laptop installer",
-          "page": "https://github.example.test/me/aperture-releases/releases/tag/v2026.10.20-58-ed1231e",
+          "page": "https://github.example.test/me/aperture/releases/tag/v2026.10.20-58-ed1231e",
           "file": "{{file}}",
           "size": {{size ?? PackageBytes.Length}},
           "sha256": "{{sha256 ?? PackageSha256}}",

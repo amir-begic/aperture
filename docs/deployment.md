@@ -19,25 +19,24 @@ Everything is in `~/Aperture`:
 
 ## Setting it up, once (you)
 
-1. **Make a public repository for releases**, e.g. `<you>/aperture-releases`, with a README (a release needs a
-   commit to point at). It holds only release packages, never code. Their release notes are the commit subjects, so
-   those become public too.
-2. **Give the workflow access:** *GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token*.
-   Repository access: only `aperture-releases`. Permissions: *Contents: Read and write*. Then in the private repository
-   under *Settings → Secrets and variables → Actions*: secret `RELEASES_TOKEN` (the token) and variable
-   `RELEASES_REPOSITORY` (`<you>/aperture-releases`). The token stays in GitHub Actions. The laptop gets none.
-3. **Promote a release:** *Actions → Promote → Run workflow*. Leave the version empty for the newest release, or enter
-   one of the last five (`.github/workflows/promote.yml`). It copies the package to the public repository with
-   `latest.json`, which names the version, the download and its SHA-256. The feed address is then
-   `https://github.com/<you>/aperture-releases/releases/latest/download/latest.json`.
-4. **Build the installer** on your Mac:
+1. **Put the code on GitHub** as a public repository and push `main`:
    ```bash
-   deploy/macos/pkg/build-pkg.sh https://github.com/<you>/aperture-releases/releases/latest/download/latest.json
+   gh repo create aperture --public --source . --push
+   ```
+   Every push to `main` runs the tests and publishes a **pre-release** with the package and its `latest.json`, which
+   names the version, the download and its SHA-256 (`.github/workflows/release.yml`). Macs never see pre-releases.
+   No token or secret is needed: the workflows use the repository's own.
+2. **Promote a release:** *Actions → Promote → Run workflow* (`.github/workflows/promote.yml`). Leave the version empty
+   for the newest release, or enter one of the last five. It becomes the repository's *latest* release, which is what
+   the Macs read. The feed address is always the same:
+   `https://github.com/<you>/aperture/releases/latest/download/latest.json`.
+3. **Build the installer** on your Mac:
+   ```bash
+   deploy/macos/pkg/build-pkg.sh https://github.com/<you>/aperture/releases/latest/download/latest.json
    # → artifacts/Aperture-Installer.pkg
    ```
-   The package contains no program, only a script that downloads the newest promoted release. So it never goes stale.
-   Build it again only if the feed address changes. Send it by AirDrop or mail, or attach it to a release in the
-   public repository.
+   The package contains no program, only a script that downloads the latest (promoted) release. So it never goes
+   stale. Build it again only if the feed address changes. Send it by AirDrop or mail, or attach it to a release.
 
 ## Installing (on the laptop)
 
@@ -62,8 +61,8 @@ Everything is in `~/Aperture`:
 
 ## Updates
 
-Every push to `main` on GitHub runs the tests and builds a release in the private repository
-(`.github/workflows/release.yml`). The Mac doesn't see it until you promote it (*Setting it up*, step 3). It then
+Every push to `main` on GitHub runs the tests and publishes a pre-release (`.github/workflows/release.yml`). The Mac
+doesn't see it until you promote it (*Setting it up*, step 2). It then
 finds it within six hours (or right away with *Settings → Updates → Check for updates*). The Dashboard says so, and
 *Install update* installs it with no password: everything belongs to the user. Aperture stops, saves a copy of the
 database in `~/Aperture/backups/before-update/`, starts the new version and checks it. If the new version doesn't come

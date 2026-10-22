@@ -1,5 +1,6 @@
-# Every push to main: run the tests, build the release and publish it as a GitHub release of this (private)
-# repository. Laptops don't see it yet: promote.yml hands a release you've tried on to the public feed they read.
+# Every push to main: run the tests, build the release and publish it as a pre-release of this repository, with
+# latest.json, the feed entry Aperture reads (Updates:FeedUrl). Macs don't see it yet: they read the latest release,
+# and pre-releases never are. promote.yml makes one the latest once you've tried it.
 #
 # Kept small for the free plan: no workflow artifacts or caches (the package goes to Releases, which don't count
 # towards Actions storage), no run for changes that are only docs, a newer push cancels the older run, and only
@@ -49,7 +50,7 @@ jobs:
           echo "tarball=$tarball" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Publish
+      - name: Publish as a pre-release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.build.outputs.version }}
@@ -61,12 +62,31 @@ jobs:
           else
             git log -1 --format='- %s' > notes.md
           fi
-          gh release create "v$VERSION" "$TARBALL" --title "Aperture $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
 
-      - name: Keep the last 5 releases
+          # The feed entry: what the release is, where its package is and the package's SHA-256 (ReleaseFeed.cs).
+          tag="v$VERSION"
+          file="$(basename "$TARBALL")"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg published "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --rawfile notes notes.md \
+            --arg page "https://github.com/$GITHUB_REPOSITORY/releases/tag/$tag" \
+            --arg file "$file" \
+            --argjson size "$(stat -c %s "$TARBALL")" \
+            --arg sha256 "$(sha256sum "$TARBALL" | cut -d ' ' -f 1)" \
+            --arg download "https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/$file" \
+            '{version: $version, published: $published, notes: $notes, page: $page, file: $file, size: $size, sha256: $sha256, download: $download}' \
+            > latest.json
+          cat latest.json
+
+          gh release create "$tag" "$TARBALL" latest.json --prerelease --latest=false \
+            --title "Aperture $VERSION" --notes-file notes.md --target "$GITHUB_SHA"
+
+      # Never the latest release: that's the one the Macs and the installer package download.
+      - name: Keep the last 5 pre-releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release list --limit 100 --json tagName,createdAt \
-            | jq -r 'sort_by(.createdAt) | reverse | .[5:] | .[].tagName' \
+          gh release list --limit 100 --json tagName,createdAt,isLatest \
+            | jq -r 'map(select(.isLatest | not)) | sort_by(.createdAt) | reverse | .[5:] | .[].tagName' \
             | while read -r tag; do gh release delete "$tag" --yes --cleanup-tag; done

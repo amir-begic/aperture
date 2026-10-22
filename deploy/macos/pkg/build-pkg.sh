@@ -1,7 +1,7 @@
 #!/bin/bash
 # Builds the installer for a laptop, artifacts/Aperture-Installer.pkg. Run on a Mac (pkgbuild comes with macOS):
 #
-#   deploy/macos/pkg/build-pkg.sh https://github.com/<you>/aperture-releases/releases/latest/download/latest.json
+#   deploy/macos/pkg/build-pkg.sh https://github.com/<you>/aperture/releases/latest/download/latest.json
 #
 # The package holds no program, only postinstall: it downloads the newest release from the feed and runs
 # install-laptop.sh for the person logged in. So it never goes stale; build it again only when the feed address or

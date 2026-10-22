@@ -18,10 +18,12 @@ out="artifacts/$name"
 rm -rf "$out"
 "$dotnet" publish src/Aperture.Web -c Release -r osx-arm64 --self-contained \
     -p:InformationalVersion="$version" -o "$out" --nologo -v quiet >&2
-# Releases end up public (promote.yml): never with the development data, login or keys.
+# Releases are public (release.yml): never with the development data, login or keys.
 [[ ! -e $out/data ]] || { echo "The build contains a data folder; check the Content items in Aperture.Web.csproj." >&2; exit 1; }
 mkdir -p "$out/deploy/macos"
 cp deploy/macos/*.sh deploy/macos/*.plist "$out/deploy/macos/"
+# Aperture's license, and the notices and license texts its third-party components require with the binaries.
+cp -R LICENSE THIRD-PARTY-NOTICES.md licenses "$out/"
 chmod +x "$out"/deploy/macos/*.sh
 
 tar -C artifacts -czf "artifacts/$name-osx-arm64.tar.gz" "$name"

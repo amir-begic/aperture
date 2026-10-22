@@ -6,7 +6,7 @@
 # Usually run by the installer package (deploy/macos/pkg), or by hand from the unpacked release.
 # Installs into ~/Aperture and runs Aperture as launchd agents of your user (~/Library/LaunchAgents): the app at
 # http://localhost:5090 whenever you're logged in, the updater, and a daily backup into ~/Aperture/backups. The login
-# is created in the browser on first start. With a feed URL (latest.json, see .github/workflows/promote.yml), Aperture
+# is created in the browser on first start. With a feed URL (…/releases/latest/download/latest.json), Aperture
 # offers new releases from it under Settings → Updates; without one, it keeps the current one. Safe to run again:
 # existing data is kept.
 set -euo pipefail

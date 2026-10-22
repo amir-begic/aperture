@@ -1,13 +1,7 @@
-# Hands a release on to the laptops: copies it from this (private) repository's releases to the public releases
-# repository, together with latest.json, the feed Aperture reads there (Updates:FeedUrl). Run by hand once you've tried
-# a release for a while: Actions → Promote → Run workflow.
-#
-# The public repository holds only these releases, no code. Its release notes are the commit subjects, so they're
-# public too.
-#
-# Needs, once (docs/deployment.md, "On a laptop"):
-#   - repository variable RELEASES_REPOSITORY: owner/name of the public repository, e.g. me/aperture-releases
-#   - secret RELEASES_TOKEN: fine-grained token, Contents: Read and write on that repository only
+# Hands a release on to the Macs: makes it the latest release of this repository. Aperture reads
+# …/releases/latest/download/latest.json (Updates:FeedUrl), and so does the installer package; release.yml publishes
+# every build as a pre-release, which is never the latest. Run by hand once you've tried a release for a while:
+# Actions → Promote → Run workflow. Promoting an older release goes back to it, but Macs only install newer builds.
 name: Promote
 
 on:
@@ -18,7 +12,7 @@ on:
         required: false
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: promote
@@ -27,57 +21,28 @@ concurrency:
 jobs:
   promote:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      PUBLIC: ${{ vars.RELEASES_REPOSITORY }}
+    timeout-minutes: 5
     steps:
-      - name: Download the release
+      - name: Promote
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ inputs.version }}
         run: |
-          [ -n "$PUBLIC" ] || { echo "::error::Set the repository variable RELEASES_REPOSITORY (docs/deployment.md)."; exit 1; }
           if [ -n "$VERSION" ]; then
             tag="v${VERSION#v}"
           else
-            tag="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)"
+            tag="$(gh release list --limit 1 --json tagName -q '.[0].tagName')"
           fi
-          gh release download "$tag" --repo "$GITHUB_REPOSITORY" --pattern 'aperture-*-osx-arm64.tar.gz'
-          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json body -q .body > notes.md
-          echo "TAG=$tag" >> "$GITHUB_ENV"
+          [ -n "$tag" ] || { echo "::error::There's no release yet. Push to main first."; exit 1; }
+          gh release view "$tag" --json assets -q '.assets[].name' | grep -qx latest.json \
+            || { echo "::error::$tag has no latest.json; it was built before releases carried one."; exit 1; }
 
-      - name: Write latest.json
-        run: |
-          file="$(ls aperture-*-osx-arm64.tar.gz)"
-          jq -n \
-            --arg version "${TAG#v}" \
-            --arg published "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            --rawfile notes notes.md \
-            --arg page "https://github.com/$PUBLIC/releases/tag/$TAG" \
-            --arg file "$file" \
-            --argjson size "$(stat -c %s "$file")" \
-            --arg sha256 "$(sha256sum "$file" | cut -d ' ' -f 1)" \
-            --arg download "https://github.com/$PUBLIC/releases/download/$TAG/$file" \
-            '{version: $version, published: $published, notes: $notes, page: $page, file: $file, size: $size, sha256: $sha256, download: $download}' \
-            > latest.json
-          cat latest.json
-          echo "FILE=$file" >> "$GITHUB_ENV"
+          gh release edit "$tag" --prerelease=false --latest
 
-      # Aperture reads …/releases/latest/download/latest.json, so the new release has to be the latest one.
-      - name: Publish
-        env:
-          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
-        run: |
-          if gh release view "$TAG" --repo "$PUBLIC" >/dev/null 2>&1; then
-            echo "::error::$TAG is already in $PUBLIC."
-            exit 1
-          fi
-          gh release create "$TAG" "$FILE" latest.json --repo "$PUBLIC" --title "Aperture ${TAG#v}" --notes-file notes.md --latest
-
-      - name: Keep the last 5 releases
-        env:
-          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
-        run: |
-          gh release list --repo "$PUBLIC" --limit 100 --json tagName,createdAt \
-            | jq -r 'sort_by(.createdAt) | reverse | .[5:] | .[].tagName' \
-            | while read -r tag; do gh release delete "$tag" --repo "$PUBLIC" --yes --cleanup-tag; done
+          # What the Macs will see. GitHub may take a moment to follow, so a mismatch here is only a warning.
+          feed="https://github.com/$GH_REPO/releases/latest/download/latest.json"
+          echo "Feed: $feed"
+          offered="$(curl -fsSL "$feed" | jq -r .version || true)"
+          [ "v$offered" = "$tag" ] && echo "Feed now offers $offered" \
+            || echo "::warning::The feed still offers '${offered:-nothing}'; check again in a minute."
