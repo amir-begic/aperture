@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs a new version of Aperture on the Mac mini.
+# Installs a new version of Aperture on the Mac mini, or on a laptop (install-laptop.sh).
 #
 #   ~/Aperture/app/deploy/macos/update.sh ~/Downloads/aperture-2026.10.06-b0d6009-osx-arm64.tar.gz
 #
@@ -10,7 +10,7 @@ source "$(cd "$(dirname "$0")" && pwd)/common.sh"
 
 require_mac
 [[ $# -eq 1 ]] || fail "Usage: update.sh <aperture-…-osx-arm64.tar.gz>"
-[[ -f $WEB_PLIST ]] || fail "Aperture isn't installed yet. Run install.sh first."
+is_installed || fail "Aperture isn't installed yet. Run install.sh (or install-laptop.sh) first."
 
 say "Unpacking"
 release="$(unpack_release "$1")"

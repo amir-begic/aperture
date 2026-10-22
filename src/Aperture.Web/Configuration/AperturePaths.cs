@@ -18,6 +18,9 @@ public sealed record AperturePaths(string DataDirectory)
     /// <summary>The key pair that signs notifications (VAPID); the devices' subscriptions are tied to it.</summary>
     public string PushKeysFile => Path.Combine(KeysDirectory, "push-vapid.json");
 
+    /// <summary>The login created in the browser on a laptop installation (see LoginStore). Delete it to set a new one.</summary>
+    public string LoginFile => Path.Combine(KeysDirectory, "login.json");
+
     /// <summary>Written by the nightly backup script (deploy/macos/backup.sh).</summary>
     public string BackupStatusFile => Path.Combine(DataDirectory, "backup-status.json");
 

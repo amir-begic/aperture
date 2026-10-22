@@ -8,6 +8,7 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
 @inject CredentialValidator Credentials
+@inject LoginStore Logins
 @inject NavigationManager Navigation
 
 <PageTitle>Sign in · Aperture</PageTitle>
@@ -60,7 +61,15 @@
 
     private bool _failed;
 
-    protected override void OnInitialized() => Input ??= new();
+    protected override void OnInitialized()
+    {
+        Input ??= new();
+        // First start of a laptop installation: there's no login to sign in with yet.
+        if (Logins.CanSetUpFrom(HttpContext.Connection.RemoteIpAddress))
+        {
+            Navigation.NavigateTo("setup");
+        }
+    }
 
     private async Task SignInAsync()
     {

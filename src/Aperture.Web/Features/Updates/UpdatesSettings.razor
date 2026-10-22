@@ -21,7 +21,8 @@
         @if (!Updates.IsConfigured)
         {
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                Updates from GitHub aren't set up on this machine. On the Mac mini, install.sh asks for the repository and a token.
+                Updates aren't set up on this machine. On the Mac mini, install.sh asks for the GitHub repository and a token;
+                on a laptop, the installer sets them up.
             </RadzenText>
         }
         else
@@ -56,7 +57,7 @@
                 @if (UpdaterSeemsMissing)
                 {
                     <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                        The updater hasn't started yet. It's set up by install.sh on the Mac mini; run that again if this stays.
+                        The updater hasn't started yet. The installer sets it up; run it again if this stays.
                     </RadzenAlert>
                 }
             }

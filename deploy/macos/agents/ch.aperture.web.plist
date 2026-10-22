@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Aperture on a laptop, as a launchd agent: runs while you're logged in, restarts if it stops, and only answers on this
+  Mac (localhost). The login is created in the browser on first start (Aperture:LocalOnly). install-laptop.sh fills in
+  the __PLACEHOLDERS__ and installs it to ~/Library/LaunchAgents.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ch.aperture.web</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>__APERTURE_HOME__/app/Aperture.Web</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>__APERTURE_HOME__/app</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>ASPNETCORE_ENVIRONMENT</key>
+        <string>Production</string>
+        <key>ASPNETCORE_URLS</key>
+        <string>http://localhost:__PORT__</string>
+        <key>Aperture__DataDirectory</key>
+        <string>__APERTURE_HOME__/data</string>
+        <key>Aperture__LocalOnly</key>
+        <string>true</string>
+        <key>Updates__FeedUrl</key>
+        <string>__FEED_URL__</string>
+        <key>DOTNET_gcServer</key>
+        <string>0</string>
+    </dict>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+    <key>StandardOutPath</key>
+    <string>__APERTURE_HOME__/logs/aperture.log</string>
+    <key>StandardErrorPath</key>
+    <string>__APERTURE_HOME__/logs/aperture.log</string>
+</dict>
+</plist>

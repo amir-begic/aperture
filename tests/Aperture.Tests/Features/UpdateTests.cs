@@ -51,7 +51,14 @@ public class UpdateTests : IAsyncLifetime, IDisposable
         public HttpClient CreateClient(string name)
         {
             var http = new HttpClient(handler, disposeHandler: false);
-            GitHubReleases.Configure(http, options);
+            if (name == nameof(ReleaseFeed))
+            {
+                ReleaseFeed.Configure(http);
+            }
+            else
+            {
+                GitHubReleases.Configure(http, options);
+            }
             return http;
         }
     }
@@ -59,9 +66,10 @@ public class UpdateTests : IAsyncLifetime, IDisposable
     private static HttpResponseMessage Json(string json) => new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };
 
     private (UpdateService Service, FakeGitHub GitHub, AperturePaths Paths) Create(
-        Func<HttpRequestMessage, HttpResponseMessage> respond, string? repository = "me/aperture", string? token = "test-token")
+        Func<HttpRequestMessage, HttpResponseMessage> respond, string? repository = "me/aperture", string? token = "test-token",
+        string? feedUrl = null)
     {
-        var options = new UpdateOptions { Repository = repository, GitHubToken = token, ApiUrl = "https://api.example.test/" };
+        var options = new UpdateOptions { Repository = repository, GitHubToken = token, FeedUrl = feedUrl, ApiUrl = "https://api.example.test/" };
         var github = new FakeGitHub(respond);
         var paths = new AperturePaths(_dataDirectory);
         var service = new UpdateService(new Factory(github, options), options, paths,
@@ -240,5 +248,113 @@ public class UpdateTests : IAsyncLifetime, IDisposable
         Assert.Equal(AttentionLevel.Info, item.Level);
         Assert.Equal("Aperture build 58 · 20.10.2026 is available", item.Text);
         Assert.Equal("settings#updates", item.Link);
+    }
+
+    // The public feed a laptop installation reads (.github/workflows/promote.yml writes it).
+
+    private const string FeedUrl = "https://github.example.test/me/aperture-releases/releases/latest/download/latest.json";
+    private const string DownloadUrl = "https://github.example.test/me/aperture-releases/releases/download/v2026.10.20-58-ed1231e/" + Package;
+    private static readonly string PackageSha256 = Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(PackageBytes));
+
+    private static string FeedJson(string? sha256 = null, string download = DownloadUrl, string file = Package) => $$"""
+        {
+          "version": "2026.10.20-58-ed1231e",
+          "published": "2026-10-20T08:00:00Z",
+          "notes": "- Add the laptop installer",
+          "page": "https://github.example.test/me/aperture-releases/releases/tag/v2026.10.20-58-ed1231e",
+          "file": "{{file}}",
+          "size": {{PackageBytes.Length}},
+          "sha256": "{{sha256 ?? PackageSha256}}",
+          "download": "{{download}}"
+        }
+        """;
+
+    private static Func<HttpRequestMessage, HttpResponseMessage> FeedLike(string json) => request =>
+        request.RequestUri!.ToString() switch
+        {
+            FeedUrl => Json(json),
+            DownloadUrl => new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(PackageBytes) },
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        };
+
+    [Fact]
+    public async Task Feed_needs_no_token()
+    {
+        var (updates, feed, _) = Create(FeedLike(FeedJson()), repository: null, token: null, feedUrl: FeedUrl);
+
+        await updates.CheckAsync();
+
+        Assert.True(updates.IsConfigured);
+        var latest = Assert.IsType<Release>(updates.Latest);
+        Assert.Equal(58, latest.Version.Build);
+        Assert.Equal(Package, latest.AssetName);
+        Assert.Equal(PackageSha256, latest.Sha256);
+        Assert.Contains("laptop installer", latest.Notes);
+        var request = Assert.Single(feed.Requests);
+        Assert.Equal(FeedUrl, request.RequestUri!.ToString());
+        Assert.Null(request.Headers.Authorization);
+    }
+
+    [Fact]
+    public async Task Feed_wins_over_GitHub_and_never_sees_the_token()
+    {
+        var (updates, feed, _) = Create(FeedLike(FeedJson()), feedUrl: FeedUrl);
+        await updates.CheckAsync();
+        await updates.InstallAsync();
+        Assert.All(feed.Requests, r => Assert.Null(r.Headers.Authorization));
+        Assert.DoesNotContain(feed.Requests, r => r.RequestUri!.Host == "api.example.test");
+    }
+
+    [Fact]
+    public async Task Feed_install_checks_the_download_and_asks_the_updater()
+    {
+        var (updates, feed, paths) = Create(FeedLike(FeedJson()), repository: null, token: null, feedUrl: FeedUrl);
+        await updates.CheckAsync();
+
+        await updates.InstallAsync();
+
+        Assert.Equal(PackageBytes, await File.ReadAllBytesAsync(Path.Combine(paths.UpdatesDirectory, Package)));
+        Assert.Equal(Package + "\n", await File.ReadAllTextAsync(paths.UpdateRequestFile));
+        Assert.Equal(DownloadUrl, feed.Requests.Last().RequestUri!.ToString());
+    }
+
+    [Fact]
+    public async Task Feed_download_that_doesnt_match_is_not_handed_over()
+    {
+        var (updates, _, paths) = Create(FeedLike(FeedJson(sha256: new string('a', 64))), repository: null, token: null, feedUrl: FeedUrl);
+        await updates.CheckAsync();
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => updates.InstallAsync());
+
+        Assert.Contains("doesn't match", error.Message);
+        Assert.False(File.Exists(paths.UpdateRequestFile));
+        Assert.Empty(Directory.GetFiles(paths.UpdatesDirectory));
+    }
+
+    [Theory]
+    [InlineData("not-a-hash", DownloadUrl, Package)]
+    [InlineData(null, "http://github.example.test/" + Package, Package)]
+    [InlineData(null, DownloadUrl, "aperture-../../x-osx-arm64.tar.gz")]
+    public async Task Feed_entry_that_isnt_safe_to_install_is_ignored(string? sha256, string download, string file)
+    {
+        var (updates, _, _) = Create(FeedLike(FeedJson(sha256, download, file)), repository: null, token: null, feedUrl: FeedUrl);
+        await updates.CheckAsync();
+        Assert.Null(updates.Latest);
+    }
+
+    [Theory]
+    [InlineData("http://github.example.test/latest.json")]
+    [InlineData("latest.json")]
+    public void Feed_needs_an_https_address(string feedUrl)
+    {
+        Assert.False(new UpdateOptions { FeedUrl = feedUrl }.IsConfigured);
+    }
+
+    [Fact]
+    public async Task Unreachable_feed_explains_the_problem()
+    {
+        var (updates, _, _) = Create(_ => new HttpResponseMessage(HttpStatusCode.Forbidden), repository: null, token: null, feedUrl: FeedUrl);
+        await updates.CheckAsync();
+        Assert.Contains("Couldn't reach the update server", updates.Problem);
     }
 }

@@ -1,0 +1,123 @@
+@page "/setup"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout AuthLayout
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using System.Text.RegularExpressions
+@using Aperture.Web.Auth
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@inject LoginStore Logins
+@inject NavigationManager Navigation
+
+@* First start of a laptop installation (Aperture:LocalOnly): there's no login yet, so the first visit creates it. *@
+
+<PageTitle>Create your login · Aperture</PageTitle>
+
+<div class="login-stack">
+<div>
+    <p class="login-tagline">Photo office</p>
+    <h1 class="wordmark login-wordmark"><span class="brand-ring" aria-hidden="true"></span>Aperture</h1>
+</div>
+<RadzenCard class="login-card">
+    <RadzenStack Gap="1rem">
+        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+            Welcome. Choose the username and password you'll sign in with. They stay on this Mac.
+        </RadzenText>
+
+        @if (_error is not null)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                @_error
+            </RadzenAlert>
+        }
+
+        @* Statically rendered form (no circuit), so it can set the auth cookie, like the login. *@
+        <EditForm Model="Input" method="post" FormName="setup" OnValidSubmit="SetUpAsync">
+            <DataAnnotationsValidator />
+            <RadzenStack Gap="1rem">
+                <label class="login-field">
+                    Username
+                    <InputText @bind-Value="Input.Username" class="rz-textbox" autocomplete="username" autofocus />
+                </label>
+                <label class="login-field">
+                    Password (at least @MinimumLength characters)
+                    <InputText @bind-Value="Input.Password" type="password" class="rz-textbox" autocomplete="new-password" />
+                </label>
+                <label class="login-field">
+                    Repeat the password
+                    <InputText @bind-Value="Input.Repeated" type="password" class="rz-textbox" autocomplete="new-password" />
+                </label>
+                <RadzenButton ButtonType="ButtonType.Submit" Text="Create login" />
+            </RadzenStack>
+        </EditForm>
+    </RadzenStack>
+</RadzenCard>
+</div>
+
+@code {
+    private const int MinimumLength = 8;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private SetupInput Input { get; set; } = default!;
+
+    private bool _allowed;
+    private string? _error;
+
+    protected override void OnInitialized()
+    {
+        Input ??= new();
+        _allowed = Logins.CanSetUpFrom(HttpContext.Connection.RemoteIpAddress);
+        if (!_allowed)
+        {
+            Navigation.NavigateTo("login");
+        }
+    }
+
+    private async Task SetUpAsync()
+    {
+        if (!_allowed)
+        {
+            return;
+        }
+
+        var username = Input.Username.Trim();
+        _error = !Regex.IsMatch(username, "^[A-Za-z0-9._@-]+$") ? "Use letters, digits and . _ @ - for the username."
+            : Input.Password.Length < MinimumLength ? $"Use at least {MinimumLength} characters for the password."
+            : Input.Password != Input.Repeated ? "The passwords don't match."
+            : null;
+        if (_error is null && !Logins.TrySetUp(username, Input.Password))
+        {
+            _error = "There's a login already. Sign in with it.";
+        }
+        Input.Password = Input.Repeated = ""; // don't echo them back into the HTML
+        if (_error is not null)
+        {
+            return;
+        }
+
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, username)], CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(identity),
+            new AuthenticationProperties { IsPersistent = true });
+
+        Navigation.NavigateTo("", forceLoad: true);
+    }
+
+    private sealed class SetupInput
+    {
+        [Required]
+        public string Username { get; set; } = "";
+
+        [Required]
+        public string Password { get; set; } = "";
+
+        [Required]
+        public string Repeated { get; set; } = "";
+    }
+}

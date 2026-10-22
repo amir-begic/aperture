@@ -32,7 +32,7 @@ public static class Attention
     /// <summary>
     /// Most urgent first: backups, overdue invoices, overdue deliveries, deliveries due soon, shoots to invoice,
     /// shoots to mark as shot, open prep, a new version of Aperture.
-    /// Backups are only checked where they're expected (the Mac mini, not a development machine).
+    /// Backups are only checked where they're expected (an installation, not a development machine).
     /// Open prep is flagged for shoots within <paramref name="prepHorizon"/> (default <see cref="PrepHorizon"/>).
     /// </summary>
     public static async Task<List<AttentionItem>> ItemsAsync(
@@ -48,7 +48,7 @@ public static class Attention
             if (backup?.LastSuccess is not { } lastSuccess)
             {
                 items.Add(new(AttentionLevel.Urgent, "backup", "No backup has run yet",
-                    "Set up the nightly backup on the Mac mini (docs/deployment.md)", "settings", "backup-none"));
+                    "Set up the nightly backup (docs/deployment.md)", "settings", "backup-none"));
             }
             else if (backup.IsStale(new DateTimeOffset(now)))
             {

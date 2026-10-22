@@ -1,7 +1,8 @@
 # Aperture
 
 A small ERP for running a photography business: shoots, clients, deliveries, costs, invoices (Swiss QR-bill) and tax exports.
-Single user, CHF, English, self-hosted on a Mac mini and used from any browser at home or through Tailscale.
+Single user, CHF, English, self-hosted on a Mac mini and used from any browser at home or through Tailscale, or
+installed on someone's own laptop.
 
 **Stack:** .NET 10 · Blazor Web App (Interactive Server) · Radzen.Blazor · EF Core + SQLite
 
@@ -49,18 +50,26 @@ See [docs/deployment.md](docs/deployment.md):
 - Pushing to `main` on GitHub builds a release (`.github/workflows/release.yml`); Aperture offers it under
   **Settings → Updates** and installs it with the same rollback.
 
+For someone running it on their own Mac laptop, see [On a laptop](docs/deployment.md#on-a-laptop-for-someone-else):
+- `deploy/macos/pkg/build-pkg.sh` builds an installer package that installs the newest promoted release for the person
+  logged in (`deploy/macos/install-laptop.sh`), without admin rights or a token; the login is created in the browser.
+- `.github/workflows/promote.yml` copies a release you've tried to a public releases repository, whose `latest.json`
+  the laptop checks for updates.
+
 ## Configuration
 
 | Setting | Default | Notes |
 |---|---|---|
 | `Aperture:DataDirectory` | `data` (relative to `src/Aperture.Web`) | All business data. `~` is expanded; the Mac mini uses `~/Aperture/data`. |
-| `Auth:Username` | – | Required. |
-| `Auth:PasswordHash` | – | Required. Generate with `hash-password`; never commit it. |
+| `Aperture:LocalOnly` | `false` | Laptop installation: the login is created in the browser on first start (kept in `keys/login.json`), and the phone features are off. |
+| `Auth:Username` | – | Required, except with `LocalOnly`. |
+| `Auth:PasswordHash` | – | Required, except with `LocalOnly`. Generate with `hash-password`; never commit it. |
 | `Updates:Repository` | – | `owner/name` on GitHub; with the token, enables Settings → Updates. |
 | `Updates:GitHubToken` | – | Fine-grained token, *Contents: Read-only* on that repository. |
+| `Updates:FeedUrl` | – | Instead of the two above: the `latest.json` of a public releases repository (https). Needs no token. |
 
 In production, use environment variables (`Aperture__DataDirectory`, `Auth__Username`, `Auth__PasswordHash`,
-`Updates__Repository`, `Updates__GitHubToken`).
+`Updates__Repository`, `Updates__GitHubToken`; on a laptop `Aperture__LocalOnly` and `Updates__FeedUrl`).
 The installer puts them in the service definition, which only root can read.
 
 The data directory holds:
@@ -68,8 +77,8 @@ The data directory holds:
 ```
 aperture.db               the database (SQLite, WAL mode)
 attachments/YYYY/     receipts, payslips, invoice PDFs, under generated names
-keys/                 keys that sign the login cookie, so a restart doesn't log you out, and the
-                      key pair that signs notifications (push-vapid.json)
+keys/                 keys that sign the login cookie, so a restart doesn't log you out, the
+                      key pair that signs notifications (push-vapid.json), and on a laptop the login (login.json)
 backup-status.json    written by the nightly backup, shown under Settings and on the dashboard
 ```
 
@@ -96,7 +105,8 @@ src/Aperture.Web/
                    Shoots, Clients, Locations, Calendar, Attachments, Invoices, Finance, Dashboard, Backup,
                    Notifications, Settings
 tests/Aperture.Tests/  xUnit; database tests run against in-memory SQLite
-deploy/            release build, Mac mini install/update/backup scripts and service definitions
+deploy/            release build, Mac mini and laptop install/update/backup scripts, service definitions (agents/ for
+                   the laptop) and the laptop installer package (macos/pkg)
 docs/              deployment guide, accounting rules
 ```
 

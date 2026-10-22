@@ -4,7 +4,8 @@
 # Runs update.sh (stop, copy the database, switch, health check, roll back on failure) and reports the outcome in
 # ~/Aperture/data/updates/status.json, which Aperture shows under Settings → Updates.
 #
-# Needs the sudo rules from install.sh (/etc/sudoers.d/aperture): there's nobody to type a password here.
+# On the Mac mini, needs the sudo rules from install.sh (/etc/sudoers.d/aperture): there's nobody to type a password
+# here. A laptop installation (install-laptop.sh) runs as launchd agents of the user and needs no sudo.
 set -uo pipefail
 
 APERTURE_HOME="${APERTURE_HOME:-$HOME/Aperture}"
@@ -45,7 +46,7 @@ if [[ ! $name =~ ^aperture-[0-9A-Za-z.-]+-osx-arm64\.tar\.gz$ || ! -f $UPDATES/$
 fi
 
 # Without the sudo rules from install.sh, update.sh would stop at the first password prompt.
-if ! sudo -n -l /bin/launchctl bootout system/ch.aperture.web >/dev/null 2>&1; then
+if [[ ! -f $HOME/Library/LaunchAgents/ch.aperture.web.plist ]] && ! sudo -n -l /bin/launchctl bootout system/ch.aperture.web >/dev/null 2>&1; then
     log "Not allowed to restart Aperture without a password"
     write_status failed "" "The updater isn't allowed to restart Aperture. Run install.sh again on the Mac; it sets this up."
     rm -f "$UPDATES/$name"

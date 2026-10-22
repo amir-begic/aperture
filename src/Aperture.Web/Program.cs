@@ -27,6 +27,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Data
 var paths = AperturePaths.From(builder.Configuration, builder.Environment);
 builder.Services.AddSingleton(paths);
+var hosting = Hosting.From(builder.Configuration);
+builder.Services.AddSingleton(hosting);
 // A factory rather than a scoped DbContext: a Blazor Server circuit lives as long as the
 // browser tab, so pages create a short-lived context per operation instead.
 builder.Services.AddDbContextFactory<ApertureDbContext>(options => options.UseSqlite(paths.ConnectionString));
@@ -34,29 +36,41 @@ builder.Services.AddSingleton<AttachmentStore>();
 builder.Services.AddSingleton<InvoiceService>();
 builder.Services.AddSingleton<TaxExport>();
 
-// Updates from GitHub releases (Settings → Updates). Off unless install.sh configured a repository and token.
+// Updates (Settings → Updates): from GitHub releases, off unless install.sh configured a repository and token, or
+// from the public feed a laptop installation is given.
 var updateOptions = builder.Configuration.GetSection("Updates").Get<UpdateOptions>() ?? new UpdateOptions();
 builder.Services.AddSingleton(updateOptions);
 builder.Services.AddHttpClient(nameof(GitHubReleases), http => GitHubReleases.Configure(http, updateOptions));
+builder.Services.AddHttpClient(nameof(ReleaseFeed), ReleaseFeed.Configure);
 builder.Services.AddSingleton<UpdateService>();
 builder.Services.AddHostedService<UpdateCheckWorker>();
 
-// Notifications on the phone (Settings → Notifications), sent through the browser's push service.
+// Notifications on the phone (Settings → Notifications), sent through the browser's push service. Not on a laptop
+// installation: no phone can reach it to sign up.
 builder.Services.AddHttpClient(nameof(PushService), http => http.Timeout = TimeSpan.FromSeconds(30));
 builder.Services.AddSingleton<PushService>();
 builder.Services.AddSingleton<PushReminders>();
-builder.Services.AddHostedService<PushReminderWorker>();
+if (!hosting.LocalOnly)
+{
+    builder.Services.AddHostedService<PushReminderWorker>();
+}
 
 // Free for individuals and businesses under USD 1M annual revenue (questpdf.com/license).
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
-// Auth: one user, cookie login, everything requires sign-in unless marked [AllowAnonymous].
-builder.Services.AddOptions<AuthOptions>()
-    .Bind(builder.Configuration.GetSection(AuthOptions.SectionName))
-    .Validate(
-        o => !string.IsNullOrWhiteSpace(o.Username) && CredentialValidator.IsWellFormedHash(o.PasswordHash),
-        "Login is not configured. Run `dotnet run --project src/Aperture.Web -- hash-password` and follow the instructions.")
-    .ValidateOnStart();
+// Auth: one user, cookie login, everything requires sign-in unless marked [AllowAnonymous]. The login is configured,
+// except on a laptop installation, where the first visit creates it (see LoginStore).
+var authOptions = builder.Services.AddOptions<AuthOptions>()
+    .Bind(builder.Configuration.GetSection(AuthOptions.SectionName));
+if (!hosting.LocalOnly)
+{
+    authOptions
+        .Validate(
+            o => !string.IsNullOrWhiteSpace(o.Username) && CredentialValidator.IsWellFormedHash(o.PasswordHash),
+            "Login is not configured. Run `dotnet run --project src/Aperture.Web -- hash-password` and follow the instructions.")
+        .ValidateOnStart();
+}
+builder.Services.AddSingleton<LoginStore>();
 builder.Services.AddSingleton<CredentialValidator>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -124,7 +138,10 @@ app.MapGet("/health", async (IDbContextFactory<ApertureDbContext> dbFactory) =>
 app.MapAttachmentEndpoints();
 app.MapInvoiceEndpoints();
 app.MapTaxExportEndpoints();
-app.MapCalendarFeedEndpoints();
+if (!hosting.LocalOnly)
+{
+    app.MapCalendarFeedEndpoints();
+}
 
 app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
 {

@@ -2,6 +2,7 @@
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NotificationService Notifications
 @inject Aperture.Web.Configuration.AperturePaths Paths
+@inject Aperture.Web.Configuration.Hosting Hosting
 
 <PageTitle>Settings · Aperture</PageTitle>
 
@@ -171,15 +172,19 @@ else
         </RadzenStack>
     </RadzenTemplateForm>
 
-    <Aperture.Web.Features.CalendarFeed.CalendarFeedSettings />
+    @* Both need a phone that can reach Aperture, which a laptop installation can't offer. *@
+    @if (!Hosting.LocalOnly)
+    {
+        <Aperture.Web.Features.CalendarFeed.CalendarFeedSettings />
 
-    <Aperture.Web.Features.Notifications.NotificationSettings HasEmail="_hasSavedEmail" />
+        <Aperture.Web.Features.Notifications.NotificationSettings HasEmail="_hasSavedEmail" />
+    }
 
     <RadzenFieldset Text="Backups" class="settings-form rz-mt-6">
         @if (_backup is null)
         {
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                No backup has run on this machine yet. The nightly backup is set up with deploy/macos/install.sh (see docs/deployment.md).
+                No backup has run on this machine yet. The installer sets up the nightly backup (see docs/deployment.md).
             </RadzenText>
         }
         else

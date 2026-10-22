@@ -2,6 +2,8 @@
 
 Aperture runs on the Mac mini as a background service. It starts when the Mac boots, restarts if it stops, and doesn't need anyone logged in. You use it from the browser on any device in your home network, or anywhere through Tailscale. A backup goes to your backup drives every night.
 
+To give Aperture to someone who runs it on their own laptop, without Tailscale or a GitHub token, see [On a laptop](#on-a-laptop-for-someone-else).
+
 ```
 ~/Aperture/app          the current version (a link into releases/)
 ~/Aperture/releases/    the last three versions
@@ -222,3 +224,98 @@ sudo launchctl bootout system/ch.aperture.web; sudo launchctl bootout system/ch.
 sudo rm /Library/LaunchDaemons/ch.aperture.web.plist /Library/LaunchDaemons/ch.aperture.backup.plist
 tailscale serve --https=443 off
 ```
+
+## On a laptop (for someone else)
+
+For someone who runs Aperture on their own Mac with Apple silicon, e.g. a MacBook. They get an installer package and
+need no Tailscale, no GitHub token and no admin rights beyond clicking *Install*. Aperture then runs while they're
+logged in, at `http://localhost:5090`, reachable from that Mac only. Updates come from a public feed that you fill by
+hand, so they only get versions you've tried.
+
+```
+~/Aperture/app, releases/, data/, logs/      as on the Mac mini
+~/Aperture/backups/Aperture Backup/          the daily backup (see below)
+~/Library/LaunchAgents/ch.aperture.*.plist   Aperture, the updater and the backup, as agents of their user
+```
+
+### Setting it up, once (you)
+
+1. **Make a public repository for releases**, e.g. `<you>/aperture-releases`, with a README (a release needs a
+   commit to point at). It holds only release packages, never code. Their release notes are the commit subjects, so
+   those become public too.
+2. **Give the workflow access:** *GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token*.
+   Repository access: only `aperture-releases`. Permissions: *Contents: Read and write*. Then in the private repository
+   under *Settings → Secrets and variables → Actions*: secret `RELEASES_TOKEN` (the token) and variable
+   `RELEASES_REPOSITORY` (`<you>/aperture-releases`). The token stays in GitHub Actions. The laptop gets none.
+3. **Promote a release:** *Actions → Promote → Run workflow*. Leave the version empty for the newest release, or enter
+   one of the last five (`.github/workflows/promote.yml`). It copies the package to the public repository with
+   `latest.json`, which names the version, the download and its SHA-256. The feed address is then
+   `https://github.com/<you>/aperture-releases/releases/latest/download/latest.json`.
+4. **Build the installer** on your Mac:
+   ```bash
+   deploy/macos/pkg/build-pkg.sh https://github.com/<you>/aperture-releases/releases/latest/download/latest.json
+   # → artifacts/Aperture-Installer.pkg
+   ```
+   The package contains no program, only a script that downloads the newest promoted release. So it never goes stale.
+   Build it again only if the feed address changes. Send it by AirDrop or mail, or attach it to a release in the
+   public repository.
+
+### Installing (on the laptop)
+
+1. **Open `Aperture-Installer.pkg`.** It isn't signed, so macOS refuses the first time ("can't be opened"). Click
+   *Done*, then go to *System Settings → Privacy & Security*, scroll down and click *Open Anyway* next to the
+   message about the package. This is needed once. Then *Continue → Install*; the Mac password it asks for is the
+   Installer's usual one.
+2. The installer downloads the newest release, checks it against the feed, installs it into `~/Aperture`
+   (`deploy/macos/install-laptop.sh`) and opens `http://localhost:5090`.
+3. **Create the login** on the page that opens: a username and password for Aperture. They're kept in
+   `~/Aperture/data/keys/login.json`, hashed. Then fill in *Settings*.
+
+### Updates
+
+After you promote a release, the laptop finds it within six hours (or right away with *Settings → Updates → Check for
+updates*). The Dashboard says so, and *Install update* runs the same update and rollback as on the Mac mini, with no
+password: everything belongs to the user. Only promote versions that ran well on the Mac mini for a while.
+
+### Backups
+
+`backup.sh` runs at login and daily at 13:00 (when the Mac wakes up, if it was asleep). It writes to
+`~/Aperture/backups/Aperture Backup`, in the same layout as on the backup drives. That copy is on the same disk: it
+helps after a mistake or a damaged database, not after losing the laptop. **Time Machine** (or any backup of the home
+folder) takes it along. Unlike the live database, these copies are always consistent. For a copy on an external drive,
+add its path to `~/Aperture/backup.conf`; it needs Full Disk Access for `/bin/bash`, as on the Mac mini.
+
+### What's different from the Mac mini
+
+- **Only on that Mac.** No phone app, iPhone calendar or notifications: no phone can reach it. Settings hides them,
+  and the calendar feed isn't served.
+- **Runs while the user is logged in,** not from boot. Closing the lid pauses it, as with any app.
+- **No sudo, no firewall rule, no service definition with secrets.** The login is in the data folder instead.
+- **The release packages are public.** A self-contained .NET build is easy to look into, so treat that as publishing
+  the code. Settings, data and the login never leave the laptop.
+- **The setup page** (`/setup`) only exists while there's no login yet, and only answers requests from that Mac. The
+  installer opens it right away. Until it's filled in, another user account on the same Mac could claim it first.
+
+### Troubleshooting
+
+| Problem | What to do |
+|---|---|
+| The installer failed | Its log: *Console → Log Reports → install.log*, search for `Aperture`. Usually the Mac was offline. |
+| Aperture isn't reachable | `launchctl print gui/$UID/ch.aperture.web` (look for `state = running`) and `tail -50 ~/Aperture/logs/aperture.log`. |
+| Forgot the password | `rm ~/Aperture/data/keys/login.json && launchctl kickstart -k gui/$UID/ch.aperture.web`, then open `http://localhost:5090` and create a new login. All data stays. |
+| Installing again | Open the installer again: it installs the newest release and keeps all data. |
+| Uninstalling | `~/Aperture/app/deploy/macos/uninstall-laptop.sh`. Removes the program and agents and keeps `~/Aperture/data` and the backups. |
+
+### Signing the installer (optional)
+
+With an Apple Developer account (USD 99 a year), the *Open Anyway* step goes away. Sign it with your *Developer ID
+Installer* certificate, then notarize it:
+
+```bash
+APERTURE_PKG_IDENTITY="Developer ID Installer: <Your Name> (<TEAMID>)" deploy/macos/pkg/build-pkg.sh <feed URL>
+xcrun notarytool submit artifacts/Aperture-Installer.pkg --keychain-profile <profile> --wait
+xcrun stapler staple artifacts/Aperture-Installer.pkg
+```
+
+Updates don't need this either way: Aperture downloads them itself, and macOS only checks files downloaded by
+browsers and similar apps.

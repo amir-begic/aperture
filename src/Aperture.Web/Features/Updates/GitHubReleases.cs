@@ -4,7 +4,11 @@ using System.Text.RegularExpressions;
 
 namespace Aperture.Web.Features.Updates;
 
-/// <summary>Where releases come from. Set by install.sh on the Mac mini; without them, Aperture doesn't look for updates.</summary>
+/// <summary>
+/// Where releases come from: a private GitHub repository with a token (the Mac mini, set by install.sh), or a public
+/// feed (a laptop, set by install-laptop.sh; see ReleaseFeed). The feed wins when both are set. Without either,
+/// Aperture doesn't look for updates.
+/// </summary>
 public sealed class UpdateOptions
 {
     /// <summary>"owner/repository" on GitHub.</summary>
@@ -13,19 +17,40 @@ public sealed class UpdateOptions
     /// <summary>Fine-grained token with read access to that repository's contents (it's private).</summary>
     public string? GitHubToken { get; set; }
 
+    /// <summary>The address of a release feed's latest.json, e.g. on a public GitHub repository that holds only releases.</summary>
+    public string? FeedUrl { get; set; }
+
     /// <summary>Only changed for tests.</summary>
     public string ApiUrl { get; set; } = "https://api.github.com/";
 
-    public bool IsConfigured =>
+    public bool UsesFeed => Uri.TryCreate(FeedUrl, UriKind.Absolute, out var feed) && feed.Scheme == Uri.UriSchemeHttps;
+
+    public bool UsesGitHub =>
         !string.IsNullOrWhiteSpace(Repository) && Regex.IsMatch(Repository, "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
         && !string.IsNullOrWhiteSpace(GitHubToken);
+
+    public bool IsConfigured => UsesFeed || UsesGitHub;
 }
 
-/// <summary>A release built by .github/workflows/release.yml, with its Mac mini package.</summary>
-public sealed record Release(ReleaseVersion Version, DateTimeOffset Published, string Notes, string Url, long AssetId, string AssetName, long AssetSize);
+/// <summary>Where Aperture looks for releases and downloads them from.</summary>
+public interface IReleaseSource
+{
+    /// <summary>The newest release with a Mac package, or null when there's none yet.</summary>
+    Task<Release?> GetLatestAsync(CancellationToken cancellationToken = default);
+
+    Task DownloadAsync(Release release, Stream destination, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// A release built by .github/workflows/release.yml, with its Mac package. From GitHub, it's downloaded by
+/// <paramref name="AssetId"/>; from a feed, from <paramref name="DownloadUrl"/> and checked against <paramref name="Sha256"/>.
+/// </summary>
+public sealed record Release(
+    ReleaseVersion Version, DateTimeOffset Published, string Notes, string Url, long AssetId, string AssetName, long AssetSize,
+    Uri? DownloadUrl = null, string? Sha256 = null);
 
 /// <summary>Reads releases from the GitHub API.</summary>
-public sealed partial class GitHubReleases(HttpClient http, UpdateOptions options)
+public sealed partial class GitHubReleases(HttpClient http, UpdateOptions options) : IReleaseSource
 {
     public static void Configure(HttpClient http, UpdateOptions options)
     {
@@ -55,7 +80,7 @@ public sealed partial class GitHubReleases(HttpClient http, UpdateOptions option
         return json is null ? null : ToRelease(json);
     }
 
-    /// <summary>Picks the Mac mini package; null if the release has none.</summary>
+    /// <summary>Picks the Mac package; null if the release has none.</summary>
     public static Release? ToRelease(ReleaseJson json)
     {
         var asset = json.Assets?.FirstOrDefault(a => PackageName().IsMatch(a.Name ?? ""));

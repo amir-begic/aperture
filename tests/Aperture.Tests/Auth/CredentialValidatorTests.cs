@@ -1,15 +1,16 @@
 using Aperture.Web.Auth;
+using Aperture.Web.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Aperture.Tests.Auth;
 
 public class CredentialValidatorTests
 {
-    private readonly CredentialValidator _validator = new(Options.Create(new AuthOptions
+    private readonly CredentialValidator _validator = new(new LoginStore(Options.Create(new AuthOptions
     {
         Username = "studio",
         PasswordHash = CredentialValidator.HashPassword("correct horse"),
-    }));
+    }), new AperturePaths(Path.Combine(Path.GetTempPath(), "aperture-no-data")), new Hosting(LocalOnly: false)));
 
     [Theory]
     [InlineData("studio")]

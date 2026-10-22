@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shared by install.sh and update.sh. Written for macOS's /bin/bash 3.2: no bash 4+ features.
+# Shared by install.sh, install-laptop.sh and update.sh. Written for macOS's /bin/bash 3.2: no bash 4+ features.
 
 APERTURE_HOME="${APERTURE_HOME:-$HOME/Aperture}"
 WEB_LABEL="ch.aperture.web"
@@ -9,6 +9,7 @@ WEB_PLIST="/Library/LaunchDaemons/$WEB_LABEL.plist"
 BACKUP_PLIST="/Library/LaunchDaemons/$BACKUP_LABEL.plist"
 UPDATER_PLIST="/Library/LaunchDaemons/$UPDATER_LABEL.plist"
 SUDOERS_FILE="/etc/sudoers.d/aperture"
+AGENTS_DIR="$HOME/Library/LaunchAgents"
 FIREWALL="/usr/libexec/ApplicationFirewall/socketfilterfw"
 KEEP_RELEASES=3
 
@@ -24,8 +25,18 @@ ask_yes() {
     [[ -z $answer || $answer == [Yy]* ]]
 }
 
+# A laptop installation (install-laptop.sh) runs Aperture as launchd agents of your user rather than system services:
+# no sudo, and nothing listens beyond this Mac. install-laptop.sh sets APERTURE_LAPTOP=1 before its agents exist.
+is_laptop() {
+    [[ ${APERTURE_LAPTOP:-} == 1 || -f $AGENTS_DIR/$WEB_LABEL.plist ]]
+}
+
+is_installed() {
+    [[ -f $WEB_PLIST ]] || is_laptop
+}
+
 require_mac() {
-    [[ $(uname -s) == Darwin ]] || fail "This script runs on the Mac mini (macOS)."
+    [[ $(uname -s) == Darwin ]] || fail "This script runs on a Mac (macOS)."
     [[ $(uname -m) == arm64 ]] || fail "This build is for Apple silicon (arm64)."
     [[ $EUID -ne 0 ]] || fail "Run it as your normal user, not with sudo. It asks for your password when needed."
 }
@@ -65,6 +76,7 @@ switch_to() {
 # so the executable is allowed explicitly (again after each update, as it's a new file).
 allow_through_firewall() {
     local executable="$1"
+    is_laptop && return 0   # only reachable from this Mac
     if sudo "$FIREWALL" --getglobalstate | grep -q "enabled"; then
         sudo "$FIREWALL" --add "$executable" >/dev/null
         sudo "$FIREWALL" --unblockapp "$executable" >/dev/null
@@ -72,11 +84,19 @@ allow_through_firewall() {
 }
 
 start_web() {
-    sudo launchctl bootstrap system "$WEB_PLIST" 2>/dev/null || sudo launchctl kickstart -k "system/$WEB_LABEL"
+    if is_laptop; then
+        launchctl bootstrap "gui/$UID" "$AGENTS_DIR/$WEB_LABEL.plist" 2>/dev/null || launchctl kickstart -k "gui/$UID/$WEB_LABEL"
+    else
+        sudo launchctl bootstrap system "$WEB_PLIST" 2>/dev/null || sudo launchctl kickstart -k "system/$WEB_LABEL"
+    fi
 }
 
 stop_web() {
-    sudo launchctl bootout "system/$WEB_LABEL" 2>/dev/null || true
+    if is_laptop; then
+        launchctl bootout "gui/$UID/$WEB_LABEL" 2>/dev/null || true
+    else
+        sudo launchctl bootout "system/$WEB_LABEL" 2>/dev/null || true
+    fi
     # bootout returns before the process is gone; wait so the database is closed.
     local i
     for i in $(seq 1 20); do
@@ -89,7 +109,7 @@ stop_web() {
 web_port() {
     if [[ -f $APERTURE_HOME/port ]]; then
         head -n 1 "$APERTURE_HOME/port"
-    else
+    elif ! is_laptop; then
         sudo /usr/libexec/PlistBuddy -c "Print :EnvironmentVariables:ASPNETCORE_URLS" "$WEB_PLIST" 2>/dev/null | sed 's/.*://'
     fi
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds Aperture for the Mac mini (Apple silicon) and packs it, scripts included:
+# Builds Aperture for Apple silicon (the Mac mini, or a laptop) and packs it, scripts included:
 #
 #   deploy/publish.sh            -> artifacts/aperture-<date>-<build>-<commit>-osx-arm64.tar.gz
 #
@@ -18,8 +18,9 @@ out="artifacts/$name"
 rm -rf "$out"
 "$dotnet" publish src/Aperture.Web -c Release -r osx-arm64 --self-contained \
     -p:InformationalVersion="$version" -o "$out" --nologo -v quiet >&2
-mkdir -p "$out/deploy/macos"
+mkdir -p "$out/deploy/macos/agents"
 cp deploy/macos/*.sh deploy/macos/*.plist "$out/deploy/macos/"
+cp deploy/macos/agents/*.plist "$out/deploy/macos/agents/"
 chmod +x "$out"/deploy/macos/*.sh
 
 tar -C artifacts -czf "artifacts/$name-osx-arm64.tar.gz" "$name"

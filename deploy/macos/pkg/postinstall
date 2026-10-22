@@ -1,0 +1,34 @@
+#!/bin/bash
+# Runs as root when the person clicks Install in Aperture-Installer.pkg (built by build-pkg.sh, which fills in
+# __FEED_URL__). Everything else happens as the person logged in: download the newest release from the feed, check it
+# against the feed's SHA-256, and run its install-laptop.sh. Output goes to /var/log/install.log.
+set -euo pipefail
+FEED_URL="__FEED_URL__"
+PACKAGE_PATTERN='^aperture-[0-9A-Za-z.-]+-osx-arm64\.tar\.gz$'
+
+fail() { echo "Aperture: $*" >&2; exit 1; }
+
+[[ $(uname -m) == arm64 ]] || fail "Aperture needs a Mac with Apple silicon."
+user="$(stat -f %Su /dev/console)"
+[[ -n $user && $user != root && $user != loginwindow ]] || fail "Nobody is logged in. Install it from your own account."
+uid="$(id -u "$user")"
+
+# In the person's login session (for launchctl and opening the browser), as them.
+as_user() { launchctl asuser "$uid" sudo -u "$user" -H "$@"; }
+
+work="$(as_user mktemp -d /tmp/aperture-install.XXXXXX)"
+trap 'rm -rf "$work"' EXIT
+
+echo "Aperture: reading $FEED_URL"
+as_user curl -fsSL --retry 3 -o "$work/latest.json" "$FEED_URL" || fail "Couldn't reach the release feed. Is this Mac online?"
+field() { plutil -extract "$1" raw -o - "$work/latest.json"; }
+file="$(field file)"
+download="$(field download)"
+sha256="$(field sha256)"
+[[ $file =~ $PACKAGE_PATTERN && $download == https://* ]] || fail "The release feed doesn't name a Mac package."
+
+echo "Aperture: downloading $file"
+as_user curl -fsSL --retry 3 -o "$work/$file" "$download" || fail "The download failed."
+echo "$sha256  $work/$file" | shasum -a 256 -c - >/dev/null || fail "The download doesn't match the release."
+as_user tar -xzf "$work/$file" -C "$work"
+as_user /bin/bash "$work/${file%-osx-arm64.tar.gz}/deploy/macos/install-laptop.sh" "$work/$file" "$FEED_URL"

@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Aperture.Web.Configuration;
@@ -30,7 +31,7 @@ public sealed record UpdateStatus(
 }
 
 /// <summary>
-/// Looks for new releases on GitHub and hands one over to the updater. Aperture can't replace itself while it runs:
+/// Looks for new releases (on GitHub, or in a public feed; see UpdateOptions) and hands one over to the updater. Aperture can't replace itself while it runs:
 /// it downloads the release into data/updates and writes its name to the request file; launchd sees the file
 /// and starts deploy/macos/auto-update.sh, which runs update.sh (stop, copy the database, switch, check, roll back
 /// if needed). Singleton: the dashboard and Settings share one state.
@@ -74,14 +75,15 @@ public sealed class UpdateService(
             Latest = await Client().GetLatestAsync(cancellationToken);
             Problem = null;
         }
-        catch (HttpRequestException e) when (e.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+        catch (HttpRequestException e) when (!options.UsesFeed
+            && e.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
         {
             Problem = "GitHub didn't accept the token. It may have expired: make a new one and run install.sh again.";
             logger.LogWarning(e, "Update check: token rejected");
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
         {
-            Problem = "Couldn't reach GitHub. Is the Mac online?";
+            Problem = options.UsesFeed ? "Couldn't reach the update server. Is this Mac online?" : "Couldn't reach GitHub. Is the Mac online?";
             logger.LogWarning(e, "Update check failed");
         }
         finally
@@ -123,6 +125,11 @@ public sealed class UpdateService(
                 File.Delete(partial);
                 throw new InvalidOperationException("The download is incomplete. Try again.");
             }
+            if (release.Sha256 is { } expected && !string.Equals(await Sha256Async(partial, cancellationToken), expected, StringComparison.OrdinalIgnoreCase))
+            {
+                File.Delete(partial);
+                throw new InvalidOperationException("The download doesn't match the release. Try again.");
+            }
             File.Move(partial, target, overwrite: true);
 
             // Written in one go (temp file, then rename), so the updater never sees half a name.
@@ -142,7 +149,15 @@ public sealed class UpdateService(
     /// <summary>True while a request waits for the updater (it removes the file when it starts).</summary>
     public bool IsRequestPending => File.Exists(paths.UpdateRequestFile);
 
-    private GitHubReleases Client() => new(httpFactory.CreateClient(nameof(GitHubReleases)), options);
+    private IReleaseSource Client() => options.UsesFeed
+        ? new ReleaseFeed(httpFactory.CreateClient(nameof(ReleaseFeed)), options)
+        : new GitHubReleases(httpFactory.CreateClient(nameof(GitHubReleases)), options);
+
+    private static async Task<string> Sha256Async(string path, CancellationToken cancellationToken)
+    {
+        await using var file = File.OpenRead(path);
+        return Convert.ToHexStringLower(await SHA256.HashDataAsync(file, cancellationToken));
+    }
 }
 
 /// <summary>Checks for updates a minute after start and then every six hours, so the dashboard can say so.</summary>

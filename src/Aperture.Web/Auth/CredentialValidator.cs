@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 
 namespace Aperture.Web.Auth;
 
-public sealed class CredentialValidator(IOptions<AuthOptions> options)
+public sealed class CredentialValidator(LoginStore logins)
 {
     // Identity's hasher (PBKDF2, salted). It ignores its "user" argument.
     private static readonly PasswordHasher<string> Hasher = new();
@@ -15,14 +14,14 @@ public sealed class CredentialValidator(IOptions<AuthOptions> options)
 
     public bool IsValid(string? username, string? password)
     {
-        var auth = options.Value;
-        if (string.IsNullOrEmpty(password)
-            || !string.Equals(username?.Trim(), auth.Username, StringComparison.OrdinalIgnoreCase))
+        if (logins.Current is not { } login
+            || string.IsNullOrEmpty(password)
+            || !string.Equals(username?.Trim(), login.Username, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }
 
-        return Hasher.VerifyHashedPassword(string.Empty, auth.PasswordHash, password)
+        return Hasher.VerifyHashedPassword(string.Empty, login.PasswordHash, password)
             != PasswordVerificationResult.Failed;
     }
 }

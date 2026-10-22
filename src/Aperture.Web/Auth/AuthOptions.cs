@@ -3,6 +3,7 @@ namespace Aperture.Web.Auth;
 /// <summary>
 /// The single login. Set via user-secrets in development and environment
 /// variables / appsettings.Production.json on the Mac mini. Never commit the hash.
+/// A laptop installation leaves it empty and creates the login on first start (see LoginStore).
 /// </summary>
 public sealed class AuthOptions
 {
