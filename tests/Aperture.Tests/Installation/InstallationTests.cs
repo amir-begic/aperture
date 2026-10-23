@@ -286,12 +286,16 @@ public sealed class InstallationTests : IDisposable
     }
 
     [Fact]
-    public void Mac_launcher_opens_a_Chromium_browser_in_app_mode_or_the_default_browser()
+    public void Mac_launcher_starts_Aperture_then_opens_a_Chromium_browser_in_app_mode_or_the_default_browser()
     {
-        var script = MacPlatform.LauncherScript(5191);
+        var script = MacPlatform.LauncherScript(5191, "/Users/anna/Library/LaunchAgents/ch.aperture.web.plist");
 
         Assert.StartsWith("#!/bin/bash\n", script);
         Assert.Contains("url=\"http://localhost:5191\"", script);
+        // Starts Aperture first if it isn't answering: loads the agent, or starts it if it's loaded.
+        Assert.Contains("if ! curl -fs --max-time 2 \"$url/health\"", script);
+        Assert.Contains("launchctl bootstrap \"gui/$(id -u)\" \"/Users/anna/Library/LaunchAgents/ch.aperture.web.plist\" 2>/dev/null"
+            + " || launchctl kickstart \"gui/$(id -u)/ch.aperture.web\"", script);
         Assert.Contains("exec open -na \"$folder/$browser.app\" --args --app=\"$url\"", script);
         Assert.EndsWith("exec open \"$url\"\n", script);
         var plist = XDocument.Parse(MacPlatform.LauncherInfoPlist).ToString();
@@ -299,11 +303,9 @@ public sealed class InstallationTests : IDisposable
     }
 
     [Fact]
-    public void Linux_menu_entry_uses_the_browser_found_or_the_default_one()
+    public void Linux_menu_entry_opens_Aperture_through_the_program()
     {
-        Assert.Contains("Exec=\"/usr/bin/chromium\" --app=http://localhost:5090\n",
-            LinuxPlatform.DesktopEntryText(Home, 5090, "/usr/bin/chromium"));
-        Assert.Contains("Exec=xdg-open http://localhost:5090\n", LinuxPlatform.DesktopEntryText(Home, 5090, null));
+        Assert.Contains($"Exec=\"{Path.Combine(Home.App, "Aperture.Web")}\" open --home \"{Home.Root}\"\n", LinuxPlatform.DesktopEntryText(Home));
     }
 
     [Fact]

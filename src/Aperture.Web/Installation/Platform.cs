@@ -137,7 +137,13 @@ public abstract class Platform(ICommandRunner run)
     public abstract Task OpenAppAsync(ApertureHome home, int port);
 
     /// <summary>Brings a launcher made by an older version up to date; called when Aperture starts. Nothing to do by default.</summary>
-    public virtual Task RefreshLauncherAsync(ApertureHome home) => Task.CompletedTask;
+    public virtual Task RefreshLauncherAsync(ApertureHome home, int port) => Task.CompletedTask;
+
+    /// <summary>
+    /// Before Aperture ends itself because nobody uses it (IdleStopWorker): tells the system not to start it again until
+    /// the launcher does. Windows doesn't anyway.
+    /// </summary>
+    public virtual Task StopWhenIdleAsync(ApertureHome home) => Task.CompletedTask;
 
     /// <summary>The argument that opens Aperture in a Chromium browser's app mode.</summary>
     public static string AppArgument(int port) => $"--app=http://localhost:{port}";
@@ -315,6 +321,16 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
     protected override Task StopWebServiceAsync(ApertureHome home) => Run.RunAsync("launchctl", "bootout", $"{Domain}/{WebLabel}");
 
     /// <summary>
+    /// KeepAlive would start it again at once: the agent is unloaded instead, without waiting (that ends this process).
+    /// It's loaded again by the launcher, or at the next login.
+    /// </summary>
+    public override Task StopWhenIdleAsync(ApertureHome home)
+    {
+        Start("launchctl", "bootout", $"{Domain}/{WebLabel}");
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
     /// Downloads by Aperture carry no quarantine flag, but releases unpacked from a browser download do. Apple silicon
     /// only runs signed code: a release built on Linux gets signed here, ad hoc, if it isn't already.
     /// </summary>
@@ -344,7 +360,7 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
         Directory.CreateDirectory(Path.Combine(contents, "Resources"));
         File.WriteAllText(Path.Combine(contents, "Info.plist"), LauncherInfoPlist);
         var script = Path.Combine(contents, "MacOS", "Aperture");
-        File.WriteAllText(script, LauncherScript(port));
+        File.WriteAllText(script, LauncherScript(port, Agent(WebLabel)));
         if (!OperatingSystem.IsWindows()) // always so here; the analyzer can't know
         {
             File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
@@ -364,15 +380,34 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
     public override Task OpenAppAsync(ApertureHome home, int port) =>
         Run.RunAsync("open", Directory.Exists(LauncherApp) ? LauncherApp : $"http://localhost:{port}");
 
+    /// <summary>Launchers from before Aperture stopped when unused only opened the browser: their script is replaced.</summary>
+    public override Task RefreshLauncherAsync(ApertureHome home, int port)
+    {
+        var script = Path.Combine(LauncherApp, "Contents", "MacOS", "Aperture");
+        if (File.Exists(script))
+        {
+            File.WriteAllText(script, LauncherScript(port, Agent(WebLabel)));
+        }
+        return Task.CompletedTask;
+    }
+
     /// <summary>
-    /// The launcher: a script, so it needs no signing. Safari has no app mode, so it looks for a Chromium browser
-    /// first; Safari users can still use File → Add to Dock.
+    /// The launcher: a script, so it needs no signing. Aperture stops when its window has been closed for a minute,
+    /// so the script starts it first if it isn't answering (loading the agent, or starting it if it's loaded).
+    /// Safari has no app mode, so it looks for a Chromium browser first; Safari users can still use File → Add to Dock.
     /// </summary>
-    public static string LauncherScript(int port) => $$"""
+    public static string LauncherScript(int port, string agent) => $$"""
         #!/bin/bash
-        # Opens Aperture in its own window: a Chromium browser's app mode (no tabs, no address bar), or the default
-        # browser if there's none. Written by "Aperture.Web install".
+        # Opens Aperture in its own window, starting it first if it isn't running: a Chromium browser's app mode (no
+        # tabs, no address bar), or the default browser if there's none. Written by "Aperture.Web install".
         url="http://localhost:{{port}}"
+        if ! curl -fs --max-time 2 "$url/health" >/dev/null; then
+            launchctl bootstrap "gui/$(id -u)" "{{agent}}" 2>/dev/null || launchctl kickstart "gui/$(id -u)/{{WebLabel}}"
+            for _ in $(seq 60); do
+                curl -fs --max-time 2 "$url/health" >/dev/null && break
+                sleep 1
+            done
+        fi
         for browser in "Google Chrome" "Microsoft Edge" "Brave Browser" "Chromium"; do
             for folder in /Applications "$HOME/Applications"; do
                 if [[ -d "$folder/$browser.app" ]]; then
@@ -541,13 +576,27 @@ public sealed class LinuxPlatform(ICommandRunner run) : Platform(run)
             .SelectMany(folder => Browsers.Select(name => Path.Combine(folder, name)))
             .FirstOrDefault(File.Exists);
 
-    /// <summary>The entry in the applications menu. The browser is looked for when installing; install again after adding one.</summary>
+    /// <summary>The entry in the applications menu: "Aperture.Web open", which starts Aperture if it isn't running.</summary>
     public override Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut)
     {
         Directory.CreateDirectory(ApplicationsDirectory);
-        File.WriteAllText(DesktopEntry, DesktopEntryText(home, port, Browser()));
+        File.WriteAllText(DesktopEntry, DesktopEntryText(home));
         return Task.CompletedTask;
     }
+
+    /// <summary>Entries from before Aperture stopped when unused opened the browser directly: they're rewritten.</summary>
+    public override Task RefreshLauncherAsync(ApertureHome home, int port)
+    {
+        if (File.Exists(DesktopEntry))
+        {
+            File.WriteAllText(DesktopEntry, DesktopEntryText(home));
+        }
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Restart=always would start it again: systemd stops it instead, without waiting (that ends this process).</summary>
+    public override Task StopWhenIdleAsync(ApertureHome home) =>
+        Run.RunAsync("systemctl", "--user", "stop", "--no-block", WebUnit);
 
     public override Task OpenAppAsync(ApertureHome home, int port)
     {
@@ -562,12 +611,12 @@ public sealed class LinuxPlatform(ICommandRunner run) : Platform(run)
         return Task.CompletedTask;
     }
 
-    public static string DesktopEntryText(ApertureHome home, int port, string? browser) => $"""
+    public static string DesktopEntryText(ApertureHome home) => $"""
         [Desktop Entry]
         Type=Application
         Name=Aperture
         Comment=Photo office: shoots, invoices and finances
-        Exec={(browser is null ? $"xdg-open http://localhost:{port}" : $"\"{browser}\" {AppArgument(port)}")}
+        Exec="{Path.Combine(home.App, "Aperture.Web")}" open --home "{home.Root}"
         Icon={Path.Combine(home.App, "wwwroot", "icon-512.png")}
         Categories=Office;
         Terminal=false
@@ -780,7 +829,7 @@ public sealed class WindowsPlatform(ICommandRunner run) : Platform(run)
     }
 
     /// <summary>Shortcuts made before "open" existed opened the browser directly: they're pointed at the program.</summary>
-    public override async Task RefreshLauncherAsync(ApertureHome home)
+    public override async Task RefreshLauncherAsync(ApertureHome home, int port)
     {
         foreach (var folder in new[] { StartMenuFolder, DesktopFolder })
         {

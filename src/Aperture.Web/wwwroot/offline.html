@@ -32,10 +32,23 @@
 <main>
     <h1><span class="ring" aria-hidden="true"></span>Aperture</h1>
     <div class="card">
-        <h2>No connection</h2>
-        <p>Aperture isn't answering. It may be restarting after an update: try again in a minute.</p>
-        <button type="button" onclick="location.reload()">Try again</button>
+        <h2 id="title">No connection</h2>
+        <p id="text">Aperture isn't running. It stops when its window has been closed for a minute: open it again from
+            the Start menu, the Dock or the applications menu. After an update, it restarts by itself in a minute.</p>
+        <button type="button" id="retry" onclick="location.reload()">Try again</button>
     </div>
 </main>
+<script>
+    // Shown by the service worker without Aperture, so the language comes from the browser.
+    if (navigator.language.startsWith("de")) {
+        document.documentElement.lang = "de";
+        document.title = "Keine Verbindung · Aperture";
+        document.getElementById("title").textContent = "Keine Verbindung";
+        document.getElementById("text").textContent = "Aperture läuft nicht. Es beendet sich, wenn sein Fenster seit einer"
+            + " Minute geschlossen ist: Öffne es wieder über das Startmenü, das Dock oder das Programmmenü. Nach einem"
+            + " Update startet es in einer Minute von selbst neu.";
+        document.getElementById("retry").textContent = "Erneut versuchen";
+    }
+</script>
 </body>
 </html>

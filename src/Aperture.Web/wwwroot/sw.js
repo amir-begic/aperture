@@ -1,8 +1,8 @@
 // Aperture's service worker. Aperture runs on the server (Blazor Server), so it can't work offline; this only replaces the
-// browser's error page with a branded "no connection" page when a page can't be loaded (Aperture is restarting after an
-// update), and shows notifications (Settings → Notifications).
+// browser's error page with a branded "no connection" page when a page can't be loaded (Aperture isn't running, or is
+// restarting after an update), and shows notifications (Settings → Notifications).
 // Everything else goes straight to the network, uncached.
-const CACHE = "aperture-offline-v6";
+const CACHE = "aperture-offline-v7";
 const OFFLINE_PAGE = "offline.html";
 const OFFLINE_ASSETS = [OFFLINE_PAGE, "fonts/SpaceGrotesk-Regular-latin.woff2", "icon-192.png"];
 

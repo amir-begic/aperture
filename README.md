@@ -2,7 +2,8 @@
 
 A small ERP for running a photography business: shoots, clients, deliveries, costs, invoices (Swiss QR-bill) and tax exports.
 Single user, CHF, English or German. It runs on the photographer's own computer (macOS, Windows or Linux), installed with a
-double-click; it opens in its own window there, a browser's app mode without tabs or address bar.
+double-click; it opens in its own window there, a browser's app mode without tabs or address bar. It only runs while
+it's used: a minute after its window is closed it stops, and opening it starts it again.
 
 ![The dashboard: year figures, what needs attention and the next shoots (example data)](docs/images/dashboard.png)
 
@@ -30,7 +31,7 @@ Details in [docs/deployment.md](docs/deployment.md).
 | **Finance** | Income statement per year on a cash basis, business costs that don't belong to a shoot, equipment with depreciation. |
 | **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |
 | **Dashboard** | Year figures and a to-do list: overdue invoices, deliveries due or overdue, inquiries waiting a week for an answer or whose date has passed, shoots without an invoice, open prep, backup problems. |
-| **Notifications** | In the browser on the computer: overdue invoices, deliveries due within a week or overdue, inquiries waiting a week, open prep three days before a shoot, backup problems and new versions. |
+| **Notifications** | In the browser on the computer, while Aperture runs (a few minutes after login, and while its window is open): overdue invoices, deliveries due within a week or overdue, inquiries waiting a week, open prep three days before a shoot, backup problems and new versions. |
 | **Language** | English or German (Swiss: *Rechnung*, *MWST*, *Offerte*), chosen in Settings; until then the browser's language. Invoices start in that language and can be switched per invoice on the shoot's Invoice tab, so a German-speaking photographer can still send an English invoice: the PDF and its QR-bill follow it. The tax export and notifications follow Aperture's language. |
 | **Backups** | Daily into the install folder's `backups` (and any external drive or synced folder you add), picked up by Time Machine or File History. *Download a backup* in Settings gets everything as one ZIP, e.g. to move to a new computer. |
 

@@ -93,6 +93,14 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddSingleton(TimeProvider.System);
 
+// An installed Aperture stops a minute after its last window closed, and the launcher starts it again (IdleStopWorker).
+builder.Services.AddSingleton<AppActivity>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Server.Circuits.CircuitHandler, WindowTracker>();
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Services.AddHostedService<IdleStopWorker>();
+}
+
 // Language: English or German, chosen in Settings (AppLanguage); texts in Localization/Texts.de.resx.
 builder.Services.AddLocalization();
 builder.Services.AddSingleton<AppLanguage>();
@@ -125,6 +133,17 @@ app.UseRequestLocalization(options =>
     options.SupportedCultures = options.SupportedUICultures = [.. Languages.Cultures];
     options.SetDefaultCulture(Language.English.Culture().Name);
     options.RequestCultureProviders = [new AppLanguageCultureProvider()];
+});
+
+// Requests count as use, also the sign-in page's, which has no window connection; /health doesn't: the launcher and the
+// updater ask it, not a person.
+app.Use((context, next) =>
+{
+    if (!context.Request.Path.StartsWithSegments("/health"))
+    {
+        context.RequestServices.GetRequiredService<AppActivity>().Request();
+    }
+    return next(context);
 });
 
 app.UseAuthentication();
@@ -162,8 +181,8 @@ app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
     return Results.LocalRedirect("~/login");
 });
 
-// Launchers made by an older version are brought up to date (on Windows they opened the browser without starting
-// Aperture), in the background once Aperture is up.
+// Launchers made by an older version are brought up to date (they opened the browser without starting Aperture), in
+// the background once Aperture is up.
 if (!app.Environment.IsDevelopment())
 {
     app.Lifetime.ApplicationStarted.Register(() => _ = RefreshLauncherAsync(app.Services));
@@ -176,7 +195,8 @@ static async Task RefreshLauncherAsync(IServiceProvider services)
 {
     try
     {
-        await services.GetRequiredService<Platform>().RefreshLauncherAsync(services.GetRequiredService<ApertureHome>());
+        var home = services.GetRequiredService<ApertureHome>();
+        await services.GetRequiredService<Platform>().RefreshLauncherAsync(home, HomeSettings.Read(home)?.Port ?? ApertureHome.DefaultPort);
     }
     catch (Exception e) when (e is InstallationException or IOException or UnauthorizedAccessException)
     {

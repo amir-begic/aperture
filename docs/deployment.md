@@ -65,7 +65,9 @@ and start `Aperture.Web install`.
 
 *Aperture* in Applications (and Launchpad) opens Aperture in its own window, without tabs or address bar, using
 Chrome, Edge, Brave or Chromium if one is installed; drag it into the Dock to keep it there. Safari has no such mode:
-without one of those browsers, Aperture opens in Safari, and *File → Add to Dock* gives it its own window.
+without one of those browsers, Aperture opens in Safari, and *File → Add to Dock* gives it its own window. *Aperture*
+in Applications starts Aperture first if it isn't running; such a Safari window, or a browser window pinned on its own,
+only opens the page, so start it through *Aperture* when it says it can't connect.
 
 ### Windows
 
@@ -77,8 +79,8 @@ without one of those browsers, Aperture opens in Safari, and *File → Add to Do
    to the desktop, if ticked) and opens it.
 
 *Aperture* in the Start menu opens Aperture in its own window, without tabs or address bar: Edge's app mode, which
-every Windows 10 and 11 has. It runs `Aperture.Web open`, which first starts Aperture if it isn't running: Windows starts
-it at logon but, unlike macOS and Linux, not again after it was ended in the Task Manager or crashed. To remove Aperture: *Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
+every Windows 10 and 11 has. It runs `Aperture.Web open`, which first starts Aperture if it isn't running (see
+*Running only while it's used* below), also after it was ended in the Task Manager or crashed. To remove Aperture: *Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
 keeps them.
 
 ### Linux
@@ -89,10 +91,18 @@ tar -xzf aperture-…-linux-x64.tar.gz
 ```
 
 It copies the release into `~/.local/share/aperture`, sets up systemd user units, adds *Aperture* to the
-applications menu and opens it: in its own window with Edge, Chrome, Chromium or Brave, if one is installed (run
-`install.sh` again after installing one), otherwise in the default browser. It needs systemd's user manager, which every desktop session
-has. Aperture runs while you're logged in; for it to run without a login session too, enable lingering once:
-`loginctl enable-linger`.
+applications menu and opens it: in its own window with Edge, Chrome, Chromium or Brave, if one is installed, otherwise
+in the default browser. The menu entry runs `Aperture.Web open`, which starts Aperture first if it isn't running. It
+needs systemd's user manager, which every desktop session has.
+
+### Running only while it's used
+
+Aperture starts when you log in, sends the notifications that are due and looks for updates, and stops five minutes
+later unless its window is open. Once open, it stops a minute after its last window is closed, so it takes no memory
+while you're not using it. Opening it from the Start menu, Applications (or the Dock) or the applications menu starts it
+again in a few seconds. It stops through launchd, systemd or Task Scheduler, so they don't start it again until then;
+a crash, though, is restarted as before. An update that's downloading is never cut off, and the daily backup runs on its
+own schedule either way. Notifications only go out while Aperture runs.
 
 ### Then, everywhere
 
@@ -222,7 +232,7 @@ On Windows the program has no console window, so it writes what it does to `logs
 | Problem | What to do |
 |---|---|
 | The installer failed | macOS: *Console → Log Reports → install.log*, search for `Aperture`. Windows: `%LOCALAPPDATA%\Aperture\logs\install.log`. Linux: the terminal shows it. |
-| Aperture isn't reachable | On Windows, open it from the Start menu: that starts it if it isn't running (macOS and Linux restart it by themselves). Then `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
+| Aperture isn't reachable | Open it from the Start menu, Applications or the applications menu: that starts it if it isn't running (it stops when its window has been closed for a minute). Then `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
 | "Port … is in use by another program" | Another program listens on Aperture's port. Close it and install again, or install again with `--port <port>` to move Aperture: then log in again, turn notifications on again and add the calendar feed again. |
 | Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open Aperture and create a new login. All data stays. |
 | Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. Backups in other folders listed in `backup.conf` stay. |
