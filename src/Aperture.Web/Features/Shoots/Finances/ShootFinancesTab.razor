@@ -13,31 +13,31 @@ else
     var financials = Financials;
 
     <div class="kpi-row rz-mb-6">
-        <KpiTile Label="To bill" Value="@Format(financials.Total)" Note="@TotalNote(financials)" />
-        <KpiTile Label="Costs" Value="@financials.Costs.ToString()" />
-        <KpiTile Label="Margin" Value="@Format(financials.Margin)" Note="@(financials.Margin < Money.Zero ? "loss" : null)" />
-        <KpiTile Label="Received" Value="@financials.Received.ToString()" />
-        <KpiTile Label="Outstanding" Value="@Format(financials.Outstanding)">
+        <KpiTile Label="@L["To bill"]" Value="@Format(financials.Total)" Note="@TotalNote(financials)" />
+        <KpiTile Label="@L["Costs"]" Value="@financials.Costs.ToString()" />
+        <KpiTile Label="@L["Margin"]" Value="@Format(financials.Margin)" Note="@(financials.Margin < Money.Zero ? L["loss"].Value : null)" />
+        <KpiTile Label="@L["Received"]" Value="@financials.Received.ToString()" />
+        <KpiTile Label="@L["Outstanding"]" Value="@Format(financials.Outstanding)">
             <PaymentStateBadge State="financials.PaymentState"
                                IsPastDue="@(_invoice is not null && _invoice.DueDate < Today && financials.Outstanding > Money.Zero)" />
         </KpiTile>
     </div>
 
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
-        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Payments received</RadzenText>
-        <RadzenButton Text="Add payment" Icon="add" Size="ButtonSize.Small" Click="@(() => EditPaymentAsync(null))" />
+        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">@L["Payments received"]</RadzenText>
+        <RadzenButton Text="@L["Add payment"]" Icon="add" Size="ButtonSize.Small" Click="@(() => EditPaymentAsync(null))" />
     </RadzenStack>
-    <RadzenDataGrid TItem="Payment" Data="_payments" class="clickable-rows rz-mb-6" EmptyText="No payments yet."
+    <RadzenDataGrid TItem="Payment" Data="_payments" class="clickable-rows rz-mb-6" EmptyText="@L["No payments yet."]"
                     RowClick="@(args => EditPaymentAsync(args.Data!.Id))">
         <Columns>
-            <RadzenDataGridColumn Title="Date" Width="8rem">
+            <RadzenDataGridColumn Title="@L["Date"]" Width="8rem">
                 <Template Context="payment">@payment.Date.ToString("dd.MM.yyyy")</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Method" Width="9rem">
-                <Template Context="payment">@PaymentDialog.MethodText(payment.Method)</Template>
+            <RadzenDataGridColumn Title="@L["Method"]" Width="9rem">
+                <Template Context="payment">@payment.Method.Text()</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(Payment.Note)" Title="Note" />
-            <RadzenDataGridColumn Title="Payslip">
+            <RadzenDataGridColumn Property="@nameof(Payment.Note)" Title="@L["Note"]" />
+            <RadzenDataGridColumn Title="@L["Payslip"]">
                 <Template Context="payment">
                     @if (payment.Proof is not null)
                     {
@@ -45,35 +45,35 @@ else
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Amount" Width="9rem" TextAlign="TextAlign.Right">
+            <RadzenDataGridColumn Title="@L["Amount"]" Width="9rem" TextAlign="TextAlign.Right">
                 <Template Context="payment">@payment.Amount</Template>
             </RadzenDataGridColumn>
         </Columns>
     </RadzenDataGrid>
 
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
-        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Costs</RadzenText>
+        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">@L["Costs"]</RadzenText>
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-            <RadzenButton Text="Add train trip" Icon="train" Size="ButtonSize.Small" Variant="Variant.Outlined" Click="AddTrainTripAsync" />
-            <RadzenButton Text="Add cost" Icon="add" Size="ButtonSize.Small" Click="@(() => EditExpenseAsync(null))" />
+            <RadzenButton Text="@L["Add train trip"]" Icon="train" Size="ButtonSize.Small" Variant="Variant.Outlined" Click="AddTrainTripAsync" />
+            <RadzenButton Text="@L["Add cost"]" Icon="add" Size="ButtonSize.Small" Click="@(() => EditExpenseAsync(null))" />
         </RadzenStack>
     </RadzenStack>
-    <RadzenDataGrid TItem="Expense" Data="_expenses" class="clickable-rows" EmptyText="No costs yet."
+    <RadzenDataGrid TItem="Expense" Data="_expenses" class="clickable-rows" EmptyText="@L["No costs yet."]"
                     RowClick="@(args => EditExpenseAsync(args.Data!.Id))">
         <Columns>
-            <RadzenDataGridColumn Title="Date" Width="8rem">
+            <RadzenDataGridColumn Title="@L["Date"]" Width="8rem">
                 <Template Context="expense">@expense.Date.ToString("dd.MM.yyyy")</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Category" Width="9rem">
+            <RadzenDataGridColumn Title="@L["Category"]" Width="9rem">
                 <Template Context="expense">@expense.Category.Text()</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Description">
+            <RadzenDataGridColumn Title="@L["Description"]">
                 <Template Context="expense">
                     <div>@expense.Description</div>
                     <RadzenText TextStyle="TextStyle.Caption">@expense.Vendor</RadzenText>
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Receipt">
+            <RadzenDataGridColumn Title="@L["Receipt"]">
                 <Template Context="expense">
                     @if (expense.Receipt is not null)
                     {
@@ -81,10 +81,10 @@ else
                     }
                 </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Cost" Width="9rem" TextAlign="TextAlign.Right">
+            <RadzenDataGridColumn Title="@L["Cost"]" Width="9rem" TextAlign="TextAlign.Right">
                 <Template Context="expense">@expense.Amount</Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Title="Billed to client" Width="10rem" TextAlign="TextAlign.Right">
+            <RadzenDataGridColumn Title="@L["Billed to client"]" Width="10rem" TextAlign="TextAlign.Right">
                 <Template Context="expense">
                     @if (expense.BilledToClient is { } billed)
                     {
@@ -92,7 +92,7 @@ else
                     }
                     else
                     {
-                        <RadzenText TextStyle="TextStyle.Caption">in quote</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L["in quote"]</RadzenText>
                     }
                 </Template>
             </RadzenDataGridColumn>
@@ -132,9 +132,9 @@ else
 
     /// <summary>Where the amount comes from: the invoice, or the quote plus costs billed on top.</summary>
     private string? TotalNote(ShootFinancials financials) =>
-        _invoice is not null ? $"Invoice {_invoice.Number}, due {_invoice.DueDate:dd.MM.yyyy}"
+        _invoice is not null ? L["Invoice {0}, due {1:dd.MM.yyyy}", _invoice.Number, _invoice.DueDate].Value
         : financials.BilledCosts == Money.Zero ? null
-        : $"Quote {Format(financials.Quote)} + billed costs {financials.BilledCosts}";
+        : L["Quote {0} + billed costs {1}", Format(financials.Quote), financials.BilledCosts].Value;
 
     protected override Task OnInitializedAsync() => LoadAsync();
 
@@ -151,7 +151,7 @@ else
     private async Task AddTrainTripAsync()
     {
         await using var db = await DbFactory.CreateDbContextAsync();
-        var changed = await Dialogs.OpenAsync<ExpenseDialog>("Add train trip",
+        var changed = await Dialogs.OpenAsync<ExpenseDialog>(L["Add train trip"],
             new Dictionary<string, object?>
             {
                 ["ShootId"] = ShootId,
@@ -165,7 +165,7 @@ else
     private async Task EditExpenseAsync(int? expenseId)
     {
         var changed = await Dialogs.OpenAsync<ExpenseDialog>(
-            expenseId is null ? "Add cost" : "Edit cost",
+            expenseId is null ? L["Add cost"] : L["Edit cost"],
             new Dictionary<string, object?> { ["ShootId"] = ShootId, ["ExpenseId"] = expenseId, ["DefaultDate"] = ShootDate },
             new DialogOptions { Width = "36rem" });
         await AfterDialogAsync(changed);
@@ -174,7 +174,7 @@ else
     private async Task EditPaymentAsync(int? paymentId)
     {
         var changed = await Dialogs.OpenAsync<PaymentDialog>(
-            paymentId is null ? "Add payment" : "Edit payment",
+            paymentId is null ? L["Add payment"] : L["Edit payment"],
             new Dictionary<string, object?>
             {
                 ["ShootId"] = ShootId,

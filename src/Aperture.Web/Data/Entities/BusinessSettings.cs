@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Aperture.Web.Domain;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Data.Entities;
 
@@ -66,6 +67,9 @@ public class BusinessSettings
     /// Off by default: St. Gallen allows the full rate (StB 41 Nr. 1), and so do many cantons.
     /// </summary>
     public bool ProRataFirstYear { get; set; }
+
+    /// <summary>Aperture's own language; null until it's chosen, and pages follow the browser (see AppLanguage).</summary>
+    public Language? Language { get; set; }
 
     /// <summary>True once everything an invoice needs has been filled in.</summary>
     public bool IsComplete =>

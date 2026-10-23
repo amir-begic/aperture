@@ -1,6 +1,7 @@
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
 using Aperture.Web.Features.Invoices;
+using Aperture.Web.Localization;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -9,7 +10,7 @@ namespace Aperture.Web.Features.Finance;
 
 /// <summary>
 /// The yearly income statement for the tax return: summary first, then every income and cost line with the
-/// number of its receipt, and the equipment register with depreciation.
+/// number of its receipt, and the equipment register with depreciation. In the current language.
 /// </summary>
 public sealed class TaxStatementDocument(TaxExportData data) : IDocument
 {
@@ -19,7 +20,7 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
 
     public DocumentMetadata GetMetadata() => new()
     {
-        Title = $"Income statement {Statement.Year}",
+        Title = TaxExport.BaseName(Statement.Year),
         Author = data.Settings.BusinessName is { Length: > 0 } business ? business : data.Settings.OwnerName,
     };
 
@@ -40,13 +41,13 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
         });
         page.Footer().Row(row =>
         {
-            row.RelativeItem().Text($"Income statement {Statement.Year} · created {data.CreatedOn:dd.MM.yyyy}").FontSize(7).FontColor(Colors.Grey.Darken1);
+            row.RelativeItem().Text(Texts.Format("Income statement {0} · created {1:dd.MM.yyyy}", Statement.Year, data.CreatedOn)).FontSize(7).FontColor(Colors.Grey.Darken1);
             row.RelativeItem().AlignRight().Text(text =>
             {
                 text.DefaultTextStyle(style => style.FontSize(7).FontColor(Colors.Grey.Darken1));
-                text.Span("Page ");
+                text.Span(Texts.Get("Page") + " ");
                 text.CurrentPageNumber();
-                text.Span(" of ");
+                text.Span(" " + Texts.Get("of") + " ");
                 text.TotalPages();
             });
         });
@@ -57,8 +58,8 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
         var settings = data.Settings;
         row.RelativeItem().Column(column =>
         {
-            column.Item().Text($"Income statement {Statement.Year}").FontSize(16).Bold();
-            column.Item().Text($"1.1.–31.12.{Statement.Year} · cash basis · amounts in CHF").FontColor(Colors.Grey.Darken1);
+            column.Item().Text(TaxExport.BaseName(Statement.Year)).FontSize(16).Bold();
+            column.Item().Text(Texts.Format("1.1.–31.12.{0} · cash basis · amounts in CHF", Statement.Year)).FontColor(Colors.Grey.Darken1);
         });
         row.RelativeItem().AlignRight().Column(column =>
         {
@@ -66,13 +67,13 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
             column.Item().AlignRight().Text(settings.OwnerName);
             column.Item().AlignRight().Text(settings.Street);
             column.Item().AlignRight().Text($"{settings.PostalCode} {settings.City}");
-            column.Item().AlignRight().Text(settings.IsVatRegistered ? $"VAT no. {settings.VatNumber}" : "Not registered for VAT");
+            column.Item().AlignRight().Text(settings.IsVatRegistered ? Texts.Format("VAT no. {0}", settings.VatNumber) : Texts.Get("Not registered for VAT"));
         });
     });
 
     private void ComposeSummary(IContainer container) => container.Column(column =>
     {
-        column.Item().PaddingBottom(2, Unit.Millimetre).Text("Summary").FontSize(12).Bold();
+        column.Item().PaddingBottom(2, Unit.Millimetre).Text(Texts.Get("Summary")).FontSize(12).Bold();
         column.Item().Table(table =>
         {
             table.ColumnsDefinition(columns =>
@@ -100,18 +101,18 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
                 }
             }
 
-            Line("Income from photography services", Statement.TotalIncome, bold: true);
+            Line(Texts.Get("Income from photography services"), Statement.TotalIncome, bold: true);
             foreach (var (category, amount) in Statement.CostsByCategory)
             {
                 Line(category.Text(), -amount, indent: true);
             }
-            if (Statement.TotalDepreciation != Money.Zero) Line("Depreciation of equipment", -Statement.TotalDepreciation, indent: true);
-            if (Statement.DisposalResult != Money.Zero) Line("Result from sale of equipment", Statement.DisposalResult, indent: true);
-            Line(Statement.Result >= Money.Zero ? "Profit" : "Loss", Statement.Result, bold: true, topBorder: true);
+            if (Statement.TotalDepreciation != Money.Zero) Line(Texts.Get("Depreciation of equipment"), -Statement.TotalDepreciation, indent: true);
+            if (Statement.DisposalResult != Money.Zero) Line(Texts.Get("Result from sale of equipment"), Statement.DisposalResult, indent: true);
+            Line(Statement.Result >= Money.Zero ? Texts.Get("Profit") : Texts.Get("Statement.Loss"), Statement.Result, bold: true, topBorder: true);
         });
     });
 
-    /// <summary>A table column: fixed width in mm, or a relative share of the rest; amounts align right.</summary>
+    /// <summary>A table column: fixed width in mm, or a relative share of the rest; amounts align right. The title is a text key.</summary>
     private sealed record Column(string Title, float? WidthMm = null, float Share = 1, bool Right = false);
 
     private void ComposeIncome(IContainer container) => Section(container, "Income", "Payments received in the year.",
@@ -152,7 +153,7 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
         {
             var (asset, year) = (entry.Asset, entry.Year);
             var end = year.DisposalResult is { } result
-                ? $"sold, {(result >= Money.Zero ? "+" : "")}{result.ToAmountString()}"
+                ? Texts.Format("sold, {0}", $"{(result >= Money.Zero ? "+" : "")}{result.ToAmountString()}")
                 : year.Closing.ToAmountString();
             return new[]
             {
@@ -168,13 +169,14 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
         }),
         total: Statement.TotalDepreciation, totalColumn: 5);
 
+    /// <summary>A titled table with a totals line; title, description and column titles are text keys, translated here.</summary>
     private static void Section(
         IContainer container, string title, string description, Column[] columns, IEnumerable<string[]> rows,
         Money total, int? totalColumn = null) =>
         container.Column(column =>
         {
-            column.Item().Text(title).FontSize(12).Bold();
-            column.Item().PaddingBottom(2, Unit.Millimetre).Text(description).FontColor(Colors.Grey.Darken1);
+            column.Item().Text(Texts.Get(title)).FontSize(12).Bold();
+            column.Item().PaddingBottom(2, Unit.Millimetre).Text(Texts.Get(description)).FontColor(Colors.Grey.Darken1);
             column.Item().Table(table =>
             {
                 table.ColumnsDefinition(definition =>
@@ -191,7 +193,7 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
                     foreach (var c in columns)
                     {
                         var cell = header.Cell().BorderBottom(1).BorderColor(Colors.Grey.Darken2).PaddingVertical(3).PaddingHorizontal(3);
-                        (c.Right ? cell.AlignRight() : cell).Text(c.Title).Bold();
+                        (c.Right ? cell.AlignRight() : cell).Text(Texts.Get(c.Title)).Bold();
                     }
                 });
 
@@ -208,7 +210,7 @@ public sealed class TaxStatementDocument(TaxExportData data) : IDocument
                 for (var i = 0; i < columns.Length; i++)
                 {
                     var cell = table.Cell().PaddingVertical(3).PaddingHorizontal(3);
-                    if (i == 0) cell.Text("Total").Bold();
+                    if (i == 0) cell.Text(Texts.Get("Total")).Bold();
                     else if (i == position) cell.AlignRight().Text(total.ToAmountString()).Bold();
                 }
             });

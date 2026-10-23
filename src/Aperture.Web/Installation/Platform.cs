@@ -74,8 +74,11 @@ public abstract class Platform(ICommandRunner run)
         (OperatingSystem.IsMacOS() ? "osx" : OperatingSystem.IsWindows() ? "win" : "linux") + "-"
         + RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
 
-    /// <summary>"this Mac", "this PC", "this computer": for texts in the app.</summary>
-    public abstract string ThisComputer { get; }
+    /// <summary>
+    /// "Mac", "PC", "computer": for texts in the app, as in "this {0}". A key of its own in German ("computer" is
+    /// "Computer"); all three are masculine there, so a text can say "diesem {0}" or "dieser {0}" as its sentence needs.
+    /// </summary>
+    public abstract string Computer { get; }
 
     public virtual string ExecutableName => "Aperture.Web";
 
@@ -257,7 +260,7 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
     public const string UpdaterLabel = "ch.aperture.updater";
     public const string BackupLabel = "ch.aperture.backup";
 
-    public override string ThisComputer => "this Mac";
+    public override string Computer => "Mac";
 
     private static string AgentsDirectory =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library", "LaunchAgents");
@@ -503,7 +506,7 @@ public sealed class LinuxPlatform(ICommandRunner run) : Platform(run)
     public static readonly string[] Units =
         [WebUnit, "aperture-updater.service", "aperture-updater.path", "aperture-backup.service", "aperture-backup.timer"];
 
-    public override string ThisComputer => "this computer";
+    public override string Computer => "computer";
 
     private static string UnitDirectory => Path.Combine(
         Environment.GetEnvironmentVariable("XDG_CONFIG_HOME") is { Length: > 0 } config
@@ -690,7 +693,7 @@ public sealed class WindowsPlatform(ICommandRunner run) : Platform(run)
     public const string BackupTask = "Aperture Backup";
     public const string UpdaterTask = "Aperture Updater";
 
-    public override string ThisComputer => "this PC";
+    public override string Computer => "PC";
 
     public override string ExecutableName => "Aperture.Web.exe";
 

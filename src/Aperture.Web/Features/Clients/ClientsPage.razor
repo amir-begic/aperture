@@ -2,25 +2,25 @@
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NavigationManager Navigation
 
-<PageTitle>Clients · Aperture</PageTitle>
+<PageTitle>@L["Clients"] · Aperture</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Clients</RadzenText>
-    <RadzenButton Text="New client" Icon="person_add" Click="@(() => Navigation.NavigateTo("clients/new"))" />
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">@L["Clients"]</RadzenText>
+    <RadzenButton Text="@L["New client"]" Icon="person_add" Click="@(() => Navigation.NavigateTo("clients/new"))" />
 </RadzenStack>
 
-<RadzenTextBox @bind-Value="_search" Immediate="true" Placeholder="Search name, company, city…" class="search-box rz-mb-4" />
+<RadzenTextBox @bind-Value="_search" Immediate="true" Placeholder="@L["Search name, company, city…"]" class="search-box rz-mb-4" />
 
 <RadzenDataGrid TItem="ClientRow" Data="FilteredClients" IsLoading="_clients is null" AllowSorting="true"
-                AllowPaging="true" PageSize="25" EmptyText="No clients yet." class="clickable-rows"
+                AllowPaging="true" PageSize="25" EmptyText="@L["No clients yet."]" class="clickable-rows"
                 RowClick="@(args => Navigation.NavigateTo($"clients/{args.Data!.Id}"))">
     <Columns>
-        <RadzenDataGridColumn Property="@nameof(ClientRow.Name)" Title="Name" />
-        <RadzenDataGridColumn Property="@nameof(ClientRow.Company)" Title="Company" />
-        <RadzenDataGridColumn Property="@nameof(ClientRow.Phone)" Title="Phone" />
-        <RadzenDataGridColumn Property="@nameof(ClientRow.Email)" Title="Email" />
-        <RadzenDataGridColumn Property="@nameof(ClientRow.City)" Title="City" />
-        <RadzenDataGridColumn Property="@nameof(ClientRow.ShootCount)" Title="Shoots" Width="6rem" TextAlign="TextAlign.Right" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Name)" Title="@L["Name"]" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Company)" Title="@L["Company"]" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Phone)" Title="@L["Phone"]" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.Email)" Title="@L["Email"]" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.City)" Title="@L["City"]" />
+        <RadzenDataGridColumn Property="@nameof(ClientRow.ShootCount)" Title="@L["Shoots"]" Width="6rem" TextAlign="TextAlign.Right" />
     </Columns>
 </RadzenDataGrid>
 

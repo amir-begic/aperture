@@ -4,6 +4,7 @@ using Aperture.Web.Data;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
 using Aperture.Web.Features.Attachments;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 
@@ -15,7 +16,7 @@ public sealed record TaxExportData(
 
 /// <summary>
 /// The yearly package for the tax return or a fiduciary: income statement as PDF, all lines as a spreadsheet,
-/// and every receipt, payslip and invoice of the year in a ZIP, numbered to match.
+/// and every receipt, payslip and invoice of the year in a ZIP, numbered to match. In the current language.
 /// </summary>
 public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, AttachmentStore store, TimeProvider time)
 {
@@ -33,7 +34,9 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
             DateOnly.FromDateTime(time.GetLocalNow().DateTime));
     }
 
-    public static string BaseName(int year) => $"Income statement {year}";
+    public static string BaseName(int year) => Texts.Format("Income statement {0}", year);
+
+    public static string AccountsName(int year) => Texts.Format("Accounts {0}", year);
 
     public static byte[] BuildPdf(TaxExportData data) => new TaxStatementDocument(data).GeneratePdf();
 
@@ -42,14 +45,14 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
         var statement = data.Statement;
         using var workbook = new XLWorkbook();
 
-        var summary = workbook.Worksheets.Add("Summary");
-        summary.Cell(1, 1).Value = $"Income statement {statement.Year} (cash basis, CHF)";
+        var summary = workbook.Worksheets.Add(Texts.Get("Summary"));
+        summary.Cell(1, 1).Value = Texts.Format("Income statement {0} (cash basis, CHF)", statement.Year);
         summary.Cell(1, 1).Style.Font.Bold = true;
-        var summaryRows = new List<(string Label, Money Amount, bool Bold)> { ("Income from photography services", statement.TotalIncome, true) };
+        var summaryRows = new List<(string Label, Money Amount, bool Bold)> { (Texts.Get("Income from photography services"), statement.TotalIncome, true) };
         summaryRows.AddRange(statement.CostsByCategory.Select(c => (c.Category.Text(), -c.Amount, false)));
-        if (statement.TotalDepreciation != Money.Zero) summaryRows.Add(("Depreciation of equipment", -statement.TotalDepreciation, false));
-        if (statement.DisposalResult != Money.Zero) summaryRows.Add(("Result from sale of equipment", statement.DisposalResult, false));
-        summaryRows.Add((statement.Result >= Money.Zero ? "Profit" : "Loss", statement.Result, true));
+        if (statement.TotalDepreciation != Money.Zero) summaryRows.Add((Texts.Get("Depreciation of equipment"), -statement.TotalDepreciation, false));
+        if (statement.DisposalResult != Money.Zero) summaryRows.Add((Texts.Get("Result from sale of equipment"), statement.DisposalResult, false));
+        summaryRows.Add((statement.Result >= Money.Zero ? Texts.Get("Profit") : Texts.Get("Statement.Loss"), statement.Result, true));
         for (var i = 0; i < summaryRows.Count; i++)
         {
             var (label, amount, bold) = summaryRows[i];
@@ -63,7 +66,7 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
         Sheet(workbook, "Income", ["Date", "Shoot", "Client", "Invoice", "Method", "Note", "Doc.", "Amount"],
             statement.Income.Select(i => new object?[]
             {
-                i.Date, i.ShootTitle, i.ClientName, i.InvoiceNumber, i.Method.ToString(), i.Note, data.Documents.NumberOf(i.Proof), i.Amount,
+                i.Date, i.ShootTitle, i.ClientName, i.InvoiceNumber, i.Method.Text(), i.Note, data.Documents.NumberOf(i.Proof), i.Amount,
             }),
             widths: [12, 30, 25, 12, 14, 20, 8, 14], totals: ["Amount"]);
 
@@ -116,7 +119,7 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
         await AddAsync(zip, $"{folder}/{BaseName(data.Statement.Year)}.pdf", BuildPdf(data), cancellationToken);
-        await AddAsync(zip, $"{folder}/Accounts {data.Statement.Year}.xlsx", BuildSpreadsheet(data), cancellationToken);
+        await AddAsync(zip, $"{folder}/{AccountsName(data.Statement.Year)}.xlsx", BuildSpreadsheet(data), cancellationToken);
 
         var missing = new List<string>();
         foreach (var document in data.Documents.All)
@@ -136,8 +139,8 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
 
         if (missing.Count > 0)
         {
-            var note = "These files were not found on the server:\n" + string.Join("\n", missing) + "\n";
-            await AddAsync(zip, $"{folder}/MISSING FILES.txt", System.Text.Encoding.UTF8.GetBytes(note), cancellationToken);
+            var note = Texts.Get("These files were not found on the server:") + "\n" + string.Join("\n", missing) + "\n";
+            await AddAsync(zip, $"{folder}/{Texts.Get("MISSING FILES")}.txt", System.Text.Encoding.UTF8.GetBytes(note), cancellationToken);
         }
     }
 
@@ -148,12 +151,13 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
         await stream.WriteAsync(content, cancellationToken);
     }
 
+    /// <summary>A sheet of rows with a totals line. Name and headers are text keys, translated here; totals name headers.</summary>
     private static void Sheet(XLWorkbook workbook, string name, string[] headers, IEnumerable<object?[]> rows, int[] widths, string[] totals)
     {
-        var sheet = workbook.Worksheets.Add(name);
+        var sheet = workbook.Worksheets.Add(Texts.Get(name));
         for (var c = 0; c < headers.Length; c++)
         {
-            sheet.Cell(1, c + 1).Value = headers[c];
+            sheet.Cell(1, c + 1).Value = Texts.Get(headers[c]);
             sheet.Column(c + 1).Width = widths[c];
         }
         sheet.Row(1).Style.Font.Bold = true;
@@ -180,7 +184,7 @@ public sealed class TaxExport(IDbContextFactory<ApertureDbContext> dbFactory, At
         }
 
         // Totals as formulas, so edits in Excel stay consistent.
-        sheet.Cell(r, 1).Value = "Total";
+        sheet.Cell(r, 1).Value = Texts.Get("Total");
         sheet.Row(r).Style.Font.Bold = true;
         foreach (var total in totals)
         {
@@ -212,12 +216,12 @@ public static class TaxExportEndpoints
 
         group.MapGet("/accounts.xlsx", async (int year, TaxExport export) =>
             Results.File(TaxExport.BuildSpreadsheet(await export.LoadAsync(year)),
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Accounts {year}.xlsx"));
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{TaxExport.AccountsName(year)}.xlsx"));
 
         group.MapGet("/export.zip", async (int year, TaxExport export, CancellationToken cancellationToken) =>
         {
             var zip = await export.CreateZipAsync(await export.LoadAsync(year), cancellationToken);
-            return Results.File(zip, "application/zip", $"Aperture {year} tax export.zip"); // disposing deletes the temp file
+            return Results.File(zip, "application/zip", Texts.Format("Aperture {0} tax export", year) + ".zip"); // disposing deletes the temp file
         });
     }
 }

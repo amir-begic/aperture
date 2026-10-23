@@ -4,6 +4,7 @@ using Aperture.Web.Data.Entities;
 using Aperture.Web.Features.Backup;
 using Aperture.Web.Features.Dashboard;
 using Aperture.Web.Features.Updates;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aperture.Web.Features.Notifications;
@@ -12,8 +13,10 @@ namespace Aperture.Web.Features.Notifications;
 /// Turns what the dashboard flags into notifications, each once: overdue invoices, deliveries due within a week or
 /// overdue, inquiries waiting a week for an answer, open prep a few days before a shoot, backup problems and new
 /// versions of Aperture. Shoots to invoice or to mark as shot, and past inquiries, stay on the dashboard only.
+/// In the language chosen in Settings.
 /// </summary>
-public sealed class PushReminders(IDbContextFactory<ApertureDbContext> dbFactory, PushService push, ILogger<PushReminders> logger)
+public sealed class PushReminders(
+    IDbContextFactory<ApertureDbContext> dbFactory, PushService push, AppLanguage language, ILogger<PushReminders> logger)
 {
     /// <summary>Open prep is pushed this close to a shoot (the dashboard shows it two weeks ahead).</summary>
     public static readonly TimeSpan PrepHorizon = TimeSpan.FromDays(3);
@@ -36,6 +39,7 @@ public sealed class PushReminders(IDbContextFactory<ApertureDbContext> dbFactory
             return;
         }
 
+        using var _ = Languages.Use(language.ForBackground);
         List<AttentionItem> due;
         await using (var db = await dbFactory.CreateDbContextAsync(cancellationToken))
         {
@@ -55,7 +59,7 @@ public sealed class PushReminders(IDbContextFactory<ApertureDbContext> dbFactory
 
         if (due.Count > MaxSeparate)
         {
-            var summary = new PushMessage($"{due.Count} things need attention",
+            var summary = new PushMessage(Texts.Format("{0} things need attention", due.Count),
                 string.Join(" · ", due.Take(MaxSeparate).Select(i => i.Text)) + " …", "", "attention");
             await SendAsync(summary, due, now, cancellationToken);
             return;

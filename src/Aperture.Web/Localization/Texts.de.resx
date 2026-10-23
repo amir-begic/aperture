@@ -1,0 +1,1810 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- German texts. The key is the English text, or for the few in Texts.resx a context key (see Texts). -->
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="+{0} more" xml:space="preserve">
+    <value>+{0} weitere</value>
+  </data>
+  <data name="1 entry" xml:space="preserve">
+    <value>1 Eintrag</value>
+  </data>
+  <data name="1 invoice" xml:space="preserve">
+    <value>1 Rechnung</value>
+  </data>
+  <data name="1 item of equipment" xml:space="preserve">
+    <value>1 Ausrüstungsgegenstand</value>
+  </data>
+  <data name="1 payment" xml:space="preserve">
+    <value>1 Zahlung</value>
+  </data>
+  <data name="1 prep task open for {0}" xml:space="preserve">
+    <value>1 Vorbereitungsaufgabe offen für {0}</value>
+  </data>
+  <data name="1.1.–31.12.{0} · cash basis · amounts in CHF" xml:space="preserve">
+    <value>1.1.–31.12.{0} · nach Zahlungseingang · Beträge in CHF</value>
+  </data>
+  <data name="10 hours, second shooter, 400 edited images, online gallery" xml:space="preserve">
+    <value>10 Stunden, Zweitfotograf, 400 bearbeitete Bilder, Online-Galerie</value>
+  </data>
+  <data name="Access, dress code and photo rules checked (stage, flash, guests who don't want photos)" xml:space="preserve">
+    <value>Zugang, Dresscode und Fotoregeln geklärt (Bühne, Blitz, Gäste ohne Fotos)</value>
+  </data>
+  <data name="Accounts (Excel)" xml:space="preserve">
+    <value>Buchungen (Excel)</value>
+  </data>
+  <data name="Accounts {0}" xml:space="preserve">
+    <value>Buchungen {0}</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="Add business cost" xml:space="preserve">
+    <value>Geschäftskosten erfassen</value>
+  </data>
+  <data name="Add cost" xml:space="preserve">
+    <value>Kosten erfassen</value>
+  </data>
+  <data name="Add equipment" xml:space="preserve">
+    <value>Ausrüstung erfassen</value>
+  </data>
+  <data name="Add line" xml:space="preserve">
+    <value>Zeile hinzufügen</value>
+  </data>
+  <data name="Add package" xml:space="preserve">
+    <value>Paket hinzufügen</value>
+  </data>
+  <data name="Add payment" xml:space="preserve">
+    <value>Zahlung erfassen</value>
+  </data>
+  <data name="Add to calendar" xml:space="preserve">
+    <value>Zum Kalender hinzufügen</value>
+  </data>
+  <data name="Add train trip" xml:space="preserve">
+    <value>Zugfahrt erfassen</value>
+  </data>
+  <data name="Add your email under Contact above and save first. Push services (Apple's, Google's, …) only deliver notifications from senders with a contact address." xml:space="preserve">
+    <value>Trage zuerst oben unter Kontakt deine E-Mail-Adresse ein und speichere. Push-Dienste (von Apple, Google, …) stellen nur Benachrichtigungen von Absendern mit Kontaktadresse zu.</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Adresse</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>Alle</value>
+  </data>
+  <data name="All categories" xml:space="preserve">
+    <value>Alle Kategorien</value>
+  </data>
+  <data name="All costs" xml:space="preserve">
+    <value>Alle Kosten</value>
+  </data>
+  <data name="All statuses" xml:space="preserve">
+    <value>Alle Status</value>
+  </data>
+  <data name="Already paid" xml:space="preserve">
+    <value>Bereits bezahlt</value>
+  </data>
+  <data name="Amount" xml:space="preserve">
+    <value>Betrag</value>
+  </data>
+  <data name="Amount (CHF)" xml:space="preserve">
+    <value>Betrag (CHF)</value>
+  </data>
+  <data name="Amount CHF" xml:space="preserve">
+    <value>Betrag CHF</value>
+  </data>
+  <data name="Amount due CHF" xml:space="preserve">
+    <value>Zu bezahlen CHF</value>
+  </data>
+  <data name="An error occurred while processing your request." xml:space="preserve">
+    <value>Beim Verarbeiten der Anfrage ist ein Fehler aufgetreten.</value>
+  </data>
+  <data name="An unhandled error has occurred." xml:space="preserve">
+    <value>Ein unerwarteter Fehler ist aufgetreten.</value>
+  </data>
+  <data name="and open the downloaded file. It goes into your calendar app (Calendar on a Mac, Outlook on Windows, …), and with a synced calendar such as iCloud, Google or Outlook onto your phone too. If the date or time changes later, change it in the calendar as well." xml:space="preserve">
+    <value>und öffne die heruntergeladene Datei. Sie landet in deiner Kalender-App (Kalender auf dem Mac, Outlook unter Windows, …) und mit einem synchronisierten Kalender wie iCloud, Google oder Outlook auch auf deinem Handy. Ändern sich Datum oder Zeit später, ändere sie auch im Kalender.</value>
+  </data>
+  <data name="Anna &amp; Marco Rossi" xml:space="preserve">
+    <value>Anna &amp; Marco Rossi</value>
+  </data>
+  <data name="Aperture can let you know on this {0} when an invoice becomes overdue, when a delivery is due within a week or overdue, when an inquiry has waited {1} days for an answer, when prep is still open {2} days before a shoot, when a backup fails and when a new version is available. Each only once, between {3:HH:mm} and {4:HH:mm}, and only while this {0} is awake: Aperture sends them itself." xml:space="preserve">
+    <value>Aperture kann dich auf diesem {0} benachrichtigen, wenn eine Rechnung überfällig wird, eine Lieferung innerhalb einer Woche fällig oder überfällig ist, eine Anfrage seit {1} Tagen auf Antwort wartet, {2} Tage vor einem Shooting noch Vorbereitung offen ist, ein Backup fehlschlägt und eine neue Version verfügbar ist. Jeweils nur einmal, zwischen {3:HH:mm} und {4:HH:mm}, und nur solange dieser {0} wach ist: Aperture verschickt sie selbst.</value>
+  </data>
+  <data name="Aperture is still running the previous version. Details are in {0}." xml:space="preserve">
+    <value>Aperture läuft weiter mit der bisherigen Version. Details stehen in {0}.</value>
+  </data>
+  <data name="Aperture is up to date." xml:space="preserve">
+    <value>Aperture ist auf dem neusten Stand.</value>
+  </data>
+  <data name="Aperture stops, saves a copy of the database, starts the new version and checks it. If it doesn't start, the previous version comes back by itself. Takes about a minute." xml:space="preserve">
+    <value>Aperture hält an, sichert eine Kopie der Datenbank, startet die neue Version und prüft sie. Startet sie nicht, kommt die bisherige Version von selbst zurück. Dauert etwa eine Minute.</value>
+  </data>
+  <data name="Aperture will let you know when something needs doing." xml:space="preserve">
+    <value>Aperture meldet sich, wenn etwas zu tun ist.</value>
+  </data>
+  <data name="Aperture {0} is available" xml:space="preserve">
+    <value>Aperture {0} ist verfügbar</value>
+  </data>
+  <data name="Aperture {0} tax export" xml:space="preserve">
+    <value>Aperture {0} Steuerexport</value>
+  </data>
+  <data name="Aperture's own language. Invoices are in each client's language, chosen on the client." xml:space="preserve">
+    <value>Die Sprache von Aperture. Rechnungen sind in der Sprache des jeweiligen Kunden, die du beim Kunden wählst.</value>
+  </data>
+  <data name="At most {0} characters." xml:space="preserve">
+    <value>Höchstens {0} Zeichen.</value>
+  </data>
+  <data name="Attach file" xml:space="preserve">
+    <value>Datei anhängen</value>
+  </data>
+  <data name="Attach payslip" xml:space="preserve">
+    <value>Zahlungsbeleg anhängen</value>
+  </data>
+  <data name="Attach receipt" xml:space="preserve">
+    <value>Quittung anhängen</value>
+  </data>
+  <data name="Backup problem" xml:space="preserve">
+    <value>Backup-Problem</value>
+  </data>
+  <data name="Backups" xml:space="preserve">
+    <value>Backups</value>
+  </data>
+  <data name="Bank transfer" xml:space="preserve">
+    <value>Banküberweisung</value>
+  </data>
+  <data name="Batteries charged, cards formatted" xml:space="preserve">
+    <value>Akkus geladen, Karten formatiert</value>
+  </data>
+  <data name="Batteries charged, cards formatted, backup body packed" xml:space="preserve">
+    <value>Akkus geladen, Karten formatiert, Ersatzkamera eingepackt</value>
+  </data>
+  <data name="Before you can issue this invoice" xml:space="preserve">
+    <value>Bevor du diese Rechnung ausstellen kannst</value>
+  </data>
+  <data name="Belongs to" xml:space="preserve">
+    <value>Gehört zu</value>
+  </data>
+  <data name="Below cost by {0}." xml:space="preserve">
+    <value>{0} unter den Kosten.</value>
+  </data>
+  <data name="Between half an hour and 24 hours." xml:space="preserve">
+    <value>Zwischen einer halben Stunde und 24 Stunden.</value>
+  </data>
+  <data name="Between {0} and {1}." xml:space="preserve">
+    <value>Zwischen {0} und {1}.</value>
+  </data>
+  <data name="Bill to the client on top of the quote" xml:space="preserve">
+    <value>Zusätzlich zur Offerte an den Kunden verrechnen</value>
+  </data>
+  <data name="Billed to" xml:space="preserve">
+    <value>Rechnungsempfänger</value>
+  </data>
+  <data name="Billed to client" xml:space="preserve">
+    <value>An Kunden verrechnet</value>
+  </data>
+  <data name="Billing address (for invoices)" xml:space="preserve">
+    <value>Rechnungsadresse (für Rechnungen)</value>
+  </data>
+  <data name="Book value end of {0}" xml:space="preserve">
+    <value>Buchwert Ende {0}</value>
+  </data>
+  <data name="Booked" xml:space="preserve">
+    <value>Gebucht</value>
+  </data>
+  <data name="Bought" xml:space="preserve">
+    <value>Gekauft</value>
+  </data>
+  <data name="Bought from (optional)" xml:space="preserve">
+    <value>Gekauft bei (optional)</value>
+  </data>
+  <data name="Bought on" xml:space="preserve">
+    <value>Gekauft am</value>
+  </data>
+  <data name="Brief and shot list received" xml:space="preserve">
+    <value>Briefing und Shotlist erhalten</value>
+  </data>
+  <data name="build {0} · {1:dd.MM.yyyy}" xml:space="preserve">
+    <value>Build {0} · {1:dd.MM.yyyy}</value>
+  </data>
+  <data name="Business" xml:space="preserve">
+    <value>Geschäft</value>
+  </data>
+  <data name="Business costs like subscriptions, insurance or your phone go here; shoot costs are added on the shoot's Finances tab. Equipment you'll use for several years belongs under" xml:space="preserve">
+    <value>Geschäftskosten wie Abos, Versicherungen oder dein Telefon gehören hierhin; Kosten eines Shootings erfasst du im Tab «Finanzen» des Shootings. Ausrüstung, die du mehrere Jahre nutzt, gehört unter</value>
+  </data>
+  <data name="Calendar" xml:space="preserve">
+    <value>Kalender</value>
+  </data>
+  <data name="Cameras &amp; lenses" xml:space="preserve">
+    <value>Kameras &amp; Objektive</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Abbrechen</value>
+  </data>
+  <data name="Cancel invoice" xml:space="preserve">
+    <value>Rechnung stornieren</value>
+  </data>
+  <data name="Cancel invoice {0}?" xml:space="preserve">
+    <value>Rechnung {0} stornieren?</value>
+  </data>
+  <data name="Cancelled invoices" xml:space="preserve">
+    <value>Stornierte Rechnungen</value>
+  </data>
+  <data name="Cash" xml:space="preserve">
+    <value>Bar</value>
+  </data>
+  <data name="Cash basis: income counts when it's received, costs when they're paid. Equipment is spread over the years as depreciation." xml:space="preserve">
+    <value>Nach Zahlungseingang: Einnahmen zählen, wenn sie eingehen, Kosten, wenn sie bezahlt werden. Ausrüstung wird über die Jahre abgeschrieben.</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Kategorie</value>
+  </data>
+  <data name="Change" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="Chart" xml:space="preserve">
+    <value>Diagramm</value>
+  </data>
+  <data name="Chart.costs" xml:space="preserve">
+    <value>Kosten</value>
+  </data>
+  <data name="Chart.income" xml:space="preserve">
+    <value>Einnahmen</value>
+  </data>
+  <data name="Check for updates" xml:space="preserve">
+    <value>Nach Updates suchen</value>
+  </data>
+  <data name="Checking…" xml:space="preserve">
+    <value>Wird geprüft …</value>
+  </data>
+  <data name="Checklist" xml:space="preserve">
+    <value>Checkliste</value>
+  </data>
+  <data name="Choose a client." xml:space="preserve">
+    <value>Wähle einen Kunden.</value>
+  </data>
+  <data name="Choose a date." xml:space="preserve">
+    <value>Wähle ein Datum.</value>
+  </data>
+  <data name="City" xml:space="preserve">
+    <value>Ort</value>
+  </data>
+  <data name="Client" xml:space="preserve">
+    <value>Kunde</value>
+  </data>
+  <data name="Client not found" xml:space="preserve">
+    <value>Kunde nicht gefunden</value>
+  </data>
+  <data name="Client saved" xml:space="preserve">
+    <value>Kunde gespeichert</value>
+  </data>
+  <data name="Clients" xml:space="preserve">
+    <value>Kunden</value>
+  </data>
+  <data name="Clients with shoots can't be deleted." xml:space="preserve">
+    <value>Kunden mit Shootings können nicht gelöscht werden.</value>
+  </data>
+  <data name="Commercial" xml:space="preserve">
+    <value>Werbung</value>
+  </data>
+  <data name="Company" xml:space="preserve">
+    <value>Firma</value>
+  </data>
+  <data name="Company (optional)" xml:space="preserve">
+    <value>Firma (optional)</value>
+  </data>
+  <data name="Complete settings" xml:space="preserve">
+    <value>Einstellungen vervollständigen</value>
+  </data>
+  <data name="computer" xml:space="preserve">
+    <value>Computer</value>
+  </data>
+  <data name="Computer &amp; software" xml:space="preserve">
+    <value>Computer &amp; Software</value>
+  </data>
+  <data name="Contact" xml:space="preserve">
+    <value>Kontakt</value>
+  </data>
+  <data name="Contact person on the day confirmed" xml:space="preserve">
+    <value>Ansprechperson am Tag bestätigt</value>
+  </data>
+  <data name="Contracts, riders, timelines… Receipts and payslips show up here too." xml:space="preserve">
+    <value>Verträge, Rider, Abläufe … Quittungen und Zahlungsbelege erscheinen auch hier.</value>
+  </data>
+  <data name="Corporate" xml:space="preserve">
+    <value>Business</value>
+  </data>
+  <data name="Cost" xml:space="preserve">
+    <value>Kosten</value>
+  </data>
+  <data name="Cost - {0}" xml:space="preserve">
+    <value>Kosten - {0}</value>
+  </data>
+  <data name="Costs" xml:space="preserve">
+    <value>Kosten</value>
+  </data>
+  <data name="Costs by category" xml:space="preserve">
+    <value>Kosten nach Kategorie</value>
+  </data>
+  <data name="Costs paid in the year, including costs of shoots." xml:space="preserve">
+    <value>Im Jahr bezahlte Kosten, einschliesslich Kosten von Shootings.</value>
+  </data>
+  <data name="Costs {0}" xml:space="preserve">
+    <value>Kosten {0}</value>
+  </data>
+  <data name="Couldn't reach the update server. Is this {0} online?" xml:space="preserve">
+    <value>Der Update-Server ist nicht erreichbar. Ist dieser {0} online?</value>
+  </data>
+  <data name="Couldn't read {0}. Please choose it again." xml:space="preserve">
+    <value>{0} konnte nicht gelesen werden. Bitte wähle die Datei erneut.</value>
+  </data>
+  <data name="Couldn't send the notification" xml:space="preserve">
+    <value>Benachrichtigung konnte nicht gesendet werden</value>
+  </data>
+  <data name="Couldn't turn notifications on: {0}" xml:space="preserve">
+    <value>Benachrichtigungen konnten nicht eingeschaltet werden: {0}</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>Land</value>
+  </data>
+  <data name="Couple shoot spot and time planned, with a bad-weather option" xml:space="preserve">
+    <value>Ort und Zeit fürs Paarshooting geplant, mit Schlechtwettervariante</value>
+  </data>
+  <data name="Covered by the quote." xml:space="preserve">
+    <value>In der Offerte enthalten.</value>
+  </data>
+  <data name="Create invoice" xml:space="preserve">
+    <value>Rechnung erstellen</value>
+  </data>
+  <data name="Create login" xml:space="preserve">
+    <value>Login erstellen</value>
+  </data>
+  <data name="Create your login" xml:space="preserve">
+    <value>Login erstellen</value>
+  </data>
+  <data name="Dashboard" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="Data in {0}" xml:space="preserve">
+    <value>Daten in {0}</value>
+  </data>
+  <data name="Date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Declining balance on the book value, pro rata by month in the year of purchase and sale." xml:space="preserve">
+    <value>Degressiv auf dem Buchwert, im Anschaffungs- und Verkaufsjahr monatsgenau anteilig.</value>
+  </data>
+  <data name="Declining balance on the book value; full rate in the year of purchase, pro rata by month in the year of sale." xml:space="preserve">
+    <value>Degressiv auf dem Buchwert; voller Satz im Anschaffungsjahr, im Verkaufsjahr monatsgenau anteilig.</value>
+  </data>
+  <data name="Default: the ESTV maximum for &quot;{0}&quot; (declining balance, Merkblatt A 1995). Lower rates are always allowed; ask your tax office if unsure." xml:space="preserve">
+    <value>Standard: das ESTV-Maximum für «{0}» (degressiv, Merkblatt A 1995). Tiefere Sätze sind immer erlaubt; frag im Zweifel dein Steueramt.</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Löschen</value>
+  </data>
+  <data name="Delete client" xml:space="preserve">
+    <value>Kunde löschen</value>
+  </data>
+  <data name="Delete draft" xml:space="preserve">
+    <value>Entwurf löschen</value>
+  </data>
+  <data name="Delete file" xml:space="preserve">
+    <value>Datei löschen</value>
+  </data>
+  <data name="Delete location" xml:space="preserve">
+    <value>Ort löschen</value>
+  </data>
+  <data name="Delete shoot" xml:space="preserve">
+    <value>Shooting löschen</value>
+  </data>
+  <data name="Delete this draft?" xml:space="preserve">
+    <value>Diesen Entwurf löschen?</value>
+  </data>
+  <data name="Delete {0}?" xml:space="preserve">
+    <value>{0} löschen?</value>
+  </data>
+  <data name="Delete {0}? Consider setting it to Cancelled instead to keep it in your records." xml:space="preserve">
+    <value>{0} löschen? Setze es besser auf «Abgesagt», damit es in deinen Unterlagen bleibt.</value>
+  </data>
+  <data name="Deliver {0} by {1:ddd dd.MM.}" xml:space="preserve">
+    <value>{0} bis {1:ddd dd.MM.} liefern</value>
+  </data>
+  <data name="Deliverables agreed (number of images, formats, sizes)" xml:space="preserve">
+    <value>Lieferumfang vereinbart (Anzahl Bilder, Formate, Grössen)</value>
+  </data>
+  <data name="Delivered" xml:space="preserve">
+    <value>Geliefert</value>
+  </data>
+  <data name="Delivery" xml:space="preserve">
+    <value>Lieferung</value>
+  </data>
+  <data name="Delivery (days)" xml:space="preserve">
+    <value>Lieferung (Tage)</value>
+  </data>
+  <data name="Delivery due" xml:space="preserve">
+    <value>Lieferung fällig</value>
+  </data>
+  <data name="Delivery due {0:ddd dd.MM.yyyy}" xml:space="preserve">
+    <value>Lieferung fällig {0:ddd dd.MM.yyyy}</value>
+  </data>
+  <data name="Delivery for {0} is overdue" xml:space="preserve">
+    <value>Lieferung für {0} ist überfällig</value>
+  </data>
+  <data name="Delivery overdue" xml:space="preserve">
+    <value>Lieferung überfällig</value>
+  </data>
+  <data name="Delivery {0:dd.MM.}" xml:space="preserve">
+    <value>Lieferung {0:dd.MM.}</value>
+  </data>
+  <data name="Delivery.overdue" xml:space="preserve">
+    <value>überfällig</value>
+  </data>
+  <data name="Deposit" xml:space="preserve">
+    <value>Anzahlung</value>
+  </data>
+  <data name="Depreciation" xml:space="preserve">
+    <value>Abschreibungen</value>
+  </data>
+  <data name="Depreciation (% per year)" xml:space="preserve">
+    <value>Abschreibung (% pro Jahr)</value>
+  </data>
+  <data name="Depreciation of equipment" xml:space="preserve">
+    <value>Abschreibung der Ausrüstung</value>
+  </data>
+  <data name="Depreciation schedule" xml:space="preserve">
+    <value>Abschreibungsplan</value>
+  </data>
+  <data name="Depreciation {0}" xml:space="preserve">
+    <value>Abschreibung {0}</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Difference" xml:space="preserve">
+    <value>Differenz</value>
+  </data>
+  <data name="Doc." xml:space="preserve">
+    <value>Beleg</value>
+  </data>
+  <data name="Don't attach" xml:space="preserve">
+    <value>Nicht anhängen</value>
+  </data>
+  <data name="Download a backup" xml:space="preserve">
+    <value>Backup herunterladen</value>
+  </data>
+  <data name="Download failed" xml:space="preserve">
+    <value>Download fehlgeschlagen</value>
+  </data>
+  <data name="Downloading {0}…" xml:space="preserve">
+    <value>{0} wird heruntergeladen …</value>
+  </data>
+  <data name="Draft" xml:space="preserve">
+    <value>Entwurf</value>
+  </data>
+  <data name="Draft saved" xml:space="preserve">
+    <value>Entwurf gespeichert</value>
+  </data>
+  <data name="Drafts" xml:space="preserve">
+    <value>Entwürfe</value>
+  </data>
+  <data name="Due" xml:space="preserve">
+    <value>Fällig</value>
+  </data>
+  <data name="Due date" xml:space="preserve">
+    <value>Fällig am</value>
+  </data>
+  <data name="Due {0:ddd dd.MM.yyyy} · {1}" xml:space="preserve">
+    <value>Fällig {0:ddd dd.MM.yyyy} · {1}</value>
+  </data>
+  <data name="Edit cost" xml:space="preserve">
+    <value>Kosten bearbeiten</value>
+  </data>
+  <data name="Edit equipment" xml:space="preserve">
+    <value>Ausrüstung bearbeiten</value>
+  </data>
+  <data name="Edit package" xml:space="preserve">
+    <value>Paket bearbeiten</value>
+  </data>
+  <data name="Edit payment" xml:space="preserve">
+    <value>Zahlung bearbeiten</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>E-Mail</value>
+  </data>
+  <data name="End" xml:space="preserve">
+    <value>Ende</value>
+  </data>
+  <data name="ends next day" xml:space="preserve">
+    <value>endet am Folgetag</value>
+  </data>
+  <data name="Enter a date after the purchase." xml:space="preserve">
+    <value>Gib ein Datum nach dem Kauf ein.</value>
+  </data>
+  <data name="Enter a price above zero." xml:space="preserve">
+    <value>Gib einen Preis über null ein.</value>
+  </data>
+  <data name="Enter a price." xml:space="preserve">
+    <value>Gib einen Preis ein.</value>
+  </data>
+  <data name="Enter an amount above zero." xml:space="preserve">
+    <value>Gib einen Betrag über null ein.</value>
+  </data>
+  <data name="Enter an amount." xml:space="preserve">
+    <value>Gib einen Betrag ein.</value>
+  </data>
+  <data name="Enter the date it arrived." xml:space="preserve">
+    <value>Gib das Datum ein, an dem sie eingegangen ist.</value>
+  </data>
+  <data name="Enter the price you charge the client." xml:space="preserve">
+    <value>Gib den Preis ein, den du dem Kunden verrechnest.</value>
+  </data>
+  <data name="Enter the price." xml:space="preserve">
+    <value>Gib den Preis ein.</value>
+  </data>
+  <data name="Enter the purchase date." xml:space="preserve">
+    <value>Gib das Kaufdatum ein.</value>
+  </data>
+  <data name="Equipment" xml:space="preserve">
+    <value>Ausrüstung</value>
+  </data>
+  <data name="Equipment - {0}" xml:space="preserve">
+    <value>Ausrüstung - {0}</value>
+  </data>
+  <data name="Equipment and depreciation" xml:space="preserve">
+    <value>Ausrüstung und Abschreibungen</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Fehler</value>
+  </data>
+  <data name="Error." xml:space="preserve">
+    <value>Fehler.</value>
+  </data>
+  <data name="Event" xml:space="preserve">
+    <value>Event</value>
+  </data>
+  <data name="Event date" xml:space="preserve">
+    <value>Datum</value>
+  </data>
+  <data name="Every invoice line needs a description." xml:space="preserve">
+    <value>Jede Rechnungszeile braucht eine Beschreibung.</value>
+  </data>
+  <data name="Everything (ZIP)" xml:space="preserve">
+    <value>Alles (ZIP)</value>
+  </data>
+  <data name="Everything in one ZIP: the database and all uploaded files, with a note on how to restore it. For a copy somewhere else, or to move Aperture to a new {0}. Your login isn't in it." xml:space="preserve">
+    <value>Alles in einer ZIP-Datei: die Datenbank und alle hochgeladenen Dateien, mit einer Anleitung zur Wiederherstellung. Für eine Kopie anderswo oder um Aperture auf einen neuen {0} zu übertragen. Dein Login ist nicht dabei.</value>
+  </data>
+  <data name="Failed to rejoin." xml:space="preserve">
+    <value>Verbindung konnte nicht wiederhergestellt werden.</value>
+  </data>
+  <data name="Failed to resume the session." xml:space="preserve">
+    <value>Die Sitzung konnte nicht fortgesetzt werden.</value>
+  </data>
+  <data name="Family" xml:space="preserve">
+    <value>Familie</value>
+  </data>
+  <data name="Family group list received" xml:space="preserve">
+    <value>Liste der Familiengruppenfotos erhalten</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>Datei</value>
+  </data>
+  <data name="Files" xml:space="preserve">
+    <value>Dateien</value>
+  </data>
+  <data name="Fills in type, quote, end time, delivery date and notes" xml:space="preserve">
+    <value>Füllt Art, Offerte, Endzeit, Lieferdatum und Notizen aus</value>
+  </data>
+  <data name="Finance" xml:space="preserve">
+    <value>Finanzen</value>
+  </data>
+  <data name="Finances" xml:space="preserve">
+    <value>Finanzen</value>
+  </data>
+  <data name="Follow up on {0}" xml:space="preserve">
+    <value>Bei {0} nachfassen</value>
+  </data>
+  <data name="For" xml:space="preserve">
+    <value>Für</value>
+  </data>
+  <data name="Format: CHE-123.456.789 MWST" xml:space="preserve">
+    <value>Format: CHE-123.456.789 MWST</value>
+  </data>
+  <data name="Full annual depreciation in the year of purchase" xml:space="preserve">
+    <value>Volle Jahresabschreibung im Anschaffungsjahr</value>
+  </data>
+  <data name="Furniture, bags &amp; cases" xml:space="preserve">
+    <value>Mobiliar, Taschen &amp; Koffer</value>
+  </data>
+  <data name="Gallery" xml:space="preserve">
+    <value>Galerie</value>
+  </data>
+  <data name="Gallery link (optional)" xml:space="preserve">
+    <value>Galerie-Link (optional)</value>
+  </data>
+  <data name="Gear &amp; studio rental" xml:space="preserve">
+    <value>Miete Ausrüstung &amp; Studio</value>
+  </data>
+  <data name="Gear you use for several years. Its price is spread over the years as depreciation instead of counting as a cost when you buy it. Cheap items are often booked directly as a cost; ask your fiduciary where the line is. How the year of purchase is depreciated is set in" xml:space="preserve">
+    <value>Ausrüstung, die du mehrere Jahre nutzt. Ihr Preis wird über die Jahre abgeschrieben, statt beim Kauf als Kosten zu zählen. Günstiges wird oft direkt als Kosten verbucht; frag deine Treuhand, wo die Grenze liegt. Wie im Anschaffungsjahr abgeschrieben wird, legst du fest unter</value>
+  </data>
+  <data name="Getting-ready locations and times known" xml:space="preserve">
+    <value>Orte und Zeiten fürs Getting Ready bekannt</value>
+  </data>
+  <data name="Hours" xml:space="preserve">
+    <value>Stunden</value>
+  </data>
+  <data name="Hours on site" xml:space="preserve">
+    <value>Stunden vor Ort</value>
+  </data>
+  <data name="Hover a shoot for details, click it to open it, or click a free day to book a new shoot on that date." xml:space="preserve">
+    <value>Fahre über ein Shooting für Details, klicke darauf, um es zu öffnen, oder klicke auf einen freien Tag, um dort ein neues Shooting einzutragen.</value>
+  </data>
+  <data name="I'm registered for VAT" xml:space="preserve">
+    <value>Ich bin MWST-pflichtig</value>
+  </data>
+  <data name="in quote" xml:space="preserve">
+    <value>in der Offerte</value>
+  </data>
+  <data name="In {0}, the client's invoice language." xml:space="preserve">
+    <value>Auf {0}, in der Rechnungssprache des Kunden.</value>
+  </data>
+  <data name="incl. depreciation" xml:space="preserve">
+    <value>inkl. Abschreibungen</value>
+  </data>
+  <data name="incl. equipment sold: {0}" xml:space="preserve">
+    <value>inkl. verkaufter Ausrüstung: {0}</value>
+  </data>
+  <data name="Income" xml:space="preserve">
+    <value>Einnahmen</value>
+  </data>
+  <data name="Income and costs per month" xml:space="preserve">
+    <value>Einnahmen und Kosten pro Monat</value>
+  </data>
+  <data name="Income from photography services" xml:space="preserve">
+    <value>Ertrag aus Fotografie-Dienstleistungen</value>
+  </data>
+  <data name="Income statement {0}" xml:space="preserve">
+    <value>Erfolgsrechnung {0}</value>
+  </data>
+  <data name="Income statement {0} (cash basis, CHF)" xml:space="preserve">
+    <value>Erfolgsrechnung {0} (nach Zahlungseingang, CHF)</value>
+  </data>
+  <data name="Income statement {0} · created {1:dd.MM.yyyy}" xml:space="preserve">
+    <value>Erfolgsrechnung {0} · erstellt am {1:dd.MM.yyyy}</value>
+  </data>
+  <data name="Income statement, all entries as a spreadsheet, and every receipt, payslip and invoice of the year, numbered to match. For your tax return or fiduciary." xml:space="preserve">
+    <value>Erfolgsrechnung, alle Buchungen als Tabelle und alle Quittungen, Zahlungsbelege und Rechnungen des Jahres, passend nummeriert. Für deine Steuererklärung oder Treuhand.</value>
+  </data>
+  <data name="Income {0}" xml:space="preserve">
+    <value>Einnahmen {0}</value>
+  </data>
+  <data name="Inquiry" xml:space="preserve">
+    <value>Anfrage</value>
+  </data>
+  <data name="Inquiry since {0:dd.MM.yyyy}, for {1:ddd dd.MM.yyyy} · {2}" xml:space="preserve">
+    <value>Anfrage seit {0:dd.MM.yyyy}, für {1:ddd dd.MM.yyyy} · {2}</value>
+  </data>
+  <data name="Install" xml:space="preserve">
+    <value>Installieren</value>
+  </data>
+  <data name="Install it under Settings → Updates" xml:space="preserve">
+    <value>Installiere es unter Einstellungen → Updates</value>
+  </data>
+  <data name="Install update" xml:space="preserve">
+    <value>Update installieren</value>
+  </data>
+  <data name="Install {0}?" xml:space="preserve">
+    <value>{0} installieren?</value>
+  </data>
+  <data name="Installing. Aperture restarts in a moment; this page reconnects by itself." xml:space="preserve">
+    <value>Wird installiert. Aperture startet gleich neu; diese Seite verbindet sich von selbst wieder.</value>
+  </data>
+  <data name="Insurance &amp; fees" xml:space="preserve">
+    <value>Versicherungen &amp; Gebühren</value>
+  </data>
+  <data name="Invoice" xml:space="preserve">
+    <value>Rechnung</value>
+  </data>
+  <data name="Invoice (draft)" xml:space="preserve">
+    <value>Rechnung (Entwurf)</value>
+  </data>
+  <data name="Invoice date" xml:space="preserve">
+    <value>Rechnungsdatum</value>
+  </data>
+  <data name="Invoice language" xml:space="preserve">
+    <value>Rechnungssprache</value>
+  </data>
+  <data name="Invoice {0}" xml:space="preserve">
+    <value>Rechnung {0}</value>
+  </data>
+  <data name="Invoice {0} cancelled" xml:space="preserve">
+    <value>Rechnung {0} storniert</value>
+  </data>
+  <data name="Invoice {0} is overdue" xml:space="preserve">
+    <value>Rechnung {0} ist überfällig</value>
+  </data>
+  <data name="Invoice {0} issued" xml:space="preserve">
+    <value>Rechnung {0} ausgestellt</value>
+  </data>
+  <data name="Invoice {0} stays in your records as cancelled, and you can create a new one." xml:space="preserve">
+    <value>Rechnung {0} bleibt als storniert in deinen Unterlagen, und du kannst eine neue erstellen.</value>
+  </data>
+  <data name="Invoice {0}, due {1:dd.MM.yyyy}" xml:space="preserve">
+    <value>Rechnung {0}, fällig am {1:dd.MM.yyyy}</value>
+  </data>
+  <data name="Invoice.Event" xml:space="preserve">
+    <value>Anlass</value>
+  </data>
+  <data name="Invoices" xml:space="preserve">
+    <value>Rechnungen</value>
+  </data>
+  <data name="Invoices are created on a shoot's Invoice tab. Click one to open its shoot." xml:space="preserve">
+    <value>Rechnungen erstellst du im Tab «Rechnung» eines Shootings. Klicke auf eine, um ihr Shooting zu öffnen.</value>
+  </data>
+  <data name="InvoiceStatus.Cancelled" xml:space="preserve">
+    <value>Storniert</value>
+  </data>
+  <data name="Issue" xml:space="preserve">
+    <value>Ausstellen</value>
+  </data>
+  <data name="Issue invoice" xml:space="preserve">
+    <value>Rechnung ausstellen</value>
+  </data>
+  <data name="Issue invoice?" xml:space="preserve">
+    <value>Rechnung ausstellen?</value>
+  </data>
+  <data name="Issued" xml:space="preserve">
+    <value>Ausgestellt</value>
+  </data>
+  <data name="issued {0:dd.MM.yyyy}, cancelled {1:dd.MM.yyyy}" xml:space="preserve">
+    <value>ausgestellt am {0:dd.MM.yyyy}, storniert am {1:dd.MM.yyyy}</value>
+  </data>
+  <data name="It should appear in a few seconds." xml:space="preserve">
+    <value>Sie sollte in wenigen Sekunden erscheinen.</value>
+  </data>
+  <data name="Keep" xml:space="preserve">
+    <value>Behalten</value>
+  </data>
+  <data name="Keep it" xml:space="preserve">
+    <value>Behalten</value>
+  </data>
+  <data name="Keep me signed in on this device" xml:space="preserve">
+    <value>Auf diesem Gerät angemeldet bleiben</value>
+  </data>
+  <data name="Key people and must-have moments listed" xml:space="preserve">
+    <value>Wichtige Personen und Must-have-Momente aufgelistet</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Sprache</value>
+  </data>
+  <data name="Last backup" xml:space="preserve">
+    <value>Letztes Backup</value>
+  </data>
+  <data name="Last backup: {0:dd.MM.yyyy HH:mm}" xml:space="preserve">
+    <value>Letztes Backup: {0:dd.MM.yyyy HH:mm}</value>
+  </data>
+  <data name="Last checked" xml:space="preserve">
+    <value>Zuletzt geprüft</value>
+  </data>
+  <data name="last notification {0:dd.MM.yyyy HH:mm}" xml:space="preserve">
+    <value>letzte Benachrichtigung {0:dd.MM.yyyy HH:mm}</value>
+  </data>
+  <data name="Last run" xml:space="preserve">
+    <value>Letzter Lauf</value>
+  </data>
+  <data name="Leave the delivery empty to use your usual delivery time from Settings." xml:space="preserve">
+    <value>Lass die Lieferung leer, um deine übliche Lieferzeit aus den Einstellungen zu verwenden.</value>
+  </data>
+  <data name="Legend" xml:space="preserve">
+    <value>Legende</value>
+  </data>
+  <data name="Light set rental" xml:space="preserve">
+    <value>Miete Lichtset</value>
+  </data>
+  <data name="Lighting &amp; studio" xml:space="preserve">
+    <value>Licht &amp; Studio</value>
+  </data>
+  <data name="Link" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Location" xml:space="preserve">
+    <value>Ort</value>
+  </data>
+  <data name="Location (optional)" xml:space="preserve">
+    <value>Ort (optional)</value>
+  </data>
+  <data name="Location access and permits arranged" xml:space="preserve">
+    <value>Zugang zur Location und Bewilligungen organisiert</value>
+  </data>
+  <data name="Location not found" xml:space="preserve">
+    <value>Ort nicht gefunden</value>
+  </data>
+  <data name="Location or studio booked, with a bad-weather option" xml:space="preserve">
+    <value>Location oder Studio gebucht, mit Schlechtwettervariante</value>
+  </data>
+  <data name="Location saved" xml:space="preserve">
+    <value>Ort gespeichert</value>
+  </data>
+  <data name="Locations" xml:space="preserve">
+    <value>Orte</value>
+  </data>
+  <data name="Locations with shoots can't be deleted." xml:space="preserve">
+    <value>Orte mit Shootings können nicht gelöscht werden.</value>
+  </data>
+  <data name="loss" xml:space="preserve">
+    <value>Verlust</value>
+  </data>
+  <data name="Margin" xml:space="preserve">
+    <value>Marge</value>
+  </data>
+  <data name="Mark {0} as shot" xml:space="preserve">
+    <value>{0} als fotografiert markieren</value>
+  </data>
+  <data name="Marketing &amp; website" xml:space="preserve">
+    <value>Marketing &amp; Website</value>
+  </data>
+  <data name="Meals, breaks, travel and parking clarified" xml:space="preserve">
+    <value>Essen, Pausen, Anreise und Parkplatz geklärt</value>
+  </data>
+  <data name="Method" xml:space="preserve">
+    <value>Zahlungsart</value>
+  </data>
+  <data name="MISSING FILES" xml:space="preserve">
+    <value>FEHLENDE DATEIEN</value>
+  </data>
+  <data name="Model release signed (if images are used for marketing)" xml:space="preserve">
+    <value>Model-Release unterschrieben (falls Bilder fürs Marketing genutzt werden)</value>
+  </data>
+  <data name="Models booked, releases ready" xml:space="preserve">
+    <value>Models gebucht, Releases bereit</value>
+  </data>
+  <data name="Month" xml:space="preserve">
+    <value>Monat</value>
+  </data>
+  <data name="Moodboard" xml:space="preserve">
+    <value>Moodboard</value>
+  </data>
+  <data name="Moodboard &amp; prep" xml:space="preserve">
+    <value>Moodboard &amp; Vorbereitung</value>
+  </data>
+  <data name="Moodboard &amp; references" xml:space="preserve">
+    <value>Moodboard &amp; Referenzen</value>
+  </data>
+  <data name="Moodboard agreed" xml:space="preserve">
+    <value>Moodboard abgestimmt</value>
+  </data>
+  <data name="Must-have shots and moodboard received" xml:space="preserve">
+    <value>Must-have-Bilder und Moodboard erhalten</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Needs attention" xml:space="preserve">
+    <value>Zu erledigen</value>
+  </data>
+  <data name="never succeeded" xml:space="preserve">
+    <value>nie erfolgreich</value>
+  </data>
+  <data name="New client" xml:space="preserve">
+    <value>Neuer Kunde</value>
+  </data>
+  <data name="New location" xml:space="preserve">
+    <value>Neuer Ort</value>
+  </data>
+  <data name="New shoot" xml:space="preserve">
+    <value>Neues Shooting</value>
+  </data>
+  <data name="New shoots suggest a delivery date this many days after the shoot. You can change it per shoot." xml:space="preserve">
+    <value>Neue Shootings schlagen ein Lieferdatum so viele Tage nach dem Shooting vor. Du kannst es pro Shooting ändern.</value>
+  </data>
+  <data name="New task" xml:space="preserve">
+    <value>Neue Aufgabe</value>
+  </data>
+  <data name="Next shoots" xml:space="preserve">
+    <value>Nächste Shootings</value>
+  </data>
+  <data name="No backup has run on this computer yet. The installer sets it up, and the first one runs right away." xml:space="preserve">
+    <value>Auf diesem Computer ist noch kein Backup gelaufen. Das Installationsprogramm richtet es ein, und das erste läuft sofort.</value>
+  </data>
+  <data name="No backup has run yet" xml:space="preserve">
+    <value>Noch kein Backup gelaufen</value>
+  </data>
+  <data name="No clients yet." xml:space="preserve">
+    <value>Noch keine Kunden.</value>
+  </data>
+  <data name="No costs in this year." xml:space="preserve">
+    <value>Keine Kosten in diesem Jahr.</value>
+  </data>
+  <data name="No costs yet." xml:space="preserve">
+    <value>Noch keine Kosten.</value>
+  </data>
+  <data name="No equipment yet." xml:space="preserve">
+    <value>Noch keine Ausrüstung.</value>
+  </data>
+  <data name="No files yet." xml:space="preserve">
+    <value>Noch keine Dateien.</value>
+  </data>
+  <data name="No invoice yet." xml:space="preserve">
+    <value>Noch keine Rechnung.</value>
+  </data>
+  <data name="No invoices yet." xml:space="preserve">
+    <value>Noch keine Rechnungen.</value>
+  </data>
+  <data name="No links yet. Paste a Pinterest board, shot list or any other reference below." xml:space="preserve">
+    <value>Noch keine Links. Füge unten ein Pinterest-Board, eine Shotlist oder eine andere Referenz ein.</value>
+  </data>
+  <data name="No locations yet." xml:space="preserve">
+    <value>Noch keine Orte.</value>
+  </data>
+  <data name="No packages yet." xml:space="preserve">
+    <value>Noch keine Pakete.</value>
+  </data>
+  <data name="No payments yet." xml:space="preserve">
+    <value>Noch keine Zahlungen.</value>
+  </data>
+  <data name="No shoots at this location yet." xml:space="preserve">
+    <value>Noch keine Shootings an diesem Ort.</value>
+  </data>
+  <data name="No shoots for this client yet." xml:space="preserve">
+    <value>Noch keine Shootings für diesen Kunden.</value>
+  </data>
+  <data name="No shoots found." xml:space="preserve">
+    <value>Keine Shootings gefunden.</value>
+  </data>
+  <data name="No shoots in this year." xml:space="preserve">
+    <value>Keine Shootings in diesem Jahr.</value>
+  </data>
+  <data name="No shoots." xml:space="preserve">
+    <value>Keine Shootings.</value>
+  </data>
+  <data name="No tasks yet." xml:space="preserve">
+    <value>Noch keine Aufgaben.</value>
+  </data>
+  <data name="No upcoming shoots." xml:space="preserve">
+    <value>Keine anstehenden Shootings.</value>
+  </data>
+  <data name="Not a valid email address." xml:space="preserve">
+    <value>Keine gültige E-Mail-Adresse.</value>
+  </data>
+  <data name="Not a valid IBAN." xml:space="preserve">
+    <value>Keine gültige IBAN.</value>
+  </data>
+  <data name="Not a valid phone number." xml:space="preserve">
+    <value>Keine gültige Telefonnummer.</value>
+  </data>
+  <data name="Not Found" xml:space="preserve">
+    <value>Nicht gefunden</value>
+  </data>
+  <data name="Not registered for VAT" xml:space="preserve">
+    <value>Nicht MWST-pflichtig</value>
+  </data>
+  <data name="Not uploaded" xml:space="preserve">
+    <value>Nicht hochgeladen</value>
+  </data>
+  <data name="Not yet" xml:space="preserve">
+    <value>Noch nicht</value>
+  </data>
+  <data name="Note" xml:space="preserve">
+    <value>Notiz</value>
+  </data>
+  <data name="Note (optional)" xml:space="preserve">
+    <value>Notiz (optional)</value>
+  </data>
+  <data name="Notes" xml:space="preserve">
+    <value>Notizen</value>
+  </data>
+  <data name="Notes (access, parking, best light, permits, …)" xml:space="preserve">
+    <value>Notizen (Zugang, Parkplätze, bestes Licht, Bewilligungen, …)</value>
+  </data>
+  <data name="Nothing to do. All invoices sent and paid, prep on track." xml:space="preserve">
+    <value>Nichts zu tun. Alle Rechnungen verschickt und bezahlt, Vorbereitung im Plan.</value>
+  </data>
+  <data name="Notification sent" xml:space="preserve">
+    <value>Benachrichtigung gesendet</value>
+  </data>
+  <data name="Notifications" xml:space="preserve">
+    <value>Benachrichtigungen</value>
+  </data>
+  <data name="Notifications are on" xml:space="preserve">
+    <value>Benachrichtigungen sind eingeschaltet</value>
+  </data>
+  <data name="Notifications are on for this device ({0})." xml:space="preserve">
+    <value>Benachrichtigungen sind für dieses Gerät eingeschaltet ({0}).</value>
+  </data>
+  <data name="Notifications from Aperture are blocked in this browser. Allow them in its settings for this address (Safari: Settings → Websites → Notifications; Chrome and Edge: the icon left of the address)." xml:space="preserve">
+    <value>Benachrichtigungen von Aperture sind in diesem Browser blockiert. Erlaube sie in seinen Einstellungen für diese Adresse (Safari: Einstellungen → Websites → Mitteilungen; Chrome und Edge: das Symbol links neben der Adresse).</value>
+  </data>
+  <data name="Notifications need Aperture's own address on this {0}. Open it at {1}." xml:space="preserve">
+    <value>Benachrichtigungen brauchen die eigene Adresse von Aperture auf diesem {0}. Öffne es unter {1}.</value>
+  </data>
+  <data name="Notifications turned off for this device" xml:space="preserve">
+    <value>Benachrichtigungen für dieses Gerät ausgeschaltet</value>
+  </data>
+  <data name="Notifications work on this device." xml:space="preserve">
+    <value>Benachrichtigungen funktionieren auf diesem Gerät.</value>
+  </data>
+  <data name="Number" xml:space="preserve">
+    <value>Nummer</value>
+  </data>
+  <data name="Number of edited images agreed" xml:space="preserve">
+    <value>Anzahl bearbeiteter Bilder vereinbart</value>
+  </data>
+  <data name="of" xml:space="preserve">
+    <value>von</value>
+  </data>
+  <data name="On" xml:space="preserve">
+    <value>Am</value>
+  </data>
+  <data name="Only PDFs, images and office documents can be attached." xml:space="preserve">
+    <value>Nur PDFs, Bilder und Office-Dokumente können angehängt werden.</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="Open client" xml:space="preserve">
+    <value>Kunde öffnen</value>
+  </data>
+  <data name="Open invoices" xml:space="preserve">
+    <value>Offene Rechnungen</value>
+  </data>
+  <data name="Open PDF" xml:space="preserve">
+    <value>PDF öffnen</value>
+  </data>
+  <data name="Open settings" xml:space="preserve">
+    <value>Einstellungen öffnen</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Andere</value>
+  </data>
+  <data name="Other devices" xml:space="preserve">
+    <value>Andere Geräte</value>
+  </data>
+  <data name="Outfit and styling tips sent" xml:space="preserve">
+    <value>Tipps zu Outfit und Styling verschickt</value>
+  </data>
+  <data name="Outstanding" xml:space="preserve">
+    <value>Offen</value>
+  </data>
+  <data name="Overdue" xml:space="preserve">
+    <value>Überfällig</value>
+  </data>
+  <data name="Overlaps with" xml:space="preserve">
+    <value>Überschneidet sich mit</value>
+  </data>
+  <data name="Package" xml:space="preserve">
+    <value>Paket</value>
+  </data>
+  <data name="Package (optional)" xml:space="preserve">
+    <value>Paket (optional)</value>
+  </data>
+  <data name="Packages" xml:space="preserve">
+    <value>Pakete</value>
+  </data>
+  <data name="Page" xml:space="preserve">
+    <value>Seite</value>
+  </data>
+  <data name="Paid" xml:space="preserve">
+    <value>Bezahlt</value>
+  </data>
+  <data name="Paid in full. Thank you!" xml:space="preserve">
+    <value>Vollständig bezahlt. Vielen Dank!</value>
+  </data>
+  <data name="Partially paid" xml:space="preserve">
+    <value>Teilweise bezahlt</value>
+  </data>
+  <data name="Passed on at cost." xml:space="preserve">
+    <value>Zum Selbstkostenpreis weiterverrechnet.</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Passwort</value>
+  </data>
+  <data name="Password (at least {0} characters)" xml:space="preserve">
+    <value>Passwort (mindestens {0} Zeichen)</value>
+  </data>
+  <data name="Past" xml:space="preserve">
+    <value>Vergangen</value>
+  </data>
+  <data name="Paste a full link starting with https://" xml:space="preserve">
+    <value>Füge einen vollständigen Link ein, der mit https:// beginnt.</value>
+  </data>
+  <data name="Payment" xml:space="preserve">
+    <value>Zahlung</value>
+  </data>
+  <data name="Payment - {0}" xml:space="preserve">
+    <value>Zahlung - {0}</value>
+  </data>
+  <data name="Payment terms (days)" xml:space="preserve">
+    <value>Zahlungsfrist (Tage)</value>
+  </data>
+  <data name="Payments are tracked in the Finances tab. Issued invoices can't be changed. To correct one, cancel it and create a new one." xml:space="preserve">
+    <value>Zahlungen werden im Tab «Finanzen» erfasst. Ausgestellte Rechnungen können nicht geändert werden. Um eine zu korrigieren, storniere sie und erstelle eine neue.</value>
+  </data>
+  <data name="Payments received" xml:space="preserve">
+    <value>Erhaltene Zahlungen</value>
+  </data>
+  <data name="Payments received in the year." xml:space="preserve">
+    <value>Im Jahr erhaltene Zahlungen.</value>
+  </data>
+  <data name="Payslip" xml:space="preserve">
+    <value>Zahlungsbeleg</value>
+  </data>
+  <data name="Payslip / proof of payment" xml:space="preserve">
+    <value>Zahlungsbeleg</value>
+  </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Telefon</value>
+  </data>
+  <data name="Phone &amp; internet" xml:space="preserve">
+    <value>Telefon &amp; Internet</value>
+  </data>
+  <data name="Photo office" xml:space="preserve">
+    <value>Fotobüro</value>
+  </data>
+  <data name="Photo rules for the ceremony checked (officiant, flash, where to stand)" xml:space="preserve">
+    <value>Fotoregeln für die Trauung geklärt (Trauperson, Blitz, Standort)</value>
+  </data>
+  <data name="Photography: {0}" xml:space="preserve">
+    <value>Fotografie: {0}</value>
+  </data>
+  <data name="Please pay {0} by {1:dd.MM.yyyy} using the QR-bill below or by bank transfer to" xml:space="preserve">
+    <value>Bitte bezahlen Sie {0} bis {1:dd.MM.yyyy} mit dem QR-Einzahlungsschein unten oder per Überweisung auf</value>
+  </data>
+  <data name="Please retry or reload the page." xml:space="preserve">
+    <value>Versuche es erneut oder lade die Seite neu.</value>
+  </data>
+  <data name="Portrait" xml:space="preserve">
+    <value>Porträt</value>
+  </data>
+  <data name="Postal code" xml:space="preserve">
+    <value>PLZ</value>
+  </data>
+  <data name="Preview PDF" xml:space="preserve">
+    <value>PDF-Vorschau</value>
+  </data>
+  <data name="Price" xml:space="preserve">
+    <value>Preis</value>
+  </data>
+  <data name="Price (CHF)" xml:space="preserve">
+    <value>Preis (CHF)</value>
+  </data>
+  <data name="Price CHF" xml:space="preserve">
+    <value>Preis CHF</value>
+  </data>
+  <data name="Price for the client (CHF)" xml:space="preserve">
+    <value>Preis für den Kunden (CHF)</value>
+  </data>
+  <data name="Prints, albums &amp; lab" xml:space="preserve">
+    <value>Prints, Alben &amp; Labor</value>
+  </data>
+  <data name="Profit" xml:space="preserve">
+    <value>Gewinn</value>
+  </data>
+  <data name="Props and styling organised" xml:space="preserve">
+    <value>Requisiten und Styling organisiert</value>
+  </data>
+  <data name="QR-bill: {0} ({1})" xml:space="preserve">
+    <value>QR-Einzahlungsschein: {0} ({1})</value>
+  </data>
+  <data name="Qty" xml:space="preserve">
+    <value>Menge</value>
+  </data>
+  <data name="Quantity" xml:space="preserve">
+    <value>Menge</value>
+  </data>
+  <data name="Quote" xml:space="preserve">
+    <value>Offerte</value>
+  </data>
+  <data name="Quote (CHF)" xml:space="preserve">
+    <value>Offerte (CHF)</value>
+  </data>
+  <data name="Quote {0} + billed costs {1}" xml:space="preserve">
+    <value>Offerte {0} + verrechnete Kosten {1}</value>
+  </data>
+  <data name="Rate" xml:space="preserve">
+    <value>Satz</value>
+  </data>
+  <data name="Rate %" xml:space="preserve">
+    <value>Satz %</value>
+  </data>
+  <data name="Receipt" xml:space="preserve">
+    <value>Quittung</value>
+  </data>
+  <data name="Receipt: {0}" xml:space="preserve">
+    <value>Quittung: {0}</value>
+  </data>
+  <data name="Receipts" xml:space="preserve">
+    <value>Belege</value>
+  </data>
+  <data name="Received" xml:space="preserve">
+    <value>Erhalten</value>
+  </data>
+  <data name="Received on" xml:space="preserve">
+    <value>Erhalten am</value>
+  </data>
+  <data name="received so far" xml:space="preserve">
+    <value>bisher eingegangen</value>
+  </data>
+  <data name="Registration is required from CHF 100'000 turnover per year. Until then, invoices show no VAT." xml:space="preserve">
+    <value>Die Anmeldung ist ab CHF 100'000 Umsatz pro Jahr Pflicht. Bis dahin zeigen Rechnungen keine MWST.</value>
+  </data>
+  <data name="Rejoin failed... trying again in" xml:space="preserve">
+    <value>Verbindung fehlgeschlagen … neuer Versuch in</value>
+  </data>
+  <data name="Rejoining the server..." xml:space="preserve">
+    <value>Verbindung zum Server wird wiederhergestellt …</value>
+  </data>
+  <data name="Reload" xml:space="preserve">
+    <value>Neu laden</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Entfernen</value>
+  </data>
+  <data name="Remove file" xml:space="preserve">
+    <value>Datei entfernen</value>
+  </data>
+  <data name="Remove line" xml:space="preserve">
+    <value>Zeile entfernen</value>
+  </data>
+  <data name="Remove link" xml:space="preserve">
+    <value>Link entfernen</value>
+  </data>
+  <data name="Remove task" xml:space="preserve">
+    <value>Aufgabe entfernen</value>
+  </data>
+  <data name="Remove this device?" xml:space="preserve">
+    <value>Dieses Gerät entfernen?</value>
+  </data>
+  <data name="Remove {0}" xml:space="preserve">
+    <value>{0} entfernen</value>
+  </data>
+  <data name="Repeat the password" xml:space="preserve">
+    <value>Passwort wiederholen</value>
+  </data>
+  <data name="Request ID:" xml:space="preserve">
+    <value>Anfrage-ID:</value>
+  </data>
+  <data name="Required when registered for VAT." xml:space="preserve">
+    <value>Pflichtfeld, wenn du MWST-pflichtig bist.</value>
+  </data>
+  <data name="Required." xml:space="preserve">
+    <value>Pflichtfeld.</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>Ergebnis</value>
+  </data>
+  <data name="Result from sale of equipment" xml:space="preserve">
+    <value>Ergebnis aus Verkauf von Ausrüstung</value>
+  </data>
+  <data name="Result {0}" xml:space="preserve">
+    <value>Ergebnis {0}</value>
+  </data>
+  <data name="Resume" xml:space="preserve">
+    <value>Fortsetzen</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>Erneut versuchen</value>
+  </data>
+  <data name="Rounding" xml:space="preserve">
+    <value>Rundung</value>
+  </data>
+  <data name="Run sheet and timings received" xml:space="preserve">
+    <value>Ablaufplan und Zeiten erhalten</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>Installiert</value>
+  </data>
+  <data name="sale gain {0}" xml:space="preserve">
+    <value>Verkaufsgewinn {0}</value>
+  </data>
+  <data name="sale loss {0}" xml:space="preserve">
+    <value>Verkaufsverlust {0}</value>
+  </data>
+  <data name="Sale result" xml:space="preserve">
+    <value>Verkaufsergebnis</value>
+  </data>
+  <data name="Same-day selection or social media images agreed" xml:space="preserve">
+    <value>Same-Day-Auswahl oder Social-Media-Bilder vereinbart</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Speichern</value>
+  </data>
+  <data name="Save and start" xml:space="preserve">
+    <value>Speichern und loslegen</value>
+  </data>
+  <data name="Save draft" xml:space="preserve">
+    <value>Entwurf speichern</value>
+  </data>
+  <data name="Saved to" xml:space="preserve">
+    <value>Gespeichert in</value>
+  </data>
+  <data name="Saving…" xml:space="preserve">
+    <value>Speichern …</value>
+  </data>
+  <data name="Search name, city…" xml:space="preserve">
+    <value>Name, Ort suchen …</value>
+  </data>
+  <data name="Search name, company, city…" xml:space="preserve">
+    <value>Name, Firma, Ort suchen …</value>
+  </data>
+  <data name="Search title, client, location…" xml:space="preserve">
+    <value>Titel, Kunde, Ort suchen …</value>
+  </data>
+  <data name="Second shooter booked" xml:space="preserve">
+    <value>Zweitfotograf gebucht</value>
+  </data>
+  <data name="Second shooters &amp; assistants" xml:space="preserve">
+    <value>Zweitfotografen &amp; Assistenz</value>
+  </data>
+  <data name="seconds." xml:space="preserve">
+    <value>Sekunden.</value>
+  </data>
+  <data name="Send a test" xml:space="preserve">
+    <value>Test senden</value>
+  </data>
+  <data name="Sending…" xml:space="preserve">
+    <value>Wird gesendet …</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="Settings saved" xml:space="preserve">
+    <value>Einstellungen gespeichert</value>
+  </data>
+  <data name="Settings → Backups shows where it goes and what went wrong." xml:space="preserve">
+    <value>Einstellungen → Backups zeigt, wohin es geht und was schiefging.</value>
+  </data>
+  <data name="Shoot" xml:space="preserve">
+    <value>Shooting</value>
+  </data>
+  <data name="Shoot not found" xml:space="preserve">
+    <value>Shooting nicht gefunden</value>
+  </data>
+  <data name="Shoot on {0:ddd dd.MM.yyyy} · {1}" xml:space="preserve">
+    <value>Shooting am {0:ddd dd.MM.yyyy} · {1}</value>
+  </data>
+  <data name="Shoot saved" xml:space="preserve">
+    <value>Shooting gespeichert</value>
+  </data>
+  <data name="Shoot type" xml:space="preserve">
+    <value>Art des Shootings</value>
+  </data>
+  <data name="Shoots" xml:space="preserve">
+    <value>Shootings</value>
+  </data>
+  <data name="Shoots in {0}" xml:space="preserve">
+    <value>Shootings {0}</value>
+  </data>
+  <data name="Shoots quoted from it keep their details." xml:space="preserve">
+    <value>Shootings, die damit offeriert wurden, behalten ihre Angaben.</value>
+  </data>
+  <data name="Shoots with costs or payments can't be deleted. Set the status to Cancelled instead." xml:space="preserve">
+    <value>Shootings mit Kosten oder Zahlungen können nicht gelöscht werden. Setze den Status stattdessen auf «Abgesagt».</value>
+  </data>
+  <data name="ShootStatus.Cancelled" xml:space="preserve">
+    <value>Abgesagt</value>
+  </data>
+  <data name="Shot" xml:space="preserve">
+    <value>Fotografiert</value>
+  </data>
+  <data name="Shot {0:ddd dd.MM.yyyy} · {1} open" xml:space="preserve">
+    <value>Fotografiert {0:ddd dd.MM.yyyy} · {1} offen</value>
+  </data>
+  <data name="Show cancelled" xml:space="preserve">
+    <value>Abgesagte anzeigen</value>
+  </data>
+  <data name="Sign in" xml:space="preserve">
+    <value>Anmelden</value>
+  </data>
+  <data name="Sign out" xml:space="preserve">
+    <value>Abmelden</value>
+  </data>
+  <data name="Since {0:dd.MM.yyyy}" xml:space="preserve">
+    <value>Seit {0:dd.MM.yyyy}</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Grösse</value>
+  </data>
+  <data name="Skip for now" xml:space="preserve">
+    <value>Vorerst überspringen</value>
+  </data>
+  <data name="Small equipment &amp; repairs" xml:space="preserve">
+    <value>Kleinmaterial &amp; Reparaturen</value>
+  </data>
+  <data name="Software &amp; subscriptions" xml:space="preserve">
+    <value>Software &amp; Abos</value>
+  </data>
+  <data name="Sold for (CHF, 0 if thrown away)" xml:space="preserve">
+    <value>Verkauft für (CHF, 0 wenn entsorgt)</value>
+  </data>
+  <data name="Sold on" xml:space="preserve">
+    <value>Verkauft am</value>
+  </data>
+  <data name="Sold or thrown away" xml:space="preserve">
+    <value>Verkauft oder entsorgt</value>
+  </data>
+  <data name="sold {0:dd.MM.yyyy}" xml:space="preserve">
+    <value>verkauft am {0:dd.MM.yyyy}</value>
+  </data>
+  <data name="sold, {0}" xml:space="preserve">
+    <value>verkauft, {0}</value>
+  </data>
+  <data name="Sorry, the content you are looking for does not exist." xml:space="preserve">
+    <value>Diese Seite gibt es leider nicht.</value>
+  </data>
+  <data name="St. Gallen allows the full rate even for equipment bought late in the year (StB 41 Nr. 1). Switch off to depreciate by month instead, e.g. if your canton requires it." xml:space="preserve">
+    <value>St. Gallen erlaubt den vollen Satz auch für Ausrüstung, die spät im Jahr gekauft wurde (StB 41 Nr. 1). Schalte es aus, um stattdessen monatsgenau abzuschreiben, z. B. wenn dein Kanton das verlangt.</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>Beginn</value>
+  </data>
+  <data name="Statement (PDF)" xml:space="preserve">
+    <value>Erfolgsrechnung (PDF)</value>
+  </data>
+  <data name="Statement.Loss" xml:space="preserve">
+    <value>Verlust</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Step 1 of 2 · Your login" xml:space="preserve">
+    <value>Schritt 1 von 2 · Dein Login</value>
+  </data>
+  <data name="Step 2 of 2 · Your business" xml:space="preserve">
+    <value>Schritt 2 von 2 · Dein Geschäft</value>
+  </data>
+  <data name="Street" xml:space="preserve">
+    <value>Strasse</value>
+  </data>
+  <data name="Street and number" xml:space="preserve">
+    <value>Strasse und Nummer</value>
+  </data>
+  <data name="Studio / business name (optional)" xml:space="preserve">
+    <value>Studio- / Firmenname (optional)</value>
+  </data>
+  <data name="Subtotal" xml:space="preserve">
+    <value>Zwischentotal</value>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>Übersicht</value>
+  </data>
+  <data name="Table" xml:space="preserve">
+    <value>Tabelle</value>
+  </data>
+  <data name="Tax export {0}" xml:space="preserve">
+    <value>Steuerexport {0}</value>
+  </data>
+  <data name="Test from Aperture" xml:space="preserve">
+    <value>Test von Aperture</value>
+  </data>
+  <data name="Thank you for the booking!" xml:space="preserve">
+    <value>Vielen Dank für Ihren Auftrag!</value>
+  </data>
+  <data name="The billing address of {0} is missing." xml:space="preserve">
+    <value>Die Rechnungsadresse von {0} fehlt.</value>
+  </data>
+  <data name="The download doesn't match the release. Try again." xml:space="preserve">
+    <value>Der Download passt nicht zur Version. Versuche es erneut.</value>
+  </data>
+  <data name="The download is incomplete. Try again." xml:space="preserve">
+    <value>Der Download ist unvollständig. Versuche es erneut.</value>
+  </data>
+  <data name="The draft starts with the quote and every cost billed to the client. You can edit it before issuing." xml:space="preserve">
+    <value>Der Entwurf beginnt mit der Offerte und allen Kosten, die dem Kunden verrechnet werden. Du kannst ihn vor dem Ausstellen bearbeiten.</value>
+  </data>
+  <data name="The due date is before the invoice date." xml:space="preserve">
+    <value>Das Fälligkeitsdatum liegt vor dem Rechnungsdatum.</value>
+  </data>
+  <data name="The file is larger than {0}." xml:space="preserve">
+    <value>Die Datei ist grösser als {0}.</value>
+  </data>
+  <data name="The installer sets it up. Settings → Backups shows the details." xml:space="preserve">
+    <value>Das Installationsprogramm richtet es ein. Einstellungen → Backups zeigt die Details.</value>
+  </data>
+  <data name="The invoice gets the next number and can't be changed afterwards. The PDF is saved in the shoot's files." xml:space="preserve">
+    <value>Die Rechnung erhält die nächste Nummer und kann danach nicht mehr geändert werden. Das PDF wird in den Dateien des Shootings gespeichert.</value>
+  </data>
+  <data name="The invoice total must be above zero." xml:space="preserve">
+    <value>Das Rechnungstotal muss über null liegen.</value>
+  </data>
+  <data name="the new version" xml:space="preserve">
+    <value>die neue Version</value>
+  </data>
+  <data name="The passwords don't match." xml:space="preserve">
+    <value>Die Passwörter stimmen nicht überein.</value>
+  </data>
+  <data name="The push service didn't take it. Is this {0} online? Details are in the log." xml:space="preserve">
+    <value>Der Push-Dienst hat sie nicht angenommen. Ist dieser {0} online? Details stehen im Log.</value>
+  </data>
+  <data name="The session has been paused by the server." xml:space="preserve">
+    <value>Die Sitzung wurde vom Server pausiert.</value>
+  </data>
+  <data name="The update to {0} didn't work:" xml:space="preserve">
+    <value>Das Update auf {0} hat nicht funktioniert:</value>
+  </data>
+  <data name="The updater hasn't started yet. The installer sets it up; run it again if this stays." xml:space="preserve">
+    <value>Das Update-Programm ist noch nicht gestartet. Das Installationsprogramm richtet es ein; führe es erneut aus, wenn das so bleibt.</value>
+  </data>
+  <data name="There's a login already. Sign in with it." xml:space="preserve">
+    <value>Es gibt bereits ein Login. Melde dich damit an.</value>
+  </data>
+  <data name="These details appear on your invoices." xml:space="preserve">
+    <value>Diese Angaben erscheinen auf deinen Rechnungen.</value>
+  </data>
+  <data name="These details go on every invoice, with a Swiss QR-bill for your IBAN. Your email is also what notifications need. You can change all of it under Settings later, where you'll also find VAT, your usual delivery time and more." xml:space="preserve">
+    <value>Diese Angaben stehen auf jeder Rechnung, mit einem Schweizer QR-Einzahlungsschein für deine IBAN. Deine E-Mail-Adresse brauchen auch die Benachrichtigungen. Du kannst alles später unter Einstellungen ändern, wo du auch MWST, deine übliche Lieferzeit und mehr findest.</value>
+  </data>
+  <data name="These files were not found on the server:" xml:space="preserve">
+    <value>Diese Dateien wurden auf dem Server nicht gefunden:</value>
+  </data>
+  <data name="This browser can't show notifications from Aperture." xml:space="preserve">
+    <value>Dieser Browser kann keine Benachrichtigungen von Aperture anzeigen.</value>
+  </data>
+  <data name="Timeline from couple / wedding planner received" xml:space="preserve">
+    <value>Ablauf vom Brautpaar / von der Hochzeitsplanerin erhalten</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Titel</value>
+  </data>
+  <data name="To bill" xml:space="preserve">
+    <value>Zu verrechnen</value>
+  </data>
+  <data name="To put a shoot in your calendar, open it, click" xml:space="preserve">
+    <value>Um ein Shooting in deinen Kalender einzutragen, öffne es, klicke auf</value>
+  </data>
+  <data name="Today" xml:space="preserve">
+    <value>Heute</value>
+  </data>
+  <data name="Too many files" xml:space="preserve">
+    <value>Zu viele Dateien</value>
+  </data>
+  <data name="Took place {0:ddd dd.MM.yyyy}, still marked Booked" xml:space="preserve">
+    <value>Fand am {0:ddd dd.MM.yyyy} statt, noch als «Gebucht» markiert</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Total CHF" xml:space="preserve">
+    <value>Total CHF</value>
+  </data>
+  <data name="Train to the shoot and back" xml:space="preserve">
+    <value>Zugfahrt zum Shooting und zurück</value>
+  </data>
+  <data name="Train to {0} and back" xml:space="preserve">
+    <value>Zugfahrt nach {0} und zurück</value>
+  </data>
+  <data name="Training" xml:space="preserve">
+    <value>Weiterbildung</value>
+  </data>
+  <data name="Travel &amp; transport" xml:space="preserve">
+    <value>Reise &amp; Transport</value>
+  </data>
+  <data name="Turn off on this device" xml:space="preserve">
+    <value>Auf diesem Gerät ausschalten</value>
+  </data>
+  <data name="Turn on notifications" xml:space="preserve">
+    <value>Benachrichtigungen einschalten</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Art</value>
+  </data>
+  <data name="Unpaid" xml:space="preserve">
+    <value>Unbezahlt</value>
+  </data>
+  <data name="Unsaved changes" xml:space="preserve">
+    <value>Ungespeicherte Änderungen</value>
+  </data>
+  <data name="Upcoming" xml:space="preserve">
+    <value>Anstehend</value>
+  </data>
+  <data name="Updated to {0} at {1}." xml:space="preserve">
+    <value>Um {1} auf {0} aktualisiert.</value>
+  </data>
+  <data name="Updates" xml:space="preserve">
+    <value>Updates</value>
+  </data>
+  <data name="Updates aren't set up on this computer. The installer sets them up; a development copy has none." xml:space="preserve">
+    <value>Updates sind auf diesem Computer nicht eingerichtet. Das Installationsprogramm richtet sie ein; eine Entwicklungskopie hat keine.</value>
+  </data>
+  <data name="Upload at most {0} files at once." xml:space="preserve">
+    <value>Lade höchstens {0} Dateien auf einmal hoch.</value>
+  </data>
+  <data name="Upload files" xml:space="preserve">
+    <value>Dateien hochladen</value>
+  </data>
+  <data name="Uploaded" xml:space="preserve">
+    <value>Hochgeladen</value>
+  </data>
+  <data name="Uploading…" xml:space="preserve">
+    <value>Wird hochgeladen …</value>
+  </data>
+  <data name="Usage rights agreed in writing" xml:space="preserve">
+    <value>Nutzungsrechte schriftlich vereinbart</value>
+  </data>
+  <data name="Use a two-letter country code, e.g. CH." xml:space="preserve">
+    <value>Zweistelliger Ländercode, z. B. CH.</value>
+  </data>
+  <data name="Use at least {0} characters for the password." xml:space="preserve">
+    <value>Verwende mindestens {0} Zeichen für das Passwort.</value>
+  </data>
+  <data name="Use letters, digits and . _ @ - for the username." xml:space="preserve">
+    <value>Verwende für den Benutzernamen Buchstaben, Ziffern und . _ @ -</value>
+  </data>
+  <data name="Username" xml:space="preserve">
+    <value>Benutzername</value>
+  </data>
+  <data name="usual" xml:space="preserve">
+    <value>üblich</value>
+  </data>
+  <data name="Usual delivery time (days)" xml:space="preserve">
+    <value>Übliche Lieferzeit (Tage)</value>
+  </data>
+  <data name="Value end of {0}" xml:space="preserve">
+    <value>Wert Ende {0}</value>
+  </data>
+  <data name="Values for" xml:space="preserve">
+    <value>Werte für</value>
+  </data>
+  <data name="VAT (MWST)" xml:space="preserve">
+    <value>MWST</value>
+  </data>
+  <data name="VAT no. {0}" xml:space="preserve">
+    <value>MWST-Nr. {0}</value>
+  </data>
+  <data name="VAT number" xml:space="preserve">
+    <value>MWST-Nummer</value>
+  </data>
+  <data name="VAT rate (%)" xml:space="preserve">
+    <value>MWST-Satz (%)</value>
+  </data>
+  <data name="VAT {0:0.0#} %" xml:space="preserve">
+    <value>MWST {0:0.0#} %</value>
+  </data>
+  <data name="Vehicle" xml:space="preserve">
+    <value>Fahrzeug</value>
+  </data>
+  <data name="Vendor" xml:space="preserve">
+    <value>Anbieter</value>
+  </data>
+  <data name="Vendor (optional)" xml:space="preserve">
+    <value>Anbieter (optional)</value>
+  </data>
+  <data name="Was on {0:ddd dd.MM.yyyy}: set it to Booked or Cancelled · {1}" xml:space="preserve">
+    <value>War am {0:ddd dd.MM.yyyy}: auf «Gebucht» oder «Abgesagt» setzen · {1}</value>
+  </data>
+  <data name="Website" xml:space="preserve">
+    <value>Website</value>
+  </data>
+  <data name="Wedding" xml:space="preserve">
+    <value>Hochzeit</value>
+  </data>
+  <data name="Wedding Anna &amp; Marco" xml:space="preserve">
+    <value>Hochzeit Anna &amp; Marco</value>
+  </data>
+  <data name="Wedding full day" xml:space="preserve">
+    <value>Hochzeit ganzer Tag</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>Woche</value>
+  </data>
+  <data name="Welcome. Choose the username and password you'll sign in with. They stay on this {0}." xml:space="preserve">
+    <value>Willkommen. Wähle den Benutzernamen und das Passwort, mit denen du dich anmeldest. Sie bleiben auf diesem {0}.</value>
+  </data>
+  <data name="What for? (optional)" xml:space="preserve">
+    <value>Wofür? (optional)</value>
+  </data>
+  <data name="What's included (optional)" xml:space="preserve">
+    <value>Was inbegriffen ist (optional)</value>
+  </data>
+  <data name="Wrong username or password." xml:space="preserve">
+    <value>Benutzername oder Passwort falsch.</value>
+  </data>
+  <data name="Year" xml:space="preserve">
+    <value>Jahr</value>
+  </data>
+  <data name="Your business" xml:space="preserve">
+    <value>Dein Geschäft</value>
+  </data>
+  <data name="Your business details are incomplete (Settings)." xml:space="preserve">
+    <value>Deine Geschäftsdaten sind unvollständig (Einstellungen).</value>
+  </data>
+  <data name="Your business details are incomplete. They're needed for invoices." xml:space="preserve">
+    <value>Deine Geschäftsdaten sind unvollständig. Sie werden für Rechnungen gebraucht.</value>
+  </data>
+  <data name="Your IBAN is a QR-IBAN. Please enter the normal IBAN of the account in Settings." xml:space="preserve">
+    <value>Deine IBAN ist eine QR-IBAN. Bitte gib in den Einstellungen die normale IBAN des Kontos ein.</value>
+  </data>
+  <data name="Your IBAN is missing (Settings)." xml:space="preserve">
+    <value>Deine IBAN fehlt (Einstellungen).</value>
+  </data>
+  <data name="Your margin on it: {0}" xml:space="preserve">
+    <value>Deine Marge darauf: {0}</value>
+  </data>
+  <data name="Your name" xml:space="preserve">
+    <value>Dein Name</value>
+  </data>
+  <data name="Your price list. Picking a package on a shoot fills in its type, quote, end time, delivery date and what's included; you can still change each of them for that shoot. Changing a package later doesn't change shoots quoted from it." xml:space="preserve">
+    <value>Deine Preisliste. Wählst du bei einem Shooting ein Paket, werden Art, Offerte, Endzeit, Lieferdatum und Leistungen ausgefüllt; du kannst alles für dieses Shooting noch ändern. Spätere Änderungen am Paket ändern bereits offerierte Shootings nicht.</value>
+  </data>
+  <data name="{0} (inquiry)" xml:space="preserve">
+    <value>{0} (Anfrage)</value>
+  </data>
+  <data name="{0} checklist" xml:space="preserve">
+    <value>Checkliste {0}</value>
+  </data>
+  <data name="{0} days" xml:space="preserve">
+    <value>{0} Tage</value>
+  </data>
+  <data name="{0} days after the shoot unless you change it" xml:space="preserve">
+    <value>{0} Tage nach dem Shooting, ausser du änderst es</value>
+  </data>
+  <data name="{0} deleted" xml:space="preserve">
+    <value>{0} gelöscht</value>
+  </data>
+  <data name="{0} entries" xml:space="preserve">
+    <value>{0} Einträge</value>
+  </data>
+  <data name="{0} has no invoice yet" xml:space="preserve">
+    <value>{0} hat noch keine Rechnung</value>
+  </data>
+  <data name="{0} invoices" xml:space="preserve">
+    <value>{0} Rechnungen</value>
+  </data>
+  <data name="{0} is larger than {1}." xml:space="preserve">
+    <value>{0} ist grösser als {1}.</value>
+  </data>
+  <data name="{0} is still an inquiry" xml:space="preserve">
+    <value>{0} ist noch eine Anfrage</value>
+  </data>
+  <data name="{0} items of equipment" xml:space="preserve">
+    <value>{0} Ausrüstungsgegenstände</value>
+  </data>
+  <data name="{0} of {1} done" xml:space="preserve">
+    <value>{0} von {1} erledigt</value>
+  </data>
+  <data name="{0} of {1} prep tasks done" xml:space="preserve">
+    <value>{0} von {1} Vorbereitungsaufgaben erledigt</value>
+  </data>
+  <data name="{0} open since {1:dd.MM.yyyy} · {2}" xml:space="preserve">
+    <value>{0} offen seit {1:dd.MM.yyyy} · {2}</value>
+  </data>
+  <data name="{0} outstanding" xml:space="preserve">
+    <value>{0} offen</value>
+  </data>
+  <data name="{0} overdue" xml:space="preserve">
+    <value>{0} überfällig</value>
+  </data>
+  <data name="{0} past their due date" xml:space="preserve">
+    <value>{0} über dem Fälligkeitsdatum</value>
+  </data>
+  <data name="{0} payments" xml:space="preserve">
+    <value>{0} Zahlungen</value>
+  </data>
+  <data name="{0} prep tasks open for {1}" xml:space="preserve">
+    <value>{0} Vorbereitungsaufgaben offen für {1}</value>
+  </data>
+  <data name="{0} stops getting notifications from Aperture." xml:space="preserve">
+    <value>{0} erhält keine Benachrichtigungen von Aperture mehr.</value>
+  </data>
+  <data name="{0} things need attention" xml:space="preserve">
+    <value>{0} Dinge sind zu erledigen</value>
+  </data>
+  <data name="{0}: only PDFs, images and office documents can be uploaded." xml:space="preserve">
+    <value>{0}: Nur PDFs, Bilder und Office-Dokumente können hochgeladen werden.</value>
+  </data>
+</root>

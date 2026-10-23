@@ -1,7 +1,7 @@
 # Aperture
 
 A small ERP for running a photography business: shoots, clients, deliveries, costs, invoices (Swiss QR-bill) and tax exports.
-Single user, CHF, English. It runs on the photographer's own computer (macOS, Windows or Linux), installed with a
+Single user, CHF, English or German. It runs on the photographer's own computer (macOS, Windows or Linux), installed with a
 double-click; it opens in its own window there, a browser's app mode without tabs or address bar.
 
 **Install:**
@@ -28,6 +28,7 @@ Details in [docs/deployment.md](docs/deployment.md).
 | **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |
 | **Dashboard** | Year figures and a to-do list: overdue invoices, deliveries due or overdue, inquiries waiting a week for an answer or whose date has passed, shoots without an invoice, open prep, backup problems. |
 | **Notifications** | In the browser on the computer: overdue invoices, deliveries due within a week or overdue, inquiries waiting a week, open prep three days before a shoot, backup problems and new versions. |
+| **Language** | English or German (Swiss: *Rechnung*, *MWST*, *Offerte*), chosen in Settings; until then the browser's language. Each client has an invoice language, so a German-speaking photographer can still send an English invoice: the PDF and its QR-bill are in the client's language. The tax export and notifications follow Aperture's language. |
 | **Backups** | Daily into the install folder's `backups` (and any external drive or synced folder you add), picked up by Time Machine or File History. *Download a backup* in Settings gets everything as one ZIP, e.g. to move to a new computer. |
 
 How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
@@ -47,6 +48,11 @@ dotnet test
 The database is created and migrated automatically on startup. The first visit asks for a username and password and
 keeps them, hashed, in `data/keys/login.json`; delete that file to start over. Then fill in your business details
 under **Settings**: address and IBAN appear on invoices.
+
+Texts are written in English in the code: `L["…"]` in pages, `Texts.Get` and `Texts.Format` elsewhere. The German is in
+`src/Aperture.Web/Localization/Texts.de.resx`, keyed by the English text; a text without an entry there shows in
+English. Keys differ in more than case (resource names ignore it), and a test checks that each German text keeps the
+`{0}`, `{1}`, … of its key.
 
 ## Installing it
 

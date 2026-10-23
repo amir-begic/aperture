@@ -13,16 +13,16 @@
 @inject TimeProvider Time
 @inject AttachmentStore Store
 
-<PageTitle>@(IsNew ? "New shoot" : _title) · Aperture</PageTitle>
+<PageTitle>@(IsNew ? L["New shoot"] : _title) · Aperture</PageTitle>
 
 <RadzenBreadCrumb class="rz-mb-2">
-    <RadzenBreadCrumbItem Path="shoots" Text="Shoots" />
-    <RadzenBreadCrumbItem Text="@(IsNew ? "New shoot" : _title)" />
+    <RadzenBreadCrumbItem Path="shoots" Text="@L["Shoots"]" />
+    <RadzenBreadCrumbItem Text="@(IsNew ? L["New shoot"] : _title)" />
 </RadzenBreadCrumb>
 
 @if (_notFound)
 {
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">Shoot not found</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@L["Shoot not found"]</RadzenText>
 }
 else if (_form is null)
 {
@@ -30,7 +30,7 @@ else if (_form is null)
 }
 else
 {
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@(IsNew ? "New shoot" : _title)</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@(IsNew ? L["New shoot"] : _title)</RadzenText>
 
     @if (IsNew)
     {
@@ -56,28 +56,28 @@ else
                 </RadzenText>
                 @if (_summary.GalleryUrl is not null)
                 {
-                    <RadzenLink Path="@_summary.GalleryUrl" Target="_blank" Icon="photo_library" Text="Gallery" />
+                    <RadzenLink Path="@_summary.GalleryUrl" Target="_blank" Icon="photo_library" Text="@L["Gallery"]" />
                 }
                 @* Downloads the shoot as an .ics file for the calendar app ("download" keeps Blazor from treating it as a page). *@
-                <a href="@($"shoots/{Id}.ics")" download class="rz-link export-link"><RadzenIcon Icon="event" /> Add to calendar</a>
+                <a href="@($"shoots/{Id}.ics")" download class="rz-link export-link"><RadzenIcon Icon="event" /> @L["Add to calendar"]</a>
             </RadzenStack>
         }
 
         <RadzenTabs @bind-SelectedIndex="_tabIndex" RenderMode="TabRenderMode.Server">
             <Tabs>
-                <RadzenTabsItem Text="Details" Icon="edit_note">
+                <RadzenTabsItem Text="@L["Details"]" Icon="edit_note">
                     @DetailsCard
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Finances" Icon="payments">
+                <RadzenTabsItem Text="@L["Finances"]" Icon="payments">
                     <ShootFinancesTab ShootId="Id!.Value" Quote="_summary?.QuotedPrice" ShootDate="ShootDate" Changed="LoadSummaryAsync" />
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Invoice" Icon="request_quote">
+                <RadzenTabsItem Text="@L["Invoice"]" Icon="request_quote">
                     <ShootInvoiceTab ShootId="Id!.Value" Changed="LoadSummaryAsync" />
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Moodboard & prep" Icon="palette">
+                <RadzenTabsItem Text="@L["Moodboard & prep"]" Icon="palette">
                     <ShootPrepTab ShootId="Id!.Value" ShootType="@(_summary?.ShootType ?? ShootType.Other)" />
                 </RadzenTabsItem>
-                <RadzenTabsItem Text="Files" Icon="folder">
+                <RadzenTabsItem Text="@L["Files"]" Icon="folder">
                     <ShootFilesTab ShootId="Id!.Value" />
                 </RadzenTabsItem>
             </Tabs>
@@ -97,31 +97,32 @@ else
         <RadzenStack Gap="1rem">
             @if (_packages.Count > 0)
             {
-                <RadzenFormField Text="Package (optional)" class="w-full">
+                <RadzenFormField Text="@L["Package (optional)"]" class="w-full">
                     <ChildContent>
                         <RadzenDropDown TValue="int?" Name="PackageId" @bind-Value="Form.PackageId" @bind-Value:after="ApplyPackageAsync"
                                         Data="_packageItems" TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
                                         AllowClear="true" />
                     </ChildContent>
-                    <Helper><RadzenText TextStyle="TextStyle.Caption">Fills in type, quote, end time, delivery date and notes</RadzenText></Helper>
+                    <Helper><RadzenText TextStyle="TextStyle.Caption">@L["Fills in type, quote, end time, delivery date and notes"]</RadzenText></Helper>
                 </RadzenFormField>
             }
 
             <RadzenRow>
                 <RadzenColumn Size="12" SizeMD="8">
-                    <RadzenFormField Text="Title" class="w-full">
-                        <ChildContent><RadzenTextBox Name="Title" @bind-Value="Form.Title" Placeholder="Wedding Anna & Marco" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Title" /></Helper>
+                    <RadzenFormField Text="@L["Title"]" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Title" @bind-Value="Form.Title" Placeholder="@L["Wedding Anna & Marco"]" /></ChildContent>
+                        <Helper><FieldValidator Component="Title" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Shoot type" class="w-full">
-                        <RadzenDropDown TValue="ShootType" Name="ShootType" @bind-Value="Form.ShootType" Data="Enum.GetValues<ShootType>()" />
+                    <RadzenFormField Text="@L["Shoot type"]" class="w-full">
+                        <RadzenDropDown TValue="ShootType" Name="ShootType" @bind-Value="Form.ShootType"
+                                        Data="Labels.Choices<ShootType>(t => t.Text())" TextProperty="Text" ValueProperty="Value" />
                     </RadzenFormField>
                 </RadzenColumn>
 
                 <RadzenColumn Size="12" SizeMD="8">
-                    <RadzenFormField Text="Client" class="w-full">
+                    <RadzenFormField Text="@L["Client"]" class="w-full">
                         <ChildContent>
                             <RadzenDropDown TValue="int?" Name="ClientId" @bind-Value="Form.ClientId" Data="_clients"
                                             TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
@@ -130,35 +131,35 @@ else
                         </ChildContent>
                         <End>
                             <RadzenButton Icon="person_add" Variant="Variant.Text" Size="ButtonSize.Small"
-                                          Click="NewClientAsync" title="New client" />
+                                          Click="NewClientAsync" title="@L["New client"]" />
                         </End>
-                        <Helper><RadzenDataAnnotationValidator Component="ClientId" /></Helper>
+                        <Helper><FieldValidator Component="ClientId" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Status" class="w-full">
+                    <RadzenFormField Text="@L["Status"]" class="w-full">
                         <RadzenDropDown TValue="ShootStatus" Name="Status" @bind-Value="Form.Status" @bind-Value:after="CheckOverlapsAsync"
-                                        Data="Enum.GetValues<ShootStatus>()" />
+                                        Data="Labels.Choices<ShootStatus>(s => s.Text())" TextProperty="Text" ValueProperty="Value" />
                     </RadzenFormField>
                 </RadzenColumn>
 
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Date" class="w-full">
+                    <RadzenFormField Text="@L["Date"]" class="w-full">
                         <ChildContent>
                             <RadzenDatePicker TValue="DateOnly?" Name="Date" @bind-Value="Form.Date" @bind-Value:after="OnDateChangedAsync"
                                               DateFormat="ddd dd.MM.yyyy" />
                         </ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Date" /></Helper>
+                        <Helper><FieldValidator Component="Date" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="2">
-                    <RadzenFormField Text="Start" class="w-full">
+                    <RadzenFormField Text="@L["Start"]" class="w-full">
                         <InputDate Type="InputDateType.Time" @bind-Value="Form.StartTime" @bind-Value:after="CheckOverlapsAsync"
                                    class="rz-textbox time-input" />
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="2">
-                    <RadzenFormField Text="End" class="w-full">
+                    <RadzenFormField Text="@L["End"]" class="w-full">
                         <ChildContent>
                             <InputDate Type="InputDateType.Time" @bind-Value="Form.EndTime" @bind-Value:after="CheckOverlapsAsync"
                                        class="rz-textbox time-input" />
@@ -166,18 +167,18 @@ else
                         <Helper>
                             @if (Form.EndsNextDay)
                             {
-                                <RadzenText TextStyle="TextStyle.Caption">ends next day</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption">@L["ends next day"]</RadzenText>
                             }
                         </Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Quote (CHF)" class="w-full">
+                    <RadzenFormField Text="@L["Quote (CHF)"]" class="w-full">
                         <ChildContent>
                             <RadzenNumeric TValue="decimal?" Name="QuotedPriceChf" @bind-Value="Form.QuotedPriceChf"
                                            Format="#,##0.00" Min="0" ShowUpDown="false" />
                         </ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="QuotedPriceChf" /></Helper>
+                        <Helper><FieldValidator Component="QuotedPriceChf" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
             </RadzenRow>
@@ -185,7 +186,7 @@ else
             @if (_overlaps.Count > 0)
             {
                 <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-my-0">
-                    Overlaps with
+                    @L["Overlaps with"]
                     @foreach (var (shoot, index) in _overlaps.Select((shoot, index) => (shoot, index)))
                     {
                         @(index > 0 ? ", " : " ")
@@ -195,7 +196,7 @@ else
                 </RadzenAlert>
             }
 
-            <RadzenFormField Text="Location (optional)" class="w-full">
+            <RadzenFormField Text="@L["Location (optional)"]" class="w-full">
                 <ChildContent>
                     <RadzenDropDown TValue="int?" Name="LocationId" @bind-Value="Form.LocationId" Data="_locations"
                                     TextProperty="@nameof(LookupItem.Text)" ValueProperty="@nameof(LookupItem.Id)"
@@ -204,40 +205,40 @@ else
                 </ChildContent>
                 <End>
                     <RadzenButton Icon="add_location_alt" Variant="Variant.Text" Size="ButtonSize.Small"
-                                  Click="NewLocationAsync" title="New location" />
+                                  Click="NewLocationAsync" title="@L["New location"]" />
                 </End>
             </RadzenFormField>
 
             <RadzenRow>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Delivery due" class="w-full">
+                    <RadzenFormField Text="@L["Delivery due"]" class="w-full">
                         <ChildContent>
                             <RadzenDatePicker TValue="DateOnly?" Name="DeliveryDue" @bind-Value="Form.DeliveryDue" DateFormat="ddd dd.MM.yyyy"
                                               AllowClear="true" />
                         </ChildContent>
-                        <Helper><RadzenText TextStyle="TextStyle.Caption">@DeliveryDays days after the shoot unless you change it</RadzenText></Helper>
+                        <Helper><RadzenText TextStyle="TextStyle.Caption">@L["{0} days after the shoot unless you change it", DeliveryDays]</RadzenText></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="8">
-                    <RadzenFormField Text="Gallery link (optional)" class="w-full">
+                    <RadzenFormField Text="@L["Gallery link (optional)"]" class="w-full">
                         <ChildContent><RadzenTextBox Name="GalleryUrl" @bind-Value="Form.GalleryUrl" Placeholder="https://…" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="GalleryUrl" /></Helper>
+                        <Helper><FieldValidator Component="GalleryUrl" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
             </RadzenRow>
 
-            <RadzenFormField Text="Notes" class="w-full">
+            <RadzenFormField Text="@L["Notes"]" class="w-full">
                 <ChildContent><RadzenTextArea Name="Notes" @bind-Value="Form.Notes" Rows="5" /></ChildContent>
-                <Helper><RadzenDataAnnotationValidator Component="Notes" /></Helper>
+                <Helper><FieldValidator Component="Notes" /></Helper>
             </RadzenFormField>
 
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_saving" BusyText="Saving…" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" Icon="save" IsBusy="_saving" BusyText="@L["Saving…"]" />
                 @if (!IsNew)
                 {
-                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="DeleteAsync"
+                    <RadzenButton Text="@L["Delete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Click="DeleteAsync"
                                   Disabled="_hasFinancialRecords"
-                                  title="@(_hasFinancialRecords ? "Shoots with costs or payments can't be deleted. Set the status to Cancelled instead." : null)" />
+                                  title="@(_hasFinancialRecords ? L["Shoots with costs or payments can't be deleted. Set the status to Cancelled instead."] : null)" />
                 }
             </RadzenStack>
         </RadzenStack>
@@ -376,7 +377,7 @@ else
 
     private async Task NewClientAsync()
     {
-        if (await Dialogs.OpenAsync<NewClientDialog>("New client", options: new DialogOptions { Width = "40rem" }) is Client client)
+        if (await Dialogs.OpenAsync<NewClientDialog>(L["New client"], options: new DialogOptions { Width = "40rem" }) is Client client)
         {
             await LoadLookupsAsync();
             var form = _form!;
@@ -388,7 +389,7 @@ else
 
     private async Task NewLocationAsync()
     {
-        if (await Dialogs.OpenAsync<NewLocationDialog>("New location", options: new DialogOptions { Width = "40rem" }) is Location location)
+        if (await Dialogs.OpenAsync<NewLocationDialog>(L["New location"], options: new DialogOptions { Width = "40rem" }) is Location location)
         {
             await LoadLookupsAsync();
             _form!.LocationId = location.Id;
@@ -415,7 +416,7 @@ else
             form.ApplyTo(shoot);
             await db.SaveChangesAsync();
 
-            Notifications.Notify(NotificationSeverity.Success, "Shoot saved");
+            Notifications.Notify(NotificationSeverity.Success, L["Shoot saved"]);
             _title = shoot.Title;
             if (IsNew)
             {
@@ -435,9 +436,9 @@ else
     private async Task DeleteAsync()
     {
         var confirmed = await Dialogs.Confirm(
-            $"Delete {_title}? Consider setting it to Cancelled instead to keep it in your records.",
-            "Delete shoot",
-            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Keep" });
+            L["Delete {0}? Consider setting it to Cancelled instead to keep it in your records.", _title],
+            L["Delete shoot"],
+            new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Keep"] });
         if (confirmed != true)
         {
             return;
@@ -445,7 +446,7 @@ else
 
         await using var db = await DbFactory.CreateDbContextAsync();
         await db.DeleteShootAsync(Id!.Value, Store);
-        Notifications.Notify(NotificationSeverity.Info, $"{_title} deleted");
+        Notifications.Notify(NotificationSeverity.Info, L["{0} deleted", _title]);
         Navigation.NavigateTo("shoots");
     }
 

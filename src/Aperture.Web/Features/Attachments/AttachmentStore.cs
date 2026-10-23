@@ -1,5 +1,6 @@
 using Aperture.Web.Configuration;
 using Aperture.Web.Data.Entities;
+using Aperture.Web.Localization;
 using Microsoft.AspNetCore.StaticFiles;
 
 namespace Aperture.Web.Features.Attachments;
@@ -33,7 +34,7 @@ public sealed class AttachmentStore(AperturePaths paths, TimeProvider time)
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
         if (!AllowedExtensions.Contains(extension))
         {
-            throw new AttachmentException($"{fileName}: only PDFs, images and office documents can be uploaded.");
+            throw new AttachmentException(Texts.Format("{0}: only PDFs, images and office documents can be uploaded.", fileName));
         }
 
         var now = time.GetLocalNow().DateTime;

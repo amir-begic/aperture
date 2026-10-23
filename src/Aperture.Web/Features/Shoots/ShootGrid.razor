@@ -4,45 +4,45 @@
 
 <RadzenDataGrid TItem="ShootRow" Data="Shoots" IsLoading="IsLoading" AllowSorting="true"
                 AllowPaging="@(PageSize is not null)" PageSize="@(PageSize ?? 25)"
-                EmptyText="@EmptyText" class="clickable-rows"
+                EmptyText="@(EmptyText ?? L["No shoots."])" class="clickable-rows"
                 RowClick="@(args => Navigation.NavigateTo($"shoots/{args.Data!.Id}"))">
     <Columns>
-        <RadzenDataGridColumn Property="@nameof(ShootRow.Start)" Title="Date" Width="11rem">
+        <RadzenDataGridColumn Property="@nameof(ShootRow.Start)" Title="@L["Date"]" Width="11rem">
             <Template Context="shoot">
                 <div>@shoot.Start.ToString("ddd dd.MM.yyyy")</div>
                 <RadzenText TextStyle="TextStyle.Caption">@ShootSchedule.FormatTimes(shoot.Start, shoot.End)</RadzenText>
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(ShootRow.Title)" Title="Shoot">
+        <RadzenDataGridColumn Property="@nameof(ShootRow.Title)" Title="@L["Shoot"]">
             <Template Context="shoot">
                 <div>@shoot.Title</div>
-                <RadzenText TextStyle="TextStyle.Caption">@shoot.ShootType</RadzenText>
+                <RadzenText TextStyle="TextStyle.Caption">@shoot.ShootType.Text()</RadzenText>
             </Template>
         </RadzenDataGridColumn>
         @if (ShowClient)
         {
-            <RadzenDataGridColumn Property="@nameof(ShootRow.ClientName)" Title="Client" />
+            <RadzenDataGridColumn Property="@nameof(ShootRow.ClientName)" Title="@L["Client"]" />
         }
         @if (ShowLocation)
         {
-            <RadzenDataGridColumn Property="@nameof(ShootRow.Location)" Title="Location" />
+            <RadzenDataGridColumn Property="@nameof(ShootRow.Location)" Title="@L["Location"]" />
         }
-        <RadzenDataGridColumn Property="@nameof(ShootRow.Status)" Title="Status" Width="9rem">
+        <RadzenDataGridColumn Property="@nameof(ShootRow.Status)" Title="@L["Status"]" Width="9rem">
             <Template Context="shoot">
                 <ShootStatusBadge Status="shoot.Status" />
                 @if (shoot.Status.AwaitsDelivery() && shoot.DeliveryDue is { } due)
                 {
                     var overdue = shoot.IsDeliveryOverdue(Today);
                     <RadzenText TextStyle="TextStyle.Caption" TagName="TagName.Div" class="@(overdue ? "delivery-overdue" : null)">
-                        @(overdue ? "Delivery overdue" : $"Delivery {due:dd.MM.}")
+                        @(overdue ? L["Delivery overdue"] : L["Delivery {0:dd.MM.}", due])
                     </RadzenText>
                 }
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(ShootRow.QuotedPrice)" Title="Quote" Width="9rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Property="@nameof(ShootRow.QuotedPrice)" Title="@L["Quote"]" Width="9rem" TextAlign="TextAlign.Right">
             <Template Context="shoot">@shoot.QuotedPrice</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Property="@nameof(ShootRow.PaymentState)" Title="Payment" Width="10.5rem">
+        <RadzenDataGridColumn Property="@nameof(ShootRow.PaymentState)" Title="@L["Payment"]" Width="10.5rem">
             <Template Context="shoot">
                 @if (shoot.PaymentState is { } state)
                 {
@@ -71,7 +71,7 @@
     public int? PageSize { get; set; } = 25;
 
     [Parameter]
-    public string EmptyText { get; set; } = "No shoots.";
+    public string? EmptyText { get; set; }
 
     private DateOnly Today => DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
 }

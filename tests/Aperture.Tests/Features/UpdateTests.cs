@@ -126,7 +126,7 @@ public class UpdateTests : IAsyncLifetime, IDisposable
         Assert.Equal(PackageSha256, latest.Sha256);
         Assert.Contains("laptop installer", latest.Notes);
         Assert.Same(latest, updates.Available); // the test build is "dev", so anything is newer
-        Assert.Null(updates.Problem);
+        Assert.False(updates.IsUnreachable);
         Assert.NotNull(updates.LastCheck);
         var request = Assert.Single(feed.Requests);
         Assert.Equal(FeedUrl, request.RequestUri!.ToString());
@@ -140,7 +140,7 @@ public class UpdateTests : IAsyncLifetime, IDisposable
         var (updates, _, _) = Create(_ => new HttpResponseMessage(HttpStatusCode.NotFound));
         await updates.CheckAsync();
         Assert.Null(updates.Latest);
-        Assert.Null(updates.Problem);
+        Assert.False(updates.IsUnreachable);
     }
 
     [Fact]
@@ -148,7 +148,7 @@ public class UpdateTests : IAsyncLifetime, IDisposable
     {
         var (updates, _, _) = Create(_ => new HttpResponseMessage(HttpStatusCode.Forbidden));
         await updates.CheckAsync();
-        Assert.Contains("Couldn't reach the update server", updates.Problem);
+        Assert.True(updates.IsUnreachable);
         Assert.Null(updates.Available);
     }
 

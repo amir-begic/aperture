@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Features.Updates;
 
@@ -28,8 +29,8 @@ public sealed partial record ReleaseVersion(string Text, DateOnly? Date, int Bui
 
     public bool IsNewerThan(ReleaseVersion other) => Build > other.Build;
 
-    /// <summary>"Build 58 · 20.10.2026", or the raw text for versions without a build number.</summary>
-    public string Display => Build > 0 && Date is { } date ? $"build {Build} · {date:dd.MM.yyyy}" : Text;
+    /// <summary>"build 58 · 20.10.2026", or the raw text for versions without a build number.</summary>
+    public string Display => Build > 0 && Date is { } date ? Texts.Format("build {0} · {1:dd.MM.yyyy}", Build, date) : Text;
 
     [GeneratedRegex(@"^(?<date>\d{4}\.\d{2}\.\d{2})-(?:(?<build>\d+)-)?(?<commit>[0-9a-f]{7,40})(?:-dirty)?$")]
     private static partial Regex Pattern();

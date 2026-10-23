@@ -5,26 +5,26 @@
 @inject NotificationService Notifications
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
-    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">Contracts, riders, timelines… Receipts and payslips show up here too.</RadzenText>
+    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@L["Contracts, riders, timelines… Receipts and payslips show up here too."]</RadzenText>
     <label class="rz-button rz-button-sm rz-variant-filled rz-primary file-button">
         <InputFile OnChange="UploadAsync" accept="@AttachmentStore.Accept" multiple />
         <RadzenIcon Icon="upload_file" />
-        <span>@(_uploading ? "Uploading…" : "Upload files")</span>
+        <span>@(_uploading ? L["Uploading…"] : L["Upload files"])</span>
     </label>
 </RadzenStack>
 
-<RadzenDataGrid TItem="FileRow" Data="_files" IsLoading="_files is null" EmptyText="No files yet.">
+<RadzenDataGrid TItem="FileRow" Data="_files" IsLoading="_files is null" EmptyText="@L["No files yet."]">
     <Columns>
-        <RadzenDataGridColumn Title="File">
+        <RadzenDataGridColumn Title="@L["File"]">
             <Template Context="file"><AttachmentLink Attachment="file.Attachment" /></Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Belongs to">
-            <Template Context="file">@(file.UsedBy ?? "Shoot")</Template>
+        <RadzenDataGridColumn Title="@L["Belongs to"]">
+            <Template Context="file">@(file.UsedBy ?? L["Shoot"])</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Size" Width="7rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Title="@L["Size"]" Width="7rem" TextAlign="TextAlign.Right">
             <Template Context="file">@FileField.FormatSize(file.Attachment.SizeBytes)</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Uploaded" Width="9rem">
+        <RadzenDataGridColumn Title="@L["Uploaded"]" Width="9rem">
             <Template Context="file">@file.Attachment.UploadedAt.ToString("dd.MM.yyyy")</Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn Width="4rem" TextAlign="TextAlign.Center">
@@ -32,7 +32,7 @@
                 @if (file.UsedBy is null)
                 {
                     <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                                  Click="@(() => DeleteAsync(file.Attachment))" title="Delete file" />
+                                  Click="@(() => DeleteAsync(file.Attachment))" title="@L["Delete file"]" />
                 }
             </Template>
         </RadzenDataGridColumn>
@@ -58,13 +58,13 @@
 
         // Receipts and payslips are deleted with their cost or payment, not here.
         var usedBy = await db.Expenses.Where(e => e.ShootId == ShootId && e.ReceiptId != null)
-            .ToDictionaryAsync(e => e.ReceiptId!.Value, e => "Receipt: " + e.Description);
+            .ToDictionaryAsync(e => e.ReceiptId!.Value, e => L["Receipt: {0}", e.Description].Value);
         var proofs = await db.Payments.Where(p => p.ShootId == ShootId && p.ProofId != null)
             .Select(p => p.ProofId!.Value).ToListAsync();
-        proofs.ForEach(id => usedBy[id] = "Payslip");
+        proofs.ForEach(id => usedBy[id] = L["Payslip"]);
         var invoicePdfs = await db.Invoices.Where(i => i.ShootId == ShootId && i.PdfId != null)
             .Select(i => new { Id = i.PdfId!.Value, i.Number }).ToListAsync();
-        invoicePdfs.ForEach(pdf => usedBy[pdf.Id] = $"Invoice {pdf.Number}");
+        invoicePdfs.ForEach(pdf => usedBy[pdf.Id] = L["Invoice {0}", pdf.Number!]);
 
         _files = attachments.Select(a => new FileRow(a, usedBy.GetValueOrDefault(a.Id))).ToList();
     }
@@ -73,7 +73,7 @@
     {
         if (args.FileCount > MaxFilesPerUpload)
         {
-            Notifications.Notify(NotificationSeverity.Warning, "Too many files", $"Upload at most {MaxFilesPerUpload} files at once.");
+            Notifications.Notify(NotificationSeverity.Warning, L["Too many files"], L["Upload at most {0} files at once.", MaxFilesPerUpload]);
             return;
         }
 
@@ -85,7 +85,7 @@
             {
                 if (file.Size > AttachmentStore.MaxFileSize)
                 {
-                    problems.Add($"{file.Name} is larger than {FileField.FormatSize(AttachmentStore.MaxFileSize)}.");
+                    problems.Add(L["{0} is larger than {1}.", file.Name, FileField.FormatSize(AttachmentStore.MaxFileSize)]);
                     continue;
                 }
 
@@ -113,7 +113,7 @@
 
         foreach (var problem in problems)
         {
-            Notifications.Notify(NotificationSeverity.Warning, "Not uploaded", problem, duration: 8000);
+            Notifications.Notify(NotificationSeverity.Warning, L["Not uploaded"], problem, duration: 8000);
         }
 
         await LoadAsync();
@@ -121,8 +121,8 @@
 
     private async Task DeleteAsync(Attachment attachment)
     {
-        var confirmed = await Dialogs.Confirm($"Delete {attachment.FileName}?", "Delete file",
-            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        var confirmed = await Dialogs.Confirm(L["Delete {0}?", attachment.FileName], L["Delete file"],
+            new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
         if (confirmed != true)
         {
             return;

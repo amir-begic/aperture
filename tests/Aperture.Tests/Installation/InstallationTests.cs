@@ -213,7 +213,7 @@ public sealed class InstallationTests : IDisposable
     /// <summary>A platform with no services to start or stop, for testing what the installer does with files.</summary>
     private sealed class FilesOnlyPlatform() : Platform(new RecordingRunner())
     {
-        public override string ThisComputer => "this computer";
+        public override string Computer => "computer";
         public override Task RegisterAsync(ApertureHome home) => Task.CompletedTask;
         public override Task StartBackupsAsync(ApertureHome home) => Task.CompletedTask;
         public override Task UnregisterAsync(ApertureHome home) => Task.CompletedTask;

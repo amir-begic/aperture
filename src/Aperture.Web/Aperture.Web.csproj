@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
-    <!-- The UI is English: skip libraries' translated messages (de, es, fr, …) in the published app. -->
-    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- The UI is English or German: skip libraries' other translations (es, fr, …) in the published app. -->
+    <SatelliteResourceLanguages>en;de</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win'))">

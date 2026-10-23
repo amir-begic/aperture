@@ -20,10 +20,10 @@
 
     private string Text => State switch
     {
-        PaymentState.Paid => "Paid",
-        _ when IsPastDue && IsOpen => "Overdue",
-        PaymentState.PartiallyPaid => "Partially paid",
-        _ => "Unpaid",
+        PaymentState.Paid => L["Paid"],
+        _ when IsPastDue && IsOpen => L["Overdue"],
+        PaymentState.PartiallyPaid => L["Partially paid"],
+        _ => L["Unpaid"],
     };
 
     private BadgeStyle Style => State switch

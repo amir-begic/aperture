@@ -1,8 +1,9 @@
 using Aperture.Web.Data.Entities;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Domain;
 
-/// <summary>Display names and order of cost categories, roughly following a Swiss income statement.</summary>
+/// <summary>Display names (English; <see cref="Text"/> translates) and order of cost categories, roughly following a Swiss income statement.</summary>
 public static class ExpenseCategories
 {
     public static readonly IReadOnlyList<(ExpenseCategory Value, string Text)> All =
@@ -20,5 +21,5 @@ public static class ExpenseCategories
         (ExpenseCategory.Other, "Other"),
     ];
 
-    public static string Text(this ExpenseCategory category) => All.First(c => c.Value == category).Text;
+    public static string Text(this ExpenseCategory category) => Texts.Get(All.First(c => c.Value == category).Text);
 }

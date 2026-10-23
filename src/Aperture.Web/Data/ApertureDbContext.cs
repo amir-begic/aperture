@@ -1,6 +1,7 @@
 using Aperture.Web.Data.Converters;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -66,6 +67,7 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
         configurationBuilder.Properties<PaymentMethod>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<InvoiceStatus>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<AssetCategory>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<Language>().HaveConversion<string>().HaveMaxLength(20);
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

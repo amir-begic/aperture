@@ -2,6 +2,7 @@ using Aperture.Web.Data;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
 using Aperture.Web.Features.Attachments;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 
@@ -24,7 +25,8 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
             throw new InvalidOperationException("This shoot already has an invoice. Cancel it first to create a new one.");
         }
 
-        var shoot = await db.Shoots.Include(s => s.Package).SingleAsync(s => s.Id == shootId);
+        var shoot = await db.Shoots.Include(s => s.Package).Include(s => s.Client).SingleAsync(s => s.Id == shootId);
+        var culture = shoot.Client.InvoiceLanguage.Culture();
         var billedCosts = await db.Expenses
             .Where(e => e.ShootId == shootId && e.BilledToClient != null)
             .OrderBy(e => e.Date).ThenBy(e => e.Id)
@@ -39,7 +41,9 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         };
         invoice.Lines.Add(new InvoiceLine
         {
-            Description = shoot.Package is { } package ? $"{package.Name}: {shoot.Title}" : $"Photography: {shoot.Title}",
+            Description = shoot.Package is { } package
+                ? $"{package.Name}: {shoot.Title}"
+                : string.Format(culture, Texts.Get("Photography: {0}", culture), shoot.Title),
             UnitPrice = shoot.QuotedPrice ?? Money.Zero,
         });
         invoice.Lines.AddRange(billedCosts.Select(cost => new InvoiceLine
@@ -98,7 +102,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         return (invoice, new InvoiceShootInfo(shoot.Title, shoot.Start, shoot.End, location));
     }
 
-    /// <summary>What has to be fixed before the invoice can be issued; empty when it's ready.</summary>
+    /// <summary>What has to be fixed before the invoice can be issued, in the current language; empty when it's ready.</summary>
     public async Task<IReadOnlyList<string>> CheckAsync(int invoiceId)
     {
         var (invoice, _) = await LoadForDocumentAsync(invoiceId);
@@ -108,23 +112,23 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         var problems = new List<string>();
         if (!settings.IsComplete)
         {
-            problems.Add("Your business details are incomplete (Settings).");
+            problems.Add(Texts.Get("Your business details are incomplete (Settings)."));
         }
         if (!invoice.Client.HasPostalAddress)
         {
-            problems.Add($"The billing address of {invoice.Client.Name} is missing.");
+            problems.Add(Texts.Format("The billing address of {0} is missing.", invoice.Client.Name));
         }
         if (invoice.Lines.Count == 0 || invoice.Lines.Any(l => string.IsNullOrWhiteSpace(l.Description)))
         {
-            problems.Add("Every invoice line needs a description.");
+            problems.Add(Texts.Get("Every invoice line needs a description."));
         }
         if (invoice.Totals.Total <= Money.Zero)
         {
-            problems.Add("The invoice total must be above zero.");
+            problems.Add(Texts.Get("The invoice total must be above zero."));
         }
         if (invoice.DueDate < invoice.IssueDate)
         {
-            problems.Add("The due date is before the invoice date.");
+            problems.Add(Texts.Get("The due date is before the invoice date."));
         }
         if (settings.IsComplete)
         {
@@ -163,7 +167,9 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         var location = await db.Locations.Where(l => l.Id == shoot.LocationId)
             .Select(l => l.City == null ? l.Name : l.Name + ", " + l.City).SingleOrDefaultAsync();
         var pdf = new InvoiceDocument(invoice, new InvoiceShootInfo(shoot.Title, shoot.Start, shoot.End, location)).GeneratePdf();
-        var attachment = await store.SaveAsync(new MemoryStream(pdf), $"Invoice {invoice.Number}.pdf", invoice.ShootId);
+        var culture = invoice.Language.Culture();
+        var fileName = string.Format(culture, Texts.Get("Invoice {0}", culture), invoice.Number) + ".pdf";
+        var attachment = await store.SaveAsync(new MemoryStream(pdf), fileName, invoice.ShootId);
         invoice.Pdf = attachment;
 
         await store.CommitAsync(async () =>

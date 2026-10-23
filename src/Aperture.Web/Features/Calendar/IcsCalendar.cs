@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Aperture.Web.Data.Entities;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Features.Calendar;
 
@@ -76,7 +77,7 @@ public static class IcsCalendar
             Line($"DTSTAMP:{stamp}");
             Line($"DTSTART;TZID=Europe/Zurich:{Local(e.Start)}");
             Line($"DTEND;TZID=Europe/Zurich:{Local(e.End)}");
-            Line($"SUMMARY:{Escape(tentative ? $"{e.Title} (inquiry)" : e.Title)}");
+            Line($"SUMMARY:{Escape(tentative ? Texts.Format("{0} (inquiry)", e.Title) : e.Title)}");
             Line($"STATUS:{(tentative ? "TENTATIVE" : "CONFIRMED")}");
             if (!string.IsNullOrWhiteSpace(e.Location))
             {
@@ -95,7 +96,7 @@ public static class IcsCalendar
     {
         var lines = new List<string>
         {
-            e.ShootType == ShootType.Other ? $"{e.Status}" : $"{e.Status} · {e.ShootType}",
+            e.ShootType == ShootType.Other ? e.Status.Text() : $"{e.Status.Text()} · {e.ShootType.Text()}",
             string.IsNullOrWhiteSpace(e.ClientPhone) ? e.ClientName : $"{e.ClientName} · {e.ClientPhone}",
         };
         if (!string.IsNullOrWhiteSpace(e.Notes))

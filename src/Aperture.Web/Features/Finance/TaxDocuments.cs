@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Aperture.Web.Data.Entities;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Features.Finance;
 
@@ -22,19 +23,19 @@ public sealed partial class TaxDocuments
         var documents = new TaxDocuments();
         foreach (var income in statement.Income.Where(i => i.Proof is not null))
         {
-            documents.AddReceipt(income.Proof!, income.Date, $"Payment - {income.ShootTitle}");
+            documents.AddReceipt(income.Proof!, income.Date, Texts.Format("Payment - {0}", income.ShootTitle));
         }
         foreach (var expense in statement.Expenses.Where(e => e.Receipt is not null))
         {
-            documents.AddReceipt(expense.Receipt!, expense.Date, $"Cost - {expense.Description}");
+            documents.AddReceipt(expense.Receipt!, expense.Date, Texts.Format("Cost - {0}", expense.Description));
         }
         foreach (var asset in statement.Assets.Where(a => a.Asset.Receipt is not null && a.Asset.PurchaseDate.Year == statement.Year))
         {
-            documents.AddReceipt(asset.Asset.Receipt!, asset.Asset.PurchaseDate, $"Equipment - {asset.Asset.Name}");
+            documents.AddReceipt(asset.Asset.Receipt!, asset.Asset.PurchaseDate, Texts.Format("Equipment - {0}", asset.Asset.Name));
         }
         foreach (var invoice in invoices.Where(i => i.Pdf is not null).OrderBy(i => i.Number))
         {
-            documents.Add(invoice.Number!, invoice.Pdf!, $"Invoices/{SafeFileName($"Invoice {invoice.Number}")}.pdf");
+            documents.Add(invoice.Number!, invoice.Pdf!, $"{Texts.Get("Invoices")}/{SafeFileName(Texts.Format("Invoice {0}", invoice.Number))}.pdf");
         }
 
         return documents;
@@ -53,7 +54,7 @@ public sealed partial class TaxDocuments
 
         var number = $"R{_all.Count(d => d.Number.StartsWith('R')) + 1:000}";
         var extension = Path.GetExtension(attachment.FileName).ToLowerInvariant();
-        Add(number, attachment, $"Receipts/{number} {date:yyyy-MM-dd} {SafeFileName(title)}{extension}");
+        Add(number, attachment, $"{Texts.Get("Receipts")}/{number} {date:yyyy-MM-dd} {SafeFileName(title)}{extension}");
     }
 
     private void Add(string number, Attachment attachment, string zipPath)

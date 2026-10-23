@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Aperture.Web.Configuration;
 using Aperture.Web.Installation;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Features.Updates;
 
@@ -51,7 +52,8 @@ public sealed class UpdateService(
 
     public Release? Latest { get; private set; }
 
-    public string? Problem { get; private set; }
+    /// <summary>The last check couldn't reach the update server.</summary>
+    public bool IsUnreachable { get; private set; }
 
     /// <summary>Set while a release downloads, until the updater takes over.</summary>
     public bool IsDownloading { get; private set; }
@@ -75,11 +77,11 @@ public sealed class UpdateService(
         try
         {
             Latest = await Client().GetLatestAsync(cancellationToken);
-            Problem = null;
+            IsUnreachable = false;
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException or JsonException)
         {
-            Problem = $"Couldn't reach the update server. Is {platform.ThisComputer} online?";
+            IsUnreachable = true;
             logger.LogWarning(e, "Update check failed");
         }
         finally
@@ -119,12 +121,12 @@ public sealed class UpdateService(
             if (release.AssetSize > 0 && new FileInfo(partial).Length != release.AssetSize)
             {
                 File.Delete(partial);
-                throw new InvalidOperationException("The download is incomplete. Try again.");
+                throw new InvalidOperationException(Texts.Get("The download is incomplete. Try again."));
             }
             if (!string.Equals(await Sha256Async(partial, cancellationToken), release.Sha256, StringComparison.OrdinalIgnoreCase))
             {
                 File.Delete(partial);
-                throw new InvalidOperationException("The download doesn't match the release. Try again.");
+                throw new InvalidOperationException(Texts.Get("The download doesn't match the release. Try again."));
             }
             File.Move(partial, target, overwrite: true);
 

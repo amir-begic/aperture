@@ -8,11 +8,11 @@ else
 {
     <RadzenRow Gap="2rem">
         <RadzenColumn Size="12" SizeLG="6">
-            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Moodboard & references</RadzenText>
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">@L["Moodboard & references"]</RadzenText>
 
             @if (_links.Count == 0)
             {
-                <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">No links yet. Paste a Pinterest board, shot list or any other reference below.</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">@L["No links yet. Paste a Pinterest board, shot list or any other reference below."]</RadzenText>
             }
             <ul class="plain-list rz-mb-4">
                 @foreach (var link in _links)
@@ -21,23 +21,23 @@ else
                         <span class="provider-tag">@LinkProvider.FromUrl(link.Url)</span>
                         <a href="@link.Url" target="_blank" rel="noopener noreferrer" class="list-row-text">@(link.Label ?? link.Url)</a>
                         <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                                      Click="@(() => DeleteLinkAsync(link))" title="Remove link" />
+                                      Click="@(() => DeleteLinkAsync(link))" title="@L["Remove link"]" />
                     </li>
                 }
             </ul>
 
             <RadzenTemplateForm TItem="ReferenceLink" Data="_newLink" Submit="AddLinkAsync">
                 <RadzenStack Gap="0.5rem">
-                    <RadzenFormField Text="Link" class="w-full">
+                    <RadzenFormField Text="@L["Link"]" class="w-full">
                         <ChildContent><RadzenTextBox Name="Url" @bind-Value="_newLink.Url" Placeholder="https://pinterest.com/…" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Url" /></Helper>
+                        <Helper><FieldValidator Component="Url" /></Helper>
                     </RadzenFormField>
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
-                        <RadzenFormField Text="What for? (optional)" Style="flex: 1">
-                            <ChildContent><RadzenTextBox Name="Label" @bind-Value="_newLink.Label" Placeholder="Moodboard" /></ChildContent>
-                            <Helper><RadzenDataAnnotationValidator Component="Label" /></Helper>
+                        <RadzenFormField Text="@L["What for? (optional)"]" Style="flex: 1">
+                            <ChildContent><RadzenTextBox Name="Label" @bind-Value="_newLink.Label" Placeholder="@L["Moodboard"]" /></ChildContent>
+                            <Helper><FieldValidator Component="Label" /></Helper>
                         </RadzenFormField>
-                        <RadzenButton ButtonType="ButtonType.Submit" Text="Add" Icon="add" class="rz-mt-1" />
+                        <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Add"]" Icon="add" class="rz-mt-1" />
                     </RadzenStack>
                 </RadzenStack>
             </RadzenTemplateForm>
@@ -45,23 +45,24 @@ else
 
         <RadzenColumn Size="12" SizeLG="6">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
-                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Checklist</RadzenText>
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">@L["Checklist"]</RadzenText>
                 @if (_items.Count > 0)
                 {
-                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@_items.Count(i => i.IsDone) of @_items.Count done</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@L["{0} of {1} done", _items.Count(i => i.IsDone), _items.Count]</RadzenText>
                 }
             </RadzenStack>
 
             @if (_items.Count == 0)
             {
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-my-4">
-                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">No tasks yet.</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@L["No tasks yet."]</RadzenText>
                     @* The one that fits the shoot type comes first, filled; the others stay available. *@
                     @foreach (var (name, template) in ChecklistTemplates.All.OrderBy(t => t.Name != SuggestedTemplate))
                     {
-                        <RadzenButton Text="@($"{name} checklist")" Icon="playlist_add_check" Size="ButtonSize.Small"
+                        @* The templates are in English; they're added in the page's language. *@
+                        <RadzenButton Text="@L["{0} checklist", L[name]]" Icon="playlist_add_check" Size="ButtonSize.Small"
                                       Variant="@(name == SuggestedTemplate ? Variant.Filled : Variant.Outlined)"
-                                      Click="@(() => AddItemsAsync(template))" />
+                                      Click="@(() => AddItemsAsync(template.Select(text => L[text].Value)))" />
                     }
                 </RadzenStack>
             }
@@ -72,18 +73,18 @@ else
                         <RadzenCheckBox TValue="bool" Value="item.IsDone" Change="@(done => SetDoneAsync(item, done))" Name="@($"item-{item.Id}")" />
                         <RadzenLabel Component="@($"item-{item.Id}")" Text="@item.Text" class="@(item.IsDone ? "list-row-text done" : "list-row-text")" />
                         <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                                      Click="@(() => DeleteItemAsync(item))" title="Remove task" />
+                                      Click="@(() => DeleteItemAsync(item))" title="@L["Remove task"]" />
                     </li>
                 }
             </ul>
 
             <RadzenTemplateForm TItem="ChecklistItem" Data="_newItem" Submit="AddItemAsync">
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Start">
-                    <RadzenFormField Text="New task" Style="flex: 1">
+                    <RadzenFormField Text="@L["New task"]" Style="flex: 1">
                         <ChildContent><RadzenTextBox Name="Text" @bind-Value="_newItem.Text" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Text" /></Helper>
+                        <Helper><FieldValidator Component="Text" /></Helper>
                     </RadzenFormField>
-                    <RadzenButton ButtonType="ButtonType.Submit" Text="Add" Icon="add" class="rz-mt-1" />
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Add"]" Icon="add" class="rz-mt-1" />
                 </RadzenStack>
             </RadzenTemplateForm>
         </RadzenColumn>

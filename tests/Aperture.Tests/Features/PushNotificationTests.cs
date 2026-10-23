@@ -6,6 +6,7 @@ using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
 using Aperture.Web.Features.Backup;
 using Aperture.Web.Features.Notifications;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -59,7 +60,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
     private PushService Push() => new(new HttpFactory(_pushService), new DbFactory(_database), new AperturePaths(_dataDirectory),
         new FixedTimeProvider(Now), NullLogger<PushService>.Instance);
 
-    private PushReminders Reminders() => new(new DbFactory(_database), Push(), NullLogger<PushReminders>.Instance);
+    private PushReminders Reminders() => new(new DbFactory(_database), Push(), new AppLanguage(new DbFactory(_database)), NullLogger<PushReminders>.Instance);
 
     private PushMessage ReceivedMessage(int index = 0) =>
         JsonSerializer.Deserialize<PushMessage>(_iPhone.Decrypt(_pushService.Received[index].Body), JsonSerializerOptions.Web)!;

@@ -1,6 +1,8 @@
 using System.Text;
 using Codecrete.SwissQRBill.Generator;
 using Aperture.Web.Data.Entities;
+using Aperture.Web.Localization;
+using QrLanguage = Codecrete.SwissQRBill.Generator.Language;
 
 namespace Aperture.Web.Features.Invoices;
 
@@ -9,6 +11,7 @@ public static class InvoiceQrBill
 {
     public static Bill Create(Invoice invoice)
     {
+        var culture = invoice.Language.Culture();
         var amountDue = invoice.Totals.AmountDue;
         var bill = new Bill
         {
@@ -18,10 +21,10 @@ public static class InvoiceQrBill
             // A QR-bill amount must be at least 0.01; without one, the payer fills it in.
             Amount = amountDue.Rappen > 0 ? amountDue.Chf : null,
             Debtor = invoice.Client.HasPostalAddress ? ToAddress(invoice.Client.Company ?? invoice.Client.Name, invoice.Client) : null,
-            UnstructuredMessage = invoice.Number is null ? null : $"Invoice {invoice.Number}",
+            UnstructuredMessage = invoice.Number is null ? null : string.Format(culture, Texts.Get("Invoice {0}", culture), invoice.Number),
             Format = new BillFormat
             {
-                Language = Language.EN,
+                Language = invoice.Language == Localization.Language.German ? QrLanguage.DE : QrLanguage.EN,
                 GraphicsFormat = GraphicsFormat.SVG,
                 OutputSize = OutputSize.QrBillOnly,
                 SeparatorType = SeparatorType.DashedLineWithScissors,
@@ -39,24 +42,24 @@ public static class InvoiceQrBill
         return bill;
     }
 
-    /// <summary>Problems that would make the QR-bill invalid, in plain words; empty when it's fine.</summary>
+    /// <summary>Problems that would make the QR-bill invalid, in plain words and the current language; empty when it's fine.</summary>
     public static IReadOnlyList<string> Problems(Invoice invoice)
     {
         if (string.IsNullOrWhiteSpace(invoice.SellerIban))
         {
-            return ["Your IBAN is missing (Settings)."];
+            return [Texts.Get("Your IBAN is missing (Settings).")];
         }
 
         if (Payments.IsQrIban(invoice.SellerIban))
         {
-            return ["Your IBAN is a QR-IBAN. Please enter the normal IBAN of the account in Settings."];
+            return [Texts.Get("Your IBAN is a QR-IBAN. Please enter the normal IBAN of the account in Settings.")];
         }
 
         var result = QRBill.Validate(Create(invoice));
         return result.HasErrors
             ? result.ValidationMessages
                 .Where(m => m.Type == ValidationMessage.MessageType.Error)
-                .Select(m => $"QR-bill: {m.Field} ({m.MessageKey})")
+                .Select(m => Texts.Format("QR-bill: {0} ({1})", m.Field, m.MessageKey))
                 .ToList()
             : [];
     }

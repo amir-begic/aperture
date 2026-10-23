@@ -3,15 +3,16 @@
 @using Aperture.Web.Features.Settings
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NavigationManager Navigation
+@inject AppLanguage Language
 
 @* The second step of the first start, after the login (SetupPage): the business details invoices need, so nobody has
    to go looking for Settings. It can be skipped; the dashboard keeps asking until the details are complete. *@
 
-<PageTitle>Your business · Aperture</PageTitle>
+<PageTitle>@L["Your business"] · Aperture</PageTitle>
 
 <div class="login-stack welcome-stack">
 <div>
-    <p class="login-tagline">Step 2 of 2 · Your business</p>
+    <p class="login-tagline">@L["Step 2 of 2 · Your business"]</p>
     <h1 class="wordmark login-wordmark"><span class="brand-ring" aria-hidden="true"></span>Aperture</h1>
 </div>
 <RadzenCard class="login-card">
@@ -24,16 +25,14 @@
         <RadzenTemplateForm TItem="BusinessSettings" Data="_settings" Submit="SaveAsync">
             <RadzenStack Gap="1.5rem">
                 <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                    These details go on every invoice, with a Swiss QR-bill for your IBAN. Your email is also what
-                    notifications need. You can change all of it under Settings later, where you'll also find VAT, your usual
-                    delivery time and more.
+                    @L["These details go on every invoice, with a Swiss QR-bill for your IBAN. Your email is also what notifications need. You can change all of it under Settings later, where you'll also find VAT, your usual delivery time and more."]
                 </RadzenText>
 
                 <BusinessDetailsFields Settings="_settings" />
 
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1.5rem" Wrap="FlexWrap.Wrap">
-                    <RadzenButton ButtonType="ButtonType.Submit" Text="Save and start" Icon="arrow_forward" IsBusy="_saving" BusyText="Saving…" />
-                    <RadzenLink Path="" Text="Skip for now" />
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save and start"]" Icon="arrow_forward" IsBusy="_saving" BusyText="@L["Saving…"]" />
+                    <RadzenLink Path="" Text="@L["Skip for now"]" />
                 </RadzenStack>
             </RadzenStack>
         </RadzenTemplateForm>
@@ -57,9 +56,12 @@
         try
         {
             settings.Iban = Iban.Normalize(settings.Iban);
+            // The language the first start was in, the browser's, stays Aperture's until it's changed in Settings.
+            settings.Language ??= Languages.Current;
             await using var db = await DbFactory.CreateDbContextAsync();
             db.BusinessSettings.Update(settings);
             await db.SaveChangesAsync();
+            Language.Set(settings.Language);
             Navigation.NavigateTo("");
         }
         finally

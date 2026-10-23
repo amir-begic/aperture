@@ -4,55 +4,54 @@
 @inject DialogService Dialogs
 @inject TimeProvider Time
 
-<PageTitle>Equipment · Aperture</PageTitle>
+<PageTitle>@L["Equipment"] · Aperture</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Equipment</RadzenText>
-    <RadzenButton Text="Add equipment" Icon="add" Click="@(() => EditAsync(null))" />
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">@L["Equipment"]</RadzenText>
+    <RadzenButton Text="@L["Add equipment"]" Icon="add" Click="@(() => EditAsync(null))" />
 </RadzenStack>
 <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
-    Gear you use for several years. Its price is spread over the years as depreciation instead of counting as a cost when you buy it.
-    Cheap items are often booked directly as a cost; ask your fiduciary where the line is.
-    How the year of purchase is depreciated is set in <RadzenLink Path="settings" Text="Settings" />.
+    @L["Gear you use for several years. Its price is spread over the years as depreciation instead of counting as a cost when you buy it. Cheap items are often booked directly as a cost; ask your fiduciary where the line is. How the year of purchase is depreciated is set in"]
+    <RadzenLink Path="settings" Text="@L["Settings"]" />.
 </RadzenText>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Wrap="FlexWrap.Wrap" Gap="1rem" class="rz-mb-4">
-    <RadzenFormField Text="Values for">
+    <RadzenFormField Text="@L["Values for"]">
         <RadzenDropDown TValue="int" @bind-Value="_year" Data="_years" />
     </RadzenFormField>
     <div class="kpi-row" style="flex: 1; min-width: 18rem">
-        <KpiTile Label="@($"Depreciation {_year}")" Value="@Rows.Sum(r => r.Year?.Depreciation ?? Money.Zero).ToString()" />
-        <KpiTile Label="@($"Book value end of {_year}")" Value="@Rows.Sum(r => r.Year?.Closing ?? Money.Zero).ToString()" />
+        <KpiTile Label="@L["Depreciation {0}", _year]" Value="@Rows.Sum(r => r.Year?.Depreciation ?? Money.Zero).ToString()" />
+        <KpiTile Label="@L["Book value end of {0}", _year]" Value="@Rows.Sum(r => r.Year?.Closing ?? Money.Zero).ToString()" />
     </div>
 </RadzenStack>
 
 <RadzenDataGrid TItem="AssetRow" Data="Rows" IsLoading="_assets is null" AllowSorting="true"
-                EmptyText="No equipment yet." class="clickable-rows"
+                EmptyText="@L["No equipment yet."]" class="clickable-rows"
                 RowClick="@(args => EditAsync(args.Data!.Asset.Id))">
     <Columns>
-        <RadzenDataGridColumn Title="Equipment" Property="Asset.Name">
+        <RadzenDataGridColumn Title="@L["Equipment"]" Property="Asset.Name">
             <Template Context="row">
                 <div>@row.Asset.Name</div>
                 <RadzenText TextStyle="TextStyle.Caption">@row.Asset.Category.Text()</RadzenText>
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Bought" Property="Asset.PurchaseDate" Width="8rem">
+        <RadzenDataGridColumn Title="@L["Bought"]" Property="Asset.PurchaseDate" Width="8rem">
             <Template Context="row">@row.Asset.PurchaseDate.ToString("dd.MM.yyyy")</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Price" Width="9rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Title="@L["Price"]" Width="9rem" TextAlign="TextAlign.Right">
             <Template Context="row">@row.Asset.Cost</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Rate" Width="5rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Title="@L["Rate"]" Width="5rem" TextAlign="TextAlign.Right">
             <Template Context="row">@row.Asset.DepreciationRatePercent.ToString("0.#") %</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="@($"Depreciation {_year}")" Width="10rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Title="@L["Depreciation {0}", _year]" Width="10rem" TextAlign="TextAlign.Right">
             <Template Context="row">@row.Year?.Depreciation</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="@($"Value end of {_year}")" Width="10rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Title="@L["Value end of {0}", _year]" Width="10rem" TextAlign="TextAlign.Right">
             <Template Context="row">
                 @if (row.Year?.DisposalResult is not null)
                 {
-                    <RadzenText TextStyle="TextStyle.Caption">sold @row.Asset.DisposedOn?.ToString("dd.MM.yyyy")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L["sold {0:dd.MM.yyyy}", row.Asset.DisposedOn!.Value]</RadzenText>
                 }
                 else
                 {
@@ -60,7 +59,7 @@
                 }
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Receipt">
+        <RadzenDataGridColumn Title="@L["Receipt"]">
             <Template Context="row">
                 @if (row.Asset.Receipt is not null)
                 {
@@ -100,7 +99,7 @@
     private async Task EditAsync(int? assetId)
     {
         var changed = await Dialogs.OpenAsync<AssetDialog>(
-            assetId is null ? "Add equipment" : "Edit equipment",
+            assetId is null ? L["Add equipment"] : L["Edit equipment"],
             new Dictionary<string, object?> { ["AssetId"] = assetId },
             new DialogOptions { Width = "40rem" });
         if (changed is true)

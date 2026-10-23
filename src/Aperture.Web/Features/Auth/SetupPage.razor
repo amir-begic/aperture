@@ -14,17 +14,17 @@
 
 @* First start: there's no login yet, so the first visit creates it. Then the business details (WelcomePage). *@
 
-<PageTitle>Create your login · Aperture</PageTitle>
+<PageTitle>@L["Create your login"] · Aperture</PageTitle>
 
 <div class="login-stack">
 <div>
-    <p class="login-tagline">Step 1 of 2 · Your login</p>
+    <p class="login-tagline">@L["Step 1 of 2 · Your login"]</p>
     <h1 class="wordmark login-wordmark"><span class="brand-ring" aria-hidden="true"></span>Aperture</h1>
 </div>
 <RadzenCard class="login-card">
     <RadzenStack Gap="1rem">
         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-            Welcome. Choose the username and password you'll sign in with. They stay on @Platform.ThisComputer.
+            @L["Welcome. Choose the username and password you'll sign in with. They stay on this {0}.", L[Platform.Computer]]
         </RadzenText>
 
         @if (_error is not null)
@@ -39,18 +39,18 @@
             <DataAnnotationsValidator />
             <RadzenStack Gap="1rem">
                 <label class="login-field">
-                    Username
+                    @L["Username"]
                     <InputText @bind-Value="Input.Username" class="rz-textbox" autocomplete="username" autofocus />
                 </label>
                 <label class="login-field">
-                    Password (at least @MinimumLength characters)
+                    @L["Password (at least {0} characters)", MinimumLength]
                     <InputText @bind-Value="Input.Password" type="password" class="rz-textbox" autocomplete="new-password" />
                 </label>
                 <label class="login-field">
-                    Repeat the password
+                    @L["Repeat the password"]
                     <InputText @bind-Value="Input.Repeated" type="password" class="rz-textbox" autocomplete="new-password" />
                 </label>
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Create login" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Create login"]" />
             </RadzenStack>
         </EditForm>
     </RadzenStack>
@@ -87,13 +87,13 @@
         }
 
         var username = Input.Username.Trim();
-        _error = !Regex.IsMatch(username, "^[A-Za-z0-9._@-]+$") ? "Use letters, digits and . _ @ - for the username."
-            : Input.Password.Length < MinimumLength ? $"Use at least {MinimumLength} characters for the password."
-            : Input.Password != Input.Repeated ? "The passwords don't match."
+        _error = !Regex.IsMatch(username, "^[A-Za-z0-9._@-]+$") ? L["Use letters, digits and . _ @ - for the username."].Value
+            : Input.Password.Length < MinimumLength ? L["Use at least {0} characters for the password.", MinimumLength].Value
+            : Input.Password != Input.Repeated ? L["The passwords don't match."].Value
             : null;
         if (_error is null && !Logins.TrySetUp(username, Input.Password))
         {
-            _error = "There's a login already. Sign in with it.";
+            _error = L["There's a login already. Sign in with it."];
         }
         Input.Password = Input.Repeated = ""; // don't echo them back into the HTML
         if (_error is not null)

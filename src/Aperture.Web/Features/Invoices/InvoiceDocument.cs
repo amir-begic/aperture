@@ -1,6 +1,8 @@
+using System.Globalization;
 using Codecrete.SwissQRBill.Generator;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
+using Aperture.Web.Localization;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -12,7 +14,7 @@ public sealed record InvoiceShootInfo(string Title, DateTime Start, DateTime End
 
 /// <summary>
 /// The invoice PDF: sender, recipient in the window position of a Swiss envelope (right),
-/// lines, totals, payment note and the QR-bill along the bottom edge of the last page.
+/// lines, totals, payment note and the QR-bill along the bottom edge of the last page. In the invoice's language.
 /// </summary>
 public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : IDocument
 {
@@ -20,11 +22,15 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
 
     static InvoiceDocument() => InvoiceFonts.EnsureRegistered();
 
+    private readonly CultureInfo _culture = invoice.Language.Culture();
+
     private bool IsDraft => invoice.Status == InvoiceStatus.Draft;
+
+    private string Title => IsDraft ? T("Invoice (draft)") : TF("Invoice {0}", invoice.Number);
 
     public DocumentMetadata GetMetadata() => new()
     {
-        Title = IsDraft ? "Invoice (draft)" : $"Invoice {invoice.Number}",
+        Title = Title,
         Author = invoice.Seller.Company ?? invoice.Seller.Name,
     };
 
@@ -42,7 +48,7 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
             if (IsDraft)
             {
                 page.Background().AlignCenter().AlignMiddle().Rotate(-30)
-                    .Text("DRAFT").FontSize(120).Bold().FontColor(Colors.Grey.Lighten3);
+                    .Text(T("Draft").ToUpper(_culture)).FontSize(120).Bold().FontColor(Colors.Grey.Lighten3);
             }
 
             page.Content().Column(column =>
@@ -104,7 +110,7 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
     private void ComposeHeading(IContainer container) => container.Column(column =>
     {
         column.Spacing(3, Unit.Millimetre);
-        column.Item().Text(IsDraft ? "Invoice (draft)" : $"Invoice {invoice.Number}").FontSize(18).Bold();
+        column.Item().Text(Title).FontSize(18).Bold();
         column.Item().Table(table =>
         {
             table.ColumnsDefinition(columns =>
@@ -119,11 +125,11 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
                 table.Cell().Text(value);
             }
 
-            Fact("Invoice date", invoice.IssueDate.ToString("dd.MM.yyyy"));
-            Fact("Due date", invoice.DueDate.ToString("dd.MM.yyyy"));
-            Fact("Event", shoot.Title);
-            Fact("Event date", $"{shoot.Start:ddd dd.MM.yyyy}, {ShootSchedule.FormatTimes(shoot.Start, shoot.End)}");
-            if (shoot.Location is not null) Fact("Location", shoot.Location);
+            Fact(T("Invoice date"), invoice.IssueDate.ToString("dd.MM.yyyy"));
+            Fact(T("Due date"), invoice.DueDate.ToString("dd.MM.yyyy"));
+            Fact(T("Invoice.Event"), shoot.Title);
+            Fact(T("Event date"), string.Format(_culture, "{0:ddd dd.MM.yyyy}, {1}", shoot.Start, ShootSchedule.FormatTimes(shoot.Start, shoot.End)));
+            if (shoot.Location is not null) Fact(T("Location"), shoot.Location);
         });
     });
 
@@ -142,10 +148,10 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
             static IContainer HeaderCell(IContainer cell) =>
                 cell.BorderBottom(1).BorderColor(Colors.Grey.Darken2).PaddingVertical(4);
 
-            header.Cell().Element(HeaderCell).Text("Description").Bold();
-            header.Cell().Element(HeaderCell).AlignRight().Text("Qty").Bold();
-            header.Cell().Element(HeaderCell).AlignRight().Text("Price CHF").Bold();
-            header.Cell().Element(HeaderCell).AlignRight().Text("Amount CHF").Bold();
+            header.Cell().Element(HeaderCell).Text(T("Description")).Bold();
+            header.Cell().Element(HeaderCell).AlignRight().Text(T("Qty")).Bold();
+            header.Cell().Element(HeaderCell).AlignRight().Text(T("Price CHF")).Bold();
+            header.Cell().Element(HeaderCell).AlignRight().Text(T("Amount CHF")).Bold();
         });
 
         foreach (var line in invoice.Lines.OrderBy(l => l.SortOrder))
@@ -160,7 +166,7 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
         }
     });
 
-    private static void ComposeTotals(IContainer container, InvoiceTotals totals) =>
+    private void ComposeTotals(IContainer container, InvoiceTotals totals) =>
         container.AlignRight().Width(85, Unit.Millimetre).Table(table =>
         {
             table.ColumnsDefinition(columns =>
@@ -189,15 +195,15 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
             }
 
             var hasAdjustments = totals.VatRatePercent is not null || totals.Rounding != Money.Zero;
-            if (hasAdjustments) Row("Subtotal", totals.Subtotal);
-            if (totals.VatRatePercent is { } rate) Row($"VAT {rate:0.0#} %", totals.Vat);
-            if (totals.Rounding != Money.Zero) Row("Rounding", totals.Rounding);
-            Row("Total CHF", totals.Total, bold: true, line: hasAdjustments);
+            if (hasAdjustments) Row(T("Subtotal"), totals.Subtotal);
+            if (totals.VatRatePercent is { } rate) Row(TF("VAT {0:0.0#} %", rate), totals.Vat);
+            if (totals.Rounding != Money.Zero) Row(T("Rounding"), totals.Rounding);
+            Row(T("Total CHF"), totals.Total, bold: true, line: hasAdjustments);
 
             if (totals.AlreadyPaid > Money.Zero)
             {
-                Row("Already paid", -totals.AlreadyPaid);
-                Row("Amount due CHF", totals.AmountDue, bold: true, line: true);
+                Row(T("Already paid"), -totals.AlreadyPaid);
+                Row(T("Amount due CHF"), totals.AmountDue, bold: true, line: true);
             }
         });
 
@@ -206,23 +212,26 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
         column.Spacing(2, Unit.Millimetre);
         if (totals.AmountDue == Money.Zero)
         {
-            column.Item().Text("Paid in full. Thank you!").Bold();
+            column.Item().Text(T("Paid in full. Thank you!")).Bold();
         }
         else
         {
             column.Item().Text(text =>
             {
-                text.Span($"Please pay {totals.AmountDue} by {invoice.DueDate:dd.MM.yyyy} ");
-                text.Span("using the QR-bill below or by bank transfer to ");
+                text.Span(TF("Please pay {0} by {1:dd.MM.yyyy} using the QR-bill below or by bank transfer to", totals.AmountDue, invoice.DueDate) + " ");
                 text.Span(invoice.SellerIban is null ? "" : Payments.FormatIban(invoice.SellerIban)).Bold();
                 text.Span($" ({invoice.Seller.Name}).");
             });
-            column.Item().Text("Thank you for the booking!");
+            column.Item().Text(T("Thank you for the booking!"));
         }
 
         if (invoice.SellerVatNumber is not null)
         {
-            column.Item().PaddingTop(2, Unit.Millimetre).Text($"VAT no. {invoice.SellerVatNumber}").FontSize(8).FontColor(Colors.Grey.Darken1);
+            column.Item().PaddingTop(2, Unit.Millimetre).Text(TF("VAT no. {0}", invoice.SellerVatNumber)).FontSize(8).FontColor(Colors.Grey.Darken1);
         }
     });
+
+    private string T(string key) => Texts.Get(key, _culture);
+
+    private string TF(string key, params object?[] args) => string.Format(_culture, T(key), args);
 }

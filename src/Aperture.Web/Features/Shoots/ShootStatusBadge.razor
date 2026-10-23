@@ -1,5 +1,5 @@
 @* Same fills as the calendar: inquiry dashed (tentative), booked black, shot white, delivered gray, cancelled crossed out. *@
-<RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Status.ToString()"
+<RadzenBadge BadgeStyle="@Style" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@Status.Text()"
              class="@(Status == ShootStatus.Cancelled ? "badge-cancelled" : null)" />
 
 @code {

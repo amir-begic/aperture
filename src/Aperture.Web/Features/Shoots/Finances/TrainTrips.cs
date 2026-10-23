@@ -1,6 +1,7 @@
 using Aperture.Web.Data;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aperture.Web.Features.Shoots.Finances;
@@ -33,7 +34,7 @@ public static class TrainTrips
         return new ExpensePreset(ExpenseCategory.Travel, Description(shoot.City ?? shoot.LocationName), Vendor, lastFare);
     }
 
-    /// <summary>"Train to Laufen-Uhwiesen and back"; without a location, "Train to the shoot and back".</summary>
+    /// <summary>"Train to Laufen-Uhwiesen and back"; without a location, "Train to the shoot and back". In the current language.</summary>
     public static string Description(string? place) =>
-        $"Train to {(string.IsNullOrWhiteSpace(place) ? "the shoot" : place.Trim())} and back";
+        string.IsNullOrWhiteSpace(place) ? Texts.Get("Train to the shoot and back") : Texts.Format("Train to {0} and back", place.Trim());
 }

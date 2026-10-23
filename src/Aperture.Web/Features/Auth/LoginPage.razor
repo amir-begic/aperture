@@ -11,11 +11,11 @@
 @inject LoginStore Logins
 @inject NavigationManager Navigation
 
-<PageTitle>Sign in · Aperture</PageTitle>
+<PageTitle>@L["Sign in"] · Aperture</PageTitle>
 
 <div class="login-stack">
 <div>
-    <p class="login-tagline">Photo office</p>
+    <p class="login-tagline">@L["Photo office"]</p>
     <h1 class="wordmark login-wordmark"><span class="brand-ring" aria-hidden="true"></span>Aperture</h1>
 </div>
 <RadzenCard class="login-card">
@@ -23,7 +23,7 @@
     @if (_failed)
     {
         <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">
-            Wrong username or password.
+            @L["Wrong username or password."]
         </RadzenAlert>
     }
 
@@ -32,18 +32,18 @@
         <DataAnnotationsValidator />
         <RadzenStack Gap="1rem">
             <label class="login-field">
-                Username
+                @L["Username"]
                 <InputText @bind-Value="Input.Username" class="rz-textbox" autocomplete="username" autofocus />
             </label>
             <label class="login-field">
-                Password
+                @L["Password"]
                 <InputText @bind-Value="Input.Password" type="password" class="rz-textbox" autocomplete="current-password" />
             </label>
             <label class="login-remember">
                 <InputCheckbox @bind-Value="Input.RememberMe" />
-                Keep me signed in on this device
+                @L["Keep me signed in on this device"]
             </label>
-            <RadzenButton ButtonType="ButtonType.Submit" Text="Sign in" />
+            <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Sign in"]" />
         </RadzenStack>
     </EditForm>
 </RadzenCard>

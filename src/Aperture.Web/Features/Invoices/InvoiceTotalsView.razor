@@ -2,21 +2,21 @@
 <table class="invoice-totals">
     @if (HasAdjustments)
     {
-        <tr><td>Subtotal</td><td class="num">@Totals.Subtotal.ToAmountString()</td></tr>
+        <tr><td>@L["Subtotal"]</td><td class="num">@Totals.Subtotal.ToAmountString()</td></tr>
     }
     @if (Totals.VatRatePercent is { } rate)
     {
-        <tr><td>VAT @rate.ToString("0.0#") %</td><td class="num">@Totals.Vat.ToAmountString()</td></tr>
+        <tr><td>@L["VAT {0:0.0#} %", rate]</td><td class="num">@Totals.Vat.ToAmountString()</td></tr>
     }
     @if (Totals.Rounding != Money.Zero)
     {
-        <tr><td>Rounding</td><td class="num">@Totals.Rounding.ToAmountString()</td></tr>
+        <tr><td>@L["Rounding"]</td><td class="num">@Totals.Rounding.ToAmountString()</td></tr>
     }
-    <tr class="@(HasAdjustments ? "sum" : null)"><th>Total CHF</th><th class="num">@Totals.Total.ToAmountString()</th></tr>
+    <tr class="@(HasAdjustments ? "sum" : null)"><th>@L["Total CHF"]</th><th class="num">@Totals.Total.ToAmountString()</th></tr>
     @if (Totals.AlreadyPaid > Money.Zero)
     {
-        <tr><td>Already paid</td><td class="num">@((-Totals.AlreadyPaid).ToAmountString())</td></tr>
-        <tr class="sum"><th>Amount due CHF</th><th class="num">@Totals.AmountDue.ToAmountString()</th></tr>
+        <tr><td>@L["Already paid"]</td><td class="num">@((-Totals.AlreadyPaid).ToAmountString())</td></tr>
+        <tr class="sum"><th>@L["Amount due CHF"]</th><th class="num">@Totals.AmountDue.ToAmountString()</th></tr>
     }
 </table>
 

@@ -9,57 +9,58 @@
         <RadzenStack Gap="1rem">
             <RadzenRow>
                 <RadzenColumn Size="12" SizeMD="8">
-                    <RadzenFormField Text="Name" class="w-full">
-                        <ChildContent><RadzenTextBox Name="Name" @bind-Value="_form.Name" Placeholder="Wedding full day" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Name" /></Helper>
+                    <RadzenFormField Text="@L["Name"]" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Name" @bind-Value="_form.Name" Placeholder="@L["Wedding full day"]" /></ChildContent>
+                        <Helper><FieldValidator Component="Name" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Shoot type" class="w-full">
-                        <RadzenDropDown TValue="ShootType" Name="ShootType" @bind-Value="_form.ShootType" Data="Enum.GetValues<ShootType>()" />
+                    <RadzenFormField Text="@L["Shoot type"]" class="w-full">
+                        <RadzenDropDown TValue="ShootType" Name="ShootType" @bind-Value="_form.ShootType"
+                                        Data="Labels.Choices<ShootType>(t => t.Text())" TextProperty="Text" ValueProperty="Value" />
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenFormField Text="Price (CHF)" class="w-full">
+                    <RadzenFormField Text="@L["Price (CHF)"]" class="w-full">
                         <ChildContent><RadzenNumeric TValue="decimal?" Name="PriceChf" @bind-Value="_form.PriceChf" Format="#,##0.00" ShowUpDown="false" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="PriceChf" /></Helper>
+                        <Helper><FieldValidator Component="PriceChf" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="4">
-                    <RadzenFormField Text="Hours on site" class="w-full">
+                    <RadzenFormField Text="@L["Hours on site"]" class="w-full">
                         <ChildContent><RadzenNumeric TValue="decimal" Name="Hours" @bind-Value="_form.Hours" Min="0.5m" Max="24" Step="0.5" Format="0.#" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Hours" /></Helper>
+                        <Helper><FieldValidator Component="Hours" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="4">
-                    <RadzenFormField Text="Delivery (days)" class="w-full">
-                        <ChildContent><RadzenNumeric TValue="int?" Name="DeliveryDays" @bind-Value="_form.DeliveryDays" Min="0" Max="365" Placeholder="usual" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="DeliveryDays" /></Helper>
+                    <RadzenFormField Text="@L["Delivery (days)"]" class="w-full">
+                        <ChildContent><RadzenNumeric TValue="int?" Name="DeliveryDays" @bind-Value="_form.DeliveryDays" Min="0" Max="365" Placeholder="@L["usual"]" /></ChildContent>
+                        <Helper><FieldValidator Component="DeliveryDays" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12">
-                    <RadzenFormField Text="What's included (optional)" class="w-full">
+                    <RadzenFormField Text="@L["What's included (optional)"]" class="w-full">
                         <ChildContent>
                             <RadzenTextArea Name="Included" @bind-Value="_form.Included" Rows="3"
-                                            Placeholder="10 hours, second shooter, 400 edited images, online gallery" />
+                                            Placeholder="@L["10 hours, second shooter, 400 edited images, online gallery"]" />
                         </ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Included" /></Helper>
+                        <Helper><FieldValidator Component="Included" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
             </RadzenRow>
 
             <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
-                Leave the delivery empty to use your usual delivery time from Settings.
+                @L["Leave the delivery empty to use your usual delivery time from Settings."]
             </RadzenText>
 
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_busy" BusyText="Saving…" />
-                <RadzenButton Text="Cancel" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(false))" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" Icon="save" IsBusy="_busy" BusyText="@L["Saving…"]" />
+                <RadzenButton Text="@L["Cancel"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(false))" />
                 @if (PackageId is not null)
                 {
-                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                    <RadzenButton Text="@L["Delete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
                                   Click="DeleteAsync" Disabled="_busy" class="rz-ms-auto"
-                                  title="Shoots quoted from it keep their details." />
+                                  title="@L["Shoots quoted from it keep their details."]" />
                 }
             </RadzenStack>
         </RadzenStack>

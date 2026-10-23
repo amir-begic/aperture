@@ -2,36 +2,37 @@
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject DialogService Dialogs
 
-<PageTitle>Packages · Aperture</PageTitle>
+<PageTitle>@L["Packages"] · Aperture</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Packages</RadzenText>
-    <RadzenButton Text="Add package" Icon="add" Click="@(() => EditAsync(null))" />
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">@L["Packages"]</RadzenText>
+    <RadzenButton Text="@L["Add package"]" Icon="add" Click="@(() => EditAsync(null))" />
 </RadzenStack>
 <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
-    Your price list. Picking a package on a shoot fills in its type, quote, end time, delivery date and what's included;
-    you can still change each of them for that shoot. Changing a package later doesn't change shoots quoted from it.
+    @L["Your price list. Picking a package on a shoot fills in its type, quote, end time, delivery date and what's included; you can still change each of them for that shoot. Changing a package later doesn't change shoots quoted from it."]
 </RadzenText>
 
 <RadzenDataGrid TItem="PackageRow" Data="_packages" IsLoading="_packages is null" AllowSorting="true"
-                EmptyText="No packages yet." class="clickable-rows"
+                EmptyText="@L["No packages yet."]" class="clickable-rows"
                 RowClick="@(args => EditAsync(args.Data!.Package.Id))">
     <Columns>
-        <RadzenDataGridColumn Title="Package" Property="Package.Name">
+        <RadzenDataGridColumn Title="@L["Package"]" Property="Package.Name">
             <Template Context="row">
                 <div>@row.Package.Name</div>
                 <RadzenText TextStyle="TextStyle.Caption">@row.Package.Included</RadzenText>
             </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Type" Property="Package.ShootType" Width="9rem" />
-        <RadzenDataGridColumn Title="Hours" Width="6rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Title="@L["Type"]" Property="Package.ShootType" Width="9rem">
+            <Template Context="row">@row.Package.ShootType.Text()</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn Title="@L["Hours"]" Width="6rem" TextAlign="TextAlign.Right">
             <Template Context="row">@row.Package.Hours.ToString("0.#")</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Delivery" Width="8rem" TextAlign="TextAlign.Right">
-            <Template Context="row">@(row.Package.DeliveryDays is { } days ? $"{days} days" : "usual")</Template>
+        <RadzenDataGridColumn Title="@L["Delivery"]" Width="8rem" TextAlign="TextAlign.Right">
+            <Template Context="row">@(row.Package.DeliveryDays is { } days ? L["{0} days", days] : L["usual"])</Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn Title="Shoots" Property="ShootCount" Width="6rem" TextAlign="TextAlign.Right" />
-        <RadzenDataGridColumn Title="Price" Width="9rem" TextAlign="TextAlign.Right">
+        <RadzenDataGridColumn Title="@L["Shoots"]" Property="ShootCount" Width="6rem" TextAlign="TextAlign.Right" />
+        <RadzenDataGridColumn Title="@L["Price"]" Width="9rem" TextAlign="TextAlign.Right">
             <Template Context="row">@row.Package.Price</Template>
         </RadzenDataGridColumn>
     </Columns>
@@ -54,7 +55,7 @@
     private async Task EditAsync(int? packageId)
     {
         var changed = await Dialogs.OpenAsync<PackageDialog>(
-            packageId is null ? "Add package" : "Edit package",
+            packageId is null ? L["Add package"] : L["Edit package"],
             new Dictionary<string, object?> { ["PackageId"] = packageId },
             new DialogOptions { Width = "40rem" });
         if (changed is true)

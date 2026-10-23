@@ -13,11 +13,11 @@ else if (Active is null)
 {
     <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
         <RadzenStack Gap="0.75rem" AlignItems="AlignItems.Start">
-            <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0">No invoice yet.</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0">@L["No invoice yet."]</RadzenText>
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                The draft starts with the quote and every cost billed to the client. You can edit it before issuing.
+                @L["The draft starts with the quote and every cost billed to the client. You can edit it before issuing."]
             </RadzenText>
-            <RadzenButton Text="Create invoice" Icon="request_quote" Click="CreateDraftAsync" IsBusy="_busy" />
+            <RadzenButton Text="@L["Create invoice"]" Icon="request_quote" Click="CreateDraftAsync" IsBusy="_busy" />
         </RadzenStack>
     </RadzenCard>
 }
@@ -26,7 +26,7 @@ else if (Active.Status == InvoiceStatus.Draft)
     <RadzenStack Gap="1rem">
         @if (_problems.Count > 0)
         {
-            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Title="Before you can issue this invoice">
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Title="@L["Before you can issue this invoice"]">
                 <ul class="rz-my-0">
                     @foreach (var problem in _problems)
                     {
@@ -34,30 +34,34 @@ else if (Active.Status == InvoiceStatus.Draft)
                     }
                 </ul>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" class="rz-mt-2">
-                    <RadzenLink Path="settings" Text="Open settings" />
-                    <RadzenLink Path="@($"clients/{_clientId}")" Text="Open client" />
+                    <RadzenLink Path="settings" Text="@L["Open settings"]" />
+                    <RadzenLink Path="@($"clients/{_clientId}")" Text="@L["Open client"]" />
                 </RadzenStack>
             </RadzenAlert>
         }
 
         <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
-            <RadzenFormField Text="Invoice date">
+            <RadzenFormField Text="@L["Invoice date"]">
                 <RadzenDatePicker TValue="DateOnly" @bind-Value="_issueDate" @bind-Value:after="OnIssueDateChanged" DateFormat="dd.MM.yyyy" />
             </RadzenFormField>
-            <RadzenFormField Text="Due date">
+            <RadzenFormField Text="@L["Due date"]">
                 <RadzenDatePicker TValue="DateOnly" @bind-Value="_dueDate" @bind-Value:after="MarkDirty" DateFormat="dd.MM.yyyy" />
             </RadzenFormField>
+            <RadzenText TextStyle="TextStyle.Caption" class="rz-my-0 rz-mt-4">
+                @L["In {0}, the client's invoice language.", _clientLanguage.Name()]
+                <RadzenLink Path="@($"clients/{_clientId}")" Text="@L["Change"]" />
+            </RadzenText>
         </RadzenStack>
 
         <div class="invoice-lines">
             <table>
                 <thead>
                     <tr>
-                        <th>Description</th>
-                        <th class="num">Qty</th>
-                        <th class="num">Price CHF</th>
-                        <th class="num">Amount CHF</th>
-                        <th aria-label="Remove"></th>
+                        <th>@L["Description"]</th>
+                        <th class="num">@L["Qty"]</th>
+                        <th class="num">@L["Price CHF"]</th>
+                        <th class="num">@L["Amount CHF"]</th>
+                        <th aria-label="@L["Remove"]"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,40 +69,40 @@ else if (Active.Status == InvoiceStatus.Draft)
                     {
                         <tr>
                             <td>
-                                <RadzenTextBox @bind-Value="line.Description" @bind-Value:after="MarkDirty" class="w-full" aria-label="Description" />
+                                <RadzenTextBox @bind-Value="line.Description" @bind-Value:after="MarkDirty" class="w-full" aria-label="@L["Description"]" />
                             </td>
                             <td class="num qty">
-                                <RadzenNumeric TValue="decimal" @bind-Value="line.Quantity" @bind-Value:after="MarkDirty" Min="0" Format="0.##" ShowUpDown="false" AriaLabel="Quantity" />
+                                <RadzenNumeric TValue="decimal" @bind-Value="line.Quantity" @bind-Value:after="MarkDirty" Min="0" Format="0.##" ShowUpDown="false" AriaLabel="@L["Quantity"]" />
                             </td>
                             <td class="num price">
-                                <RadzenNumeric TValue="decimal" @bind-Value="line.PriceChf" @bind-Value:after="MarkDirty" Format="#,##0.00" ShowUpDown="false" AriaLabel="Price" />
+                                <RadzenNumeric TValue="decimal" @bind-Value="line.PriceChf" @bind-Value:after="MarkDirty" Format="#,##0.00" ShowUpDown="false" AriaLabel="@L["Price"]" />
                             </td>
                             <td class="num">@(new InvoiceLineAmount(line.Quantity, Money.FromChf(line.PriceChf)).Total.ToAmountString())</td>
                             <td>
                                 <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                                              Click="@(() => RemoveLine(line))" title="Remove line" />
+                                              Click="@(() => RemoveLine(line))" title="@L["Remove line"]" />
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
-            <RadzenButton Text="Add line" Icon="add" Variant="Variant.Text" Size="ButtonSize.Small" Click="AddLine" class="rz-mt-2" />
+            <RadzenButton Text="@L["Add line"]" Icon="add" Variant="Variant.Text" Size="ButtonSize.Small" Click="AddLine" class="rz-mt-2" />
         </div>
 
         <InvoiceTotalsView Totals="DraftTotals" />
 
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.Center">
-            <RadzenButton Text="Save draft" Icon="save" Click="SaveAsync" IsBusy="_busy" Disabled="!_dirty" Variant="Variant.Outlined" />
+            <RadzenButton Text="@L["Save draft"]" Icon="save" Click="SaveAsync" IsBusy="_busy" Disabled="!_dirty" Variant="Variant.Outlined" />
             @if (_dirty)
             {
-                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">Unsaved changes</RadzenText>
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">@L["Unsaved changes"]</RadzenText>
             }
             else
             {
-                <RadzenLink Path="@($"invoices/{Active.Id}/pdf")" Target="_blank" Icon="preview" Text="Preview PDF" class="rz-mx-2" />
+                <RadzenLink Path="@($"invoices/{Active.Id}/pdf")" Target="_blank" Icon="preview" Text="@L["Preview PDF"]" class="rz-mx-2" />
             }
-            <RadzenButton Text="Issue invoice" Icon="send" Click="IssueAsync" IsBusy="_busy" Disabled="@(_problems.Count > 0 && !_dirty)" />
-            <RadzenButton Text="Delete draft" Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="DeleteDraftAsync" Disabled="_busy" />
+            <RadzenButton Text="@L["Issue invoice"]" Icon="send" Click="IssueAsync" IsBusy="_busy" Disabled="@(_problems.Count > 0 && !_dirty)" />
+            <RadzenButton Text="@L["Delete draft"]" Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="DeleteDraftAsync" Disabled="_busy" />
         </RadzenStack>
     </RadzenStack>
 }
@@ -109,23 +113,24 @@ else
     <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
         <RadzenStack Gap="1rem">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
-                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Invoice @invoice.Number</RadzenText>
-                <RadzenBadge BadgeStyle="BadgeStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="Issued" />
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">@L["Invoice {0}", invoice.Number!]</RadzenText>
+                <RadzenBadge BadgeStyle="BadgeStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@InvoiceStatus.Issued.Text()" />
             </RadzenStack>
             <dl class="facts">
-                <dt>Invoice date</dt><dd>@invoice.IssueDate.ToString("dd.MM.yyyy")</dd>
-                <dt>Due date</dt><dd>@invoice.DueDate.ToString("dd.MM.yyyy")</dd>
-                <dt>Billed to</dt><dd>@(invoice.Client.Company ?? invoice.Client.Name), @invoice.Client.City</dd>
+                <dt>@L["Invoice date"]</dt><dd>@invoice.IssueDate.ToString("dd.MM.yyyy")</dd>
+                <dt>@L["Due date"]</dt><dd>@invoice.DueDate.ToString("dd.MM.yyyy")</dd>
+                <dt>@L["Billed to"]</dt><dd>@(invoice.Client.Company ?? invoice.Client.Name), @invoice.Client.City</dd>
+                <dt>@L["Language"]</dt><dd>@invoice.Language.Name()</dd>
             </dl>
             <InvoiceTotalsView Totals="totals" />
             <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
-                Payments are tracked in the Finances tab. Issued invoices can't be changed. To correct one, cancel it and create a new one.
+                @L["Payments are tracked in the Finances tab. Issued invoices can't be changed. To correct one, cancel it and create a new one."]
             </RadzenText>
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
                 <a href="@($"invoices/{invoice.Id}/pdf")" target="_blank" rel="noopener" class="rz-button rz-button-md rz-variant-filled rz-primary">
-                    <RadzenIcon Icon="picture_as_pdf" /> Open PDF
+                    <RadzenIcon Icon="picture_as_pdf" /> @L["Open PDF"]
                 </a>
-                <RadzenButton Text="Cancel invoice" Icon="block" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="CancelAsync" IsBusy="_busy" />
+                <RadzenButton Text="@L["Cancel invoice"]" Icon="block" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="CancelAsync" IsBusy="_busy" />
             </RadzenStack>
         </RadzenStack>
     </RadzenCard>
@@ -133,14 +138,14 @@ else
 
 @if (_invoices is not null && _invoices.Any(i => i.Status == InvoiceStatus.Cancelled))
 {
-    <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-4">Cancelled invoices</RadzenText>
+    <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-4">@L["Cancelled invoices"]</RadzenText>
     <ul class="plain-list">
         @foreach (var cancelled in _invoices.Where(i => i.Status == InvoiceStatus.Cancelled))
         {
             <li class="list-row">
-                <a href="@($"invoices/{cancelled.Id}/pdf")" target="_blank" rel="noopener" class="list-row-text">Invoice @cancelled.Number</a>
+                <a href="@($"invoices/{cancelled.Id}/pdf")" target="_blank" rel="noopener" class="list-row-text">@L["Invoice {0}", cancelled.Number!]</a>
                 <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
-                    issued @cancelled.IssueDate.ToString("dd.MM.yyyy"), cancelled @cancelled.CancelledAt?.ToString("dd.MM.yyyy")
+                    @L["issued {0:dd.MM.yyyy}, cancelled {1:dd.MM.yyyy}", cancelled.IssueDate, cancelled.CancelledAt!.Value]
                 </RadzenText>
             </li>
         }
@@ -168,6 +173,7 @@ else
     private int _paymentTermsDays;
     private Money _received;
     private int _clientId;
+    private Language _clientLanguage;
     private bool _busy;
 
     private InvoiceTotals DraftTotals => InvoiceTotals.Calculate(
@@ -180,7 +186,9 @@ else
         await using var db = await DbFactory.CreateDbContextAsync();
         _invoices = await db.Invoices.AsNoTracking().Include(i => i.Lines)
             .Where(i => i.ShootId == ShootId).OrderByDescending(i => i.Id).ToListAsync();
-        _clientId = await db.Shoots.Where(s => s.Id == ShootId).Select(s => s.ClientId).SingleAsync();
+        var client = await db.Shoots.Where(s => s.Id == ShootId).Select(s => new { s.ClientId, s.Client.InvoiceLanguage }).SingleAsync();
+        _clientId = client.ClientId;
+        _clientLanguage = client.InvoiceLanguage;
 
         if (Active is { Status: InvoiceStatus.Draft } draft)
         {
@@ -240,7 +248,7 @@ else
         {
             await Invoices.SaveDraftAsync(Active!.Id, _issueDate, _dueDate, _lines.Select(l => l.ToDraftLine()).ToList());
             await LoadAsync();
-            Notifications.Notify(NotificationSeverity.Success, "Draft saved");
+            Notifications.Notify(NotificationSeverity.Success, L["Draft saved"]);
         }
         finally
         {
@@ -251,9 +259,9 @@ else
     private async Task IssueAsync()
     {
         var confirmed = await Dialogs.Confirm(
-            "The invoice gets the next number and can't be changed afterwards. The PDF is saved in the shoot's files.",
-            "Issue invoice?",
-            new ConfirmOptions { OkButtonText = "Issue", CancelButtonText = "Not yet" });
+            L["The invoice gets the next number and can't be changed afterwards. The PDF is saved in the shoot's files."],
+            L["Issue invoice?"],
+            new ConfirmOptions { OkButtonText = L["Issue"], CancelButtonText = L["Not yet"] });
         if (confirmed != true)
         {
             return;
@@ -276,7 +284,7 @@ else
                 return;
             }
 
-            Notifications.Notify(NotificationSeverity.Success, $"Invoice {Active?.Number} issued");
+            Notifications.Notify(NotificationSeverity.Success, L["Invoice {0} issued", Active?.Number ?? ""]);
             await Changed.InvokeAsync();
         }
         finally
@@ -287,11 +295,11 @@ else
 
     private async Task CancelAsync()
     {
-        var number = Active!.Number;
+        var number = Active!.Number!;
         var confirmed = await Dialogs.Confirm(
-            $"Invoice {number} stays in your records as cancelled, and you can create a new one.",
-            $"Cancel invoice {number}?",
-            new ConfirmOptions { OkButtonText = "Cancel invoice", CancelButtonText = "Keep it" });
+            L["Invoice {0} stays in your records as cancelled, and you can create a new one.", number],
+            L["Cancel invoice {0}?", number],
+            new ConfirmOptions { OkButtonText = L["Cancel invoice"], CancelButtonText = L["Keep it"] });
         if (confirmed != true)
         {
             return;
@@ -302,7 +310,7 @@ else
         {
             await Invoices.CancelAsync(Active.Id);
             await LoadAsync();
-            Notifications.Notify(NotificationSeverity.Info, $"Invoice {number} cancelled");
+            Notifications.Notify(NotificationSeverity.Info, L["Invoice {0} cancelled", number]);
             await Changed.InvokeAsync();
         }
         finally
@@ -313,8 +321,8 @@ else
 
     private async Task DeleteDraftAsync()
     {
-        var confirmed = await Dialogs.Confirm("Delete this draft?", "Delete draft",
-            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Keep" });
+        var confirmed = await Dialogs.Confirm(L["Delete this draft?"], L["Delete draft"],
+            new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Keep"] });
         if (confirmed != true)
         {
             return;

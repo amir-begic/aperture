@@ -4,16 +4,16 @@
 @inject NavigationManager Navigation
 @inject TimeProvider Time
 
-<PageTitle>Finance · Aperture</PageTitle>
+<PageTitle>@L["Finance"] · Aperture</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-2">
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Finance</RadzenText>
-    <RadzenFormField Text="Year">
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">@L["Finance"]</RadzenText>
+    <RadzenFormField Text="@L["Year"]">
         <RadzenDropDown TValue="int" @bind-Value="_year" @bind-Value:after="LoadAsync" Data="_years" />
     </RadzenFormField>
 </RadzenStack>
 <RadzenText TextStyle="TextStyle.Body2" class="rz-mb-4">
-    Cash basis: income counts when it's received, costs when they're paid. Equipment is spread over the years as depreciation.
+    @L["Cash basis: income counts when it's received, costs when they're paid. Equipment is spread over the years as depreciation."]
 </RadzenText>
 
 @if (_statement is null)
@@ -24,38 +24,37 @@ else
 {
     var s = _statement;
     <div class="kpi-row rz-mb-6">
-        <KpiTile Label="Income" Value="@s.TotalIncome.ToString()" Note="@($"{s.Income.Count} payment{(s.Income.Count == 1 ? "" : "s")}")" />
-        <KpiTile Label="Costs" Value="@s.TotalCosts.ToString()" Note="@($"{s.Expenses.Count} entr{(s.Expenses.Count == 1 ? "y" : "ies")}")" />
-        <KpiTile Label="Depreciation" Value="@s.TotalDepreciation.ToString()" Note="@($"{s.Assets.Count} item{(s.Assets.Count == 1 ? "" : "s")} of equipment")" />
-        <KpiTile Label="Result" Value="@s.Result.ToString()"
-                 Note="@(s.DisposalResult == Money.Zero ? (s.Result < Money.Zero ? "loss" : null) : $"incl. equipment sold: {s.DisposalResult}")" />
+        <KpiTile Label="@L["Income"]" Value="@s.TotalIncome.ToString()" Note="@(s.Income.Count == 1 ? L["1 payment"] : L["{0} payments", s.Income.Count])" />
+        <KpiTile Label="@L["Costs"]" Value="@s.TotalCosts.ToString()" Note="@(s.Expenses.Count == 1 ? L["1 entry"] : L["{0} entries", s.Expenses.Count])" />
+        <KpiTile Label="@L["Depreciation"]" Value="@s.TotalDepreciation.ToString()" Note="@(s.Assets.Count == 1 ? L["1 item of equipment"] : L["{0} items of equipment", s.Assets.Count])" />
+        <KpiTile Label="@L["Result"]" Value="@s.Result.ToString()"
+                 Note="@(s.DisposalResult == Money.Zero ? (s.Result < Money.Zero ? L["loss"].Value : null) : L["incl. equipment sold: {0}", s.DisposalResult])" />
     </div>
 
     <RadzenCard Variant="Variant.Outlined" class="rz-mb-6">
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="1rem">
             <RadzenStack Gap="0.25rem" Style="flex: 1; min-width: 16rem">
-                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Tax export @s.Year</RadzenText>
+                <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">@L["Tax export {0}", s.Year]</RadzenText>
                 <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                    Income statement, all entries as a spreadsheet, and every receipt, payslip and invoice of the year,
-                    numbered to match. For your tax return or fiduciary.
+                    @L["Income statement, all entries as a spreadsheet, and every receipt, payslip and invoice of the year, numbered to match. For your tax return or fiduciary."]
                 </RadzenText>
             </RadzenStack>
             @* "download" keeps Blazor from treating these as page navigation. *@
             <a href="@($"tax/{s.Year}/export.zip")" download class="rz-button rz-button-md rz-variant-filled rz-primary export-button">
-                <RadzenIcon Icon="folder_zip" /> Everything (ZIP)
+                <RadzenIcon Icon="folder_zip" /> @L["Everything (ZIP)"]
             </a>
-            <a href="@($"tax/{s.Year}/statement.pdf")" download class="rz-link export-link"><RadzenIcon Icon="picture_as_pdf" /> Statement (PDF)</a>
-            <a href="@($"tax/{s.Year}/accounts.xlsx")" download class="rz-link export-link"><RadzenIcon Icon="table_view" /> Accounts (Excel)</a>
+            <a href="@($"tax/{s.Year}/statement.pdf")" download class="rz-link export-link"><RadzenIcon Icon="picture_as_pdf" /> @L["Statement (PDF)"]</a>
+            <a href="@($"tax/{s.Year}/accounts.xlsx")" download class="rz-link export-link"><RadzenIcon Icon="table_view" /> @L["Accounts (Excel)"]</a>
         </RadzenStack>
     </RadzenCard>
 
     <RadzenCard Variant="Variant.Outlined" class="rz-mb-6">
         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-2">
-            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">Income and costs per month</RadzenText>
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">@L["Income and costs per month"]</RadzenText>
             <RadzenSelectBar TValue="bool" @bind-Value="_showTable" Size="ButtonSize.Small">
                 <Items>
-                    <RadzenSelectBarItem Text="Chart" Value="false" />
-                    <RadzenSelectBarItem Text="Table" Value="true" />
+                    <RadzenSelectBarItem Text="@L["Chart"]" Value="false" />
+                    <RadzenSelectBarItem Text="@L["Table"]" Value="true" />
                 </Items>
             </RadzenSelectBar>
         </RadzenStack>
@@ -63,7 +62,7 @@ else
         @if (_showTable)
         {
             <table class="finance-table">
-                <thead><tr><th>Month</th><th class="num">Income</th><th class="num">Costs</th><th class="num">Difference</th></tr></thead>
+                <thead><tr><th>@L["Month"]</th><th class="num">@L["Income"]</th><th class="num">@L["Costs"]</th><th class="num">@L["Difference"]</th></tr></thead>
                 <tbody>
                     @foreach (var month in s.Months)
                     {
@@ -81,12 +80,12 @@ else
         {
             <RadzenChart Style="height: 280px" class="finance-chart">
                 <RadzenColumnSeries Data="_months" CategoryProperty="@nameof(MonthPoint.Label)" ValueProperty="@nameof(MonthPoint.Income)"
-                                    Title="Income" Fill="@Palette.Income" Stroke="@Palette.Income">
-                    <TooltipTemplate Context="point">@point.Label · income <strong>@Money.FromChf(point.Income)</strong></TooltipTemplate>
+                                    Title="@L["Income"]" Fill="@Palette.Income" Stroke="@Palette.Income">
+                    <TooltipTemplate Context="point">@point.Label · @L["Chart.income"] <strong>@Money.FromChf(point.Income)</strong></TooltipTemplate>
                 </RadzenColumnSeries>
                 <RadzenColumnSeries Data="_months" CategoryProperty="@nameof(MonthPoint.Label)" ValueProperty="@nameof(MonthPoint.Costs)"
-                                    Title="Costs" Fill="@Palette.Costs" Stroke="@Palette.Costs">
-                    <TooltipTemplate Context="point">@point.Label · costs <strong>@Money.FromChf(point.Costs)</strong></TooltipTemplate>
+                                    Title="@L["Costs"]" Fill="@Palette.Costs" Stroke="@Palette.Costs">
+                    <TooltipTemplate Context="point">@point.Label · @L["Chart.costs"] <strong>@Money.FromChf(point.Costs)</strong></TooltipTemplate>
                 </RadzenColumnSeries>
                 <RadzenColumnOptions Radius="4" Margin="2" />
                 <RadzenValueAxis Formatter="@FormatAxis">
@@ -100,7 +99,7 @@ else
 
     <RadzenRow Gap="2rem">
         <RadzenColumn Size="12" SizeLG="6">
-            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Costs by category</RadzenText>
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">@L["Costs by category"]</RadzenText>
             <table class="finance-table">
                 <tbody>
                     @foreach (var (category, amount) in s.CostsByCategory)
@@ -114,41 +113,41 @@ else
                     @if (s.TotalDepreciation != Money.Zero)
                     {
                         <tr>
-                            <td><RadzenLink Path="equipment" Text="Depreciation of equipment" /></td>
+                            <td><RadzenLink Path="equipment" Text="@L["Depreciation of equipment"]" /></td>
                             <td class="num">@s.TotalDepreciation.ToAmountString()</td>
                             <td></td>
                         </tr>
                     }
                 </tbody>
                 <tfoot>
-                    <tr><th>Total</th><th class="num">@((s.TotalCosts + s.TotalDepreciation).ToAmountString())</th><th></th></tr>
+                    <tr><th>@L["Total"]</th><th class="num">@((s.TotalCosts + s.TotalDepreciation).ToAmountString())</th><th></th></tr>
                 </tfoot>
             </table>
-            <RadzenLink Path="costs" Text="All costs" class="rz-mt-2" />
+            <RadzenLink Path="costs" Text="@L["All costs"]" class="rz-mt-2" />
         </RadzenColumn>
 
     </RadzenRow>
 
     <RadzenRow class="rz-mt-6">
         <RadzenColumn Size="12">
-            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">Shoots in @s.Year</RadzenText>
-            <RadzenDataGrid TItem="ShootResult" Data="s.Shoots" AllowSorting="true" EmptyText="No shoots in this year." class="clickable-rows"
+            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">@L["Shoots in {0}", s.Year]</RadzenText>
+            <RadzenDataGrid TItem="ShootResult" Data="s.Shoots" AllowSorting="true" EmptyText="@L["No shoots in this year."]" class="clickable-rows"
                             RowClick="@(args => Navigation.NavigateTo($"shoots/{args.Data!.ShootId}?tab=finances"))">
                 <Columns>
-                    <RadzenDataGridColumn Property="@nameof(ShootResult.Start)" Title="Date" Width="7rem">
+                    <RadzenDataGridColumn Property="@nameof(ShootResult.Start)" Title="@L["Date"]" Width="7rem">
                         <Template Context="shoot">@shoot.Start.ToString("dd.MM.")</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Property="@nameof(ShootResult.Title)" Title="Shoot" />
-                    <RadzenDataGridColumn Title="To bill" TextAlign="TextAlign.Right" Width="8rem">
+                    <RadzenDataGridColumn Property="@nameof(ShootResult.Title)" Title="@L["Shoot"]" />
+                    <RadzenDataGridColumn Title="@L["To bill"]" TextAlign="TextAlign.Right" Width="8rem">
                         <Template Context="shoot">@shoot.ToBill?.ToAmountString()</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Title="Costs" TextAlign="TextAlign.Right" Width="7rem">
+                    <RadzenDataGridColumn Title="@L["Costs"]" TextAlign="TextAlign.Right" Width="7rem">
                         <Template Context="shoot">@shoot.Costs.ToAmountString()</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Title="Margin" TextAlign="TextAlign.Right" Width="8rem">
+                    <RadzenDataGridColumn Title="@L["Margin"]" TextAlign="TextAlign.Right" Width="8rem">
                         <Template Context="shoot">@shoot.Margin?.ToAmountString()</Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Title="Received" TextAlign="TextAlign.Right" Width="8rem">
+                    <RadzenDataGridColumn Title="@L["Received"]" TextAlign="TextAlign.Right" Width="8rem">
                         <Template Context="shoot">@shoot.Received.ToAmountString()</Template>
                     </RadzenDataGridColumn>
                 </Columns>

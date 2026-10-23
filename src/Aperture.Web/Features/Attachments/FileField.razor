@@ -8,13 +8,13 @@
         <RadzenIcon Icon="upload_file" />
         <span>@_pending.Name (@FormatSize(_pending.Size))</span>
         <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                      Click="@(() => _pending = null)" title="Don't attach" />
+                      Click="@(() => _pending = null)" title="@L["Don't attach"]" />
     }
     else if (Current is not null && !_remove)
     {
         <AttachmentLink Attachment="Current" />
         <RadzenButton Icon="close" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                      Click="@(() => _remove = true)" title="Remove file" />
+                      Click="@(() => _remove = true)" title="@L["Remove file"]" />
     }
 
     @* Always rendered, only hidden: Blazor reads the chosen file from this input when the form is saved,
@@ -22,7 +22,7 @@
     <label class="rz-button rz-button-sm rz-variant-outlined rz-base file-button" hidden="@(_pending is not null || (Current is not null && !_remove))">
         <InputFile OnChange="OnChosen" accept="@AttachmentStore.Accept" />
         <RadzenIcon Icon="attach_file" />
-        <span>@ChooseText</span>
+        <span>@(ChooseText ?? L["Attach file"])</span>
     </label>
 </div>
 @if (_error is not null)
@@ -35,7 +35,7 @@
     public Attachment? Current { get; set; }
 
     [Parameter]
-    public string ChooseText { get; set; } = "Attach file";
+    public string? ChooseText { get; set; }
 
     private IBrowserFile? _pending;
     private bool _remove;
@@ -48,11 +48,11 @@
         var extension = Path.GetExtension(file.Name);
         if (!AttachmentStore.AllowedExtensions.Contains(extension))
         {
-            _error = "Only PDFs, images and office documents can be attached.";
+            _error = L["Only PDFs, images and office documents can be attached."];
         }
         else if (file.Size > AttachmentStore.MaxFileSize)
         {
-            _error = $"The file is larger than {FormatSize(AttachmentStore.MaxFileSize)}.";
+            _error = L["The file is larger than {0}.", FormatSize(AttachmentStore.MaxFileSize)];
         }
         else
         {
@@ -75,7 +75,7 @@
             {
                 var name = _pending.Name;
                 _pending = null;
-                throw new AttachmentException($"Couldn't read {name}. Please choose it again.");
+                throw new AttachmentException(L["Couldn't read {0}. Please choose it again.", name]);
             }
         }
 

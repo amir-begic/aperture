@@ -6,16 +6,16 @@
 @inject NotificationService Notifications
 @inject DialogService Dialogs
 
-<PageTitle>@(IsNew ? "New client" : _title) · Aperture</PageTitle>
+<PageTitle>@(IsNew ? L["New client"] : _title) · Aperture</PageTitle>
 
 <RadzenBreadCrumb class="rz-mb-2">
-    <RadzenBreadCrumbItem Path="clients" Text="Clients" />
-    <RadzenBreadCrumbItem Text="@(IsNew ? "New client" : _title)" />
+    <RadzenBreadCrumbItem Path="clients" Text="@L["Clients"]" />
+    <RadzenBreadCrumbItem Text="@(IsNew ? L["New client"] : _title)" />
 </RadzenBreadCrumb>
 
 @if (_notFound)
 {
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">Client not found</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@L["Client not found"]</RadzenText>
 }
 else if (_client is null)
 {
@@ -23,18 +23,18 @@ else if (_client is null)
 }
 else
 {
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@(IsNew ? "New client" : _title)</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@(IsNew ? L["New client"] : _title)</RadzenText>
 
     <RadzenCard class="form-card rz-mb-6">
         <ClientForm Client="_client" Saved="OnSaved">
             <Buttons>
                 @if (!IsNew)
                 {
-                    <RadzenButton Text="New shoot" Icon="event" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
+                    <RadzenButton Text="@L["New shoot"]" Icon="event" ButtonStyle="ButtonStyle.Secondary" Variant="Variant.Outlined"
                                   Click="@(() => Navigation.NavigateTo($"shoots/new?clientId={Id}"))" />
-                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                    <RadzenButton Text="@L["Delete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
                                   Disabled="@(_shoots.Count > 0)" Click="DeleteAsync"
-                                  title="@(_shoots.Count > 0 ? "Clients with shoots can't be deleted." : null)" />
+                                  title="@(_shoots.Count > 0 ? L["Clients with shoots can't be deleted."] : null)" />
                 }
             </Buttons>
         </ClientForm>
@@ -42,8 +42,8 @@ else
 
     @if (!IsNew)
     {
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Shoots</RadzenText>
-        <ShootGrid Shoots="_shoots" ShowClient="false" PageSize="null" EmptyText="No shoots for this client yet." />
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">@L["Shoots"]</RadzenText>
+        <ShootGrid Shoots="_shoots" ShowClient="false" PageSize="null" EmptyText="@L["No shoots for this client yet."]" />
     }
 }
 
@@ -62,7 +62,7 @@ else
     {
         if (IsNew)
         {
-            _client = new Client();
+            _client = new Client { InvoiceLanguage = Languages.Current };
             _shoots = [];
             return;
         }
@@ -76,7 +76,7 @@ else
 
     private void OnSaved(Client client)
     {
-        Notifications.Notify(NotificationSeverity.Success, "Client saved");
+        Notifications.Notify(NotificationSeverity.Success, L["Client saved"]);
         if (IsNew)
         {
             Navigation.NavigateTo($"clients/{client.Id}", replace: true);
@@ -89,8 +89,8 @@ else
 
     private async Task DeleteAsync()
     {
-        var confirmed = await Dialogs.Confirm($"Delete {_title}?", "Delete client",
-            new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        var confirmed = await Dialogs.Confirm(L["Delete {0}?", _title], L["Delete client"],
+            new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Cancel"] });
         if (confirmed != true)
         {
             return;
@@ -98,7 +98,7 @@ else
 
         await using var db = await DbFactory.CreateDbContextAsync();
         await db.Clients.Where(c => c.Id == Id).ExecuteDeleteAsync();
-        Notifications.Notify(NotificationSeverity.Info, $"{_title} deleted");
+        Notifications.Notify(NotificationSeverity.Info, L["{0} deleted", _title]);
         Navigation.NavigateTo("clients");
     }
 }

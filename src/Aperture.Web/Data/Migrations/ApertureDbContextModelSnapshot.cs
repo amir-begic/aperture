@@ -141,6 +141,10 @@ namespace Aperture.Web.Data.Migrations
                     b.Property<bool>("IsVatRegistered")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Language")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("OwnerName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -249,6 +253,11 @@ namespace Aperture.Web.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("InvoiceLanguage")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -342,6 +351,11 @@ namespace Aperture.Web.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("IssuedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Number")

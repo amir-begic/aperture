@@ -1,10 +1,12 @@
 using Aperture.Web.Data.Entities;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Domain;
 
 /// <summary>
 /// Equipment categories with the ESTV's maximum declining-balance rates (Merkblatt A 1995, % of book value).
-/// They're defaults: each asset keeps its own rate, and lower rates are always allowed.
+/// They're defaults: each asset keeps its own rate, and lower rates are always allowed. Names in English, <see cref="Text"/>
+/// translates them; the ESTV classes stay German, as the ESTV names them.
 /// </summary>
 public static class AssetCategories
 {
@@ -18,7 +20,7 @@ public static class AssetCategories
         (AssetCategory.Other, "Other", 30, "Apparate und Maschinen"),
     ];
 
-    public static string Text(this AssetCategory category) => All.First(c => c.Value == category).Text;
+    public static string Text(this AssetCategory category) => Texts.Get(All.First(c => c.Value == category).Text);
 
     public static decimal DefaultRatePercent(this AssetCategory category) => All.First(c => c.Value == category).DefaultRatePercent;
 }

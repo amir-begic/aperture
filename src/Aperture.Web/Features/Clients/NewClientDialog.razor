@@ -3,10 +3,11 @@
 
 <ClientForm Client="_client" Compact="true" Saved="@(client => Dialogs.Close(client))">
     <Buttons>
-        <RadzenButton Text="Cancel" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close())" />
+        <RadzenButton Text="@L["Cancel"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close())" />
     </Buttons>
 </ClientForm>
 
 @code {
-    private readonly Client _client = new();
+    // Invoices in the language Aperture is in; the client page can change it.
+    private readonly Client _client = new() { InvoiceLanguage = Languages.Current };
 }

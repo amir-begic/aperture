@@ -6,15 +6,16 @@
 @inject DialogService Dialogs
 @inject NotificationService Notifications
 @inject TimeProvider Time
+@inject Aperture.Web.Installation.Platform Platform
 
-<RadzenFieldset Text="Updates" class="settings-form rz-mt-6" id="updates">
+<RadzenFieldset Text="@L["Updates"]" class="settings-form rz-mt-6" id="updates">
     <RadzenStack Gap="1rem">
         <dl class="facts">
-            <dt>Running</dt>
+            <dt>@L["Running"]</dt>
             <dd>Aperture @UpdateService.Current.Display <span class="version-text">(@UpdateService.Current.Text)</span></dd>
             @if (Updates.LastCheck is { } checkedAt)
             {
-                <dt>Last checked</dt>
+                <dt>@L["Last checked"]</dt>
                 <dd>@checkedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</dd>
             }
         </dl>
@@ -22,7 +23,7 @@
         @if (!Updates.IsConfigured)
         {
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                Updates aren't set up on this computer. The installer sets them up; a development copy has none.
+                @L["Updates aren't set up on this computer. The installer sets them up; a development copy has none."]
             </RadzenText>
         }
         else
@@ -30,14 +31,14 @@
             @if (RecentStatus is { Failed: true } failed)
             {
                 <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                    The update to @(failed.Version ?? "the new version") didn't work: @failed.Message
-                    Aperture is still running the previous version. Details are in @Home.Log("update").
+                    @L["The update to {0} didn't work:", failed.Version ?? L["the new version"]] @failed.Message
+                    @L["Aperture is still running the previous version. Details are in {0}.", Home.Log("update")]
                 </RadzenAlert>
             }
             else if (RecentStatus is { Succeeded: true } done && done.Version == UpdateService.Current.Text)
             {
                 <RadzenAlert AlertStyle="AlertStyle.Success" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                    Updated to @UpdateService.Current.Display at @done.Time?.ToLocalTime().ToString("HH:mm").
+                    @L["Updated to {0} at {1}.", UpdateService.Current.Display, done.Time?.ToLocalTime().ToString("HH:mm") ?? ""]
                 </RadzenAlert>
             }
 
@@ -45,19 +46,19 @@
             {
                 <div class="update-progress" role="status">
                     <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                    Downloading @Updates.Available?.Version.Display…
+                    @L["Downloading {0}…", Updates.Available?.Version.Display ?? ""]
                 </div>
             }
             else if (IsInstalling)
             {
                 <div class="update-progress" role="status">
                     <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
-                    Installing. Aperture restarts in a moment; this page reconnects by itself.
+                    @L["Installing. Aperture restarts in a moment; this page reconnects by itself."]
                 </div>
                 @if (UpdaterSeemsMissing)
                 {
                     <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                        The updater hasn't started yet. The installer sets it up; run it again if this stays.
+                        @L["The updater hasn't started yet. The installer sets it up; run it again if this stays."]
                     </RadzenAlert>
                 }
             }
@@ -65,37 +66,39 @@
             {
                 <div class="update-card">
                     <RadzenText TextStyle="TextStyle.Subtitle1" TagName="TagName.H3" class="rz-m-0">
-                        Aperture @release.Version.Display is available
+                        @L["Aperture {0} is available", release.Version.Display]
                     </RadzenText>
                     @if (!string.IsNullOrWhiteSpace(release.Notes))
                     {
                         <div class="update-notes">@release.Notes</div>
                     }
                     <div>
-                        <RadzenButton Text="Install update" Icon="system_update_alt" Click="InstallAsync" />
+                        <RadzenButton Text="@L["Install update"]" Icon="system_update_alt" Click="InstallAsync" />
                     </div>
                 </div>
             }
             else if (Updates.Latest is not null)
             {
-                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">Aperture is up to date.</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@L["Aperture is up to date."]</RadzenText>
             }
 
-            @if (Updates.Problem is { } problem)
+            @if (Updates.IsUnreachable)
             {
-                <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">@problem</RadzenAlert>
+                <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
+                    @L["Couldn't reach the update server. Is this {0} online?", L[Platform.Computer]]
+                </RadzenAlert>
             }
 
             @if (!IsInstalling && !Updates.IsDownloading)
             {
                 <div>
-                    <RadzenButton Text="Check for updates" Icon="refresh" Variant="Variant.Outlined" Click="CheckAsync"
-                                  IsBusy="_checking" BusyText="Checking…" />
+                    <RadzenButton Text="@L["Check for updates"]" Icon="refresh" Variant="Variant.Outlined" Click="CheckAsync"
+                                  IsBusy="_checking" BusyText="@L["Checking…"]" />
                 </div>
             }
         }
 
-        <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">Data in @Paths.DataDirectory</RadzenText>
+        <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">@L["Data in {0}", Paths.DataDirectory]</RadzenText>
     </RadzenStack>
 </RadzenFieldset>
 
@@ -154,9 +157,9 @@
     {
         if (Updates.Available is not { } release
             || await Dialogs.Confirm(
-                "Aperture stops, saves a copy of the database, starts the new version and checks it. If it doesn't start, the previous version comes back by itself. Takes about a minute.",
-                $"Install {release.Version.Display}?",
-                new ConfirmOptions { OkButtonText = "Install", CancelButtonText = "Cancel" }) != true)
+                L["Aperture stops, saves a copy of the database, starts the new version and checks it. If it doesn't start, the previous version comes back by itself. Takes about a minute."],
+                L["Install {0}?", release.Version.Display],
+                new ConfirmOptions { OkButtonText = L["Install"], CancelButtonText = L["Cancel"] }) != true)
         {
             return;
         }
@@ -168,7 +171,7 @@
         catch (Exception e) when (e is HttpRequestException or IOException or InvalidOperationException or TaskCanceledException
             or Aperture.Web.Installation.InstallationException)
         {
-            Notifications.Notify(NotificationSeverity.Error, "Download failed", e.Message);
+            Notifications.Notify(NotificationSeverity.Error, L["Download failed"], e.Message);
         }
     }
 

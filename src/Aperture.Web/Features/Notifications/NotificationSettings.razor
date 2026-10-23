@@ -8,14 +8,11 @@
 @inject NavigationManager Navigation
 @inject Aperture.Web.Installation.Platform Platform
 
-<RadzenFieldset Text="Notifications" class="settings-form rz-mt-6" id="notifications">
+<RadzenFieldset Text="@L["Notifications"]" class="settings-form rz-mt-6" id="notifications">
     <RadzenStack Gap="1rem">
         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-            Aperture can let you know on @Platform.ThisComputer when an invoice becomes overdue, when a delivery is due within a week or
-            overdue, when an inquiry has waited @InquiryDays days for an answer, when prep is still open @PrepDays days
-            before a shoot, when a backup fails and when a new version is available. Each only once, between
-            @PushReminders.DayStarts.ToString("HH:mm") and @PushReminders.DayEnds.ToString("HH:mm"), and only while
-            @Platform.ThisComputer is awake: Aperture sends them itself.
+            @L["Aperture can let you know on this {0} when an invoice becomes overdue, when a delivery is due within a week or overdue, when an inquiry has waited {1} days for an answer, when prep is still open {2} days before a shoot, when a backup fails and when a new version is available. Each only once, between {3:HH:mm} and {4:HH:mm}, and only while this {0} is awake: Aperture sends them itself.",
+                L[Platform.Computer], InquiryDays, PrepDays, PushReminders.DayStarts, PushReminders.DayEnds]
         </RadzenText>
 
         @if (_device is null)
@@ -25,8 +22,7 @@
         else if (!HasEmail)
         {
             <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                Add your email under Contact above and save first. Push services (Apple's, Google's, …) only deliver
-                notifications from senders with a contact address.
+                @L["Add your email under Contact above and save first. Push services (Apple's, Google's, …) only deliver notifications from senders with a contact address."]
             </RadzenAlert>
         }
         else if (!_device.Supported || !_device.Secure)
@@ -34,31 +30,30 @@
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                 @if (!_device.Secure)
                 {
-                    <text>Notifications need Aperture's own address on @Platform.ThisComputer. Open it at http://localhost:@(new Uri(Navigation.BaseUri).Port).</text>
+                    @L["Notifications need Aperture's own address on this {0}. Open it at {1}.", L[Platform.Computer], $"http://localhost:{new Uri(Navigation.BaseUri).Port}"]
                 }
                 else
                 {
-                    <text>This browser can't show notifications from Aperture.</text>
+                    @L["This browser can't show notifications from Aperture."]
                 }
             </RadzenText>
         }
         else if (_device.Permission == "denied")
         {
             <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                Notifications from Aperture are blocked in this browser. Allow them in its settings for this address (Safari:
-                Settings → Websites → Notifications; Chrome and Edge: the icon left of the address).
+                @L["Notifications from Aperture are blocked in this browser. Allow them in its settings for this address (Safari: Settings → Websites → Notifications; Chrome and Edge: the icon left of the address)."]
             </RadzenAlert>
         }
         else if (_thisDevice is { } current)
         {
             <div class="push-on">
                 <RadzenIcon Icon="notifications_active" />
-                <span>Notifications are on for this device (@current.Device).</span>
+                <span>@L["Notifications are on for this device ({0}).", current.Device]</span>
             </div>
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                <RadzenButton Text="Send a test" Icon="send" Variant="Variant.Outlined" Click="SendTestAsync"
-                              IsBusy="_testing" BusyText="Sending…" />
-                <RadzenButton Text="Turn off on this device" Icon="notifications_off" Variant="Variant.Text"
+                <RadzenButton Text="@L["Send a test"]" Icon="send" Variant="Variant.Outlined" Click="SendTestAsync"
+                              IsBusy="_testing" BusyText="@L["Sending…"]" />
+                <RadzenButton Text="@L["Turn off on this device"]" Icon="notifications_off" Variant="Variant.Text"
                               ButtonStyle="ButtonStyle.Danger" Click="TurnOffAsync" />
             </RadzenStack>
         }
@@ -66,7 +61,7 @@
         {
             <div>
                 @* Handled in the browser (wwwroot/push.js): the permission prompt has to come from the tap itself. *@
-                <RadzenButton Text="Turn on notifications" Icon="notifications" data-push-enable="@Push.PublicKey" />
+                <RadzenButton Text="@L["Turn on notifications"]" Icon="notifications" data-push-enable="@Push.PublicKey" />
             </div>
         }
 
@@ -78,7 +73,7 @@
         @if (OtherDevices.Any())
         {
             <div>
-                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3" class="rz-mb-1">Other devices</RadzenText>
+                <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3" class="rz-mb-1">@L["Other devices"]</RadzenText>
                 <ul class="plain-list push-devices">
                     @foreach (var device in OtherDevices)
                     {
@@ -87,11 +82,11 @@
                             <span class="list-row-text">
                                 <span>@device.Device</span>
                                 <span class="push-device-detail">
-                                    Since @device.CreatedAt.ToString("dd.MM.yyyy")@(device.LastDeliveredAt is { } last ? $" · last notification {last:dd.MM.yyyy HH:mm}" : "")
+                                    @L["Since {0:dd.MM.yyyy}", device.CreatedAt]@(device.LastDeliveredAt is { } last ? $" · {L["last notification {0:dd.MM.yyyy HH:mm}", last]}" : "")
                                 </span>
                             </span>
                             <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
-                                          title="Remove" aria-label="@($"Remove {device.Device}")" Click="@(() => RemoveAsync(device))" />
+                                          title="@L["Remove"]" aria-label="@L["Remove {0}", device.Device]" Click="@(() => RemoveAsync(device))" />
                         </li>
                     }
                 </ul>
@@ -161,7 +156,7 @@
         _thisDevice = await Push.SaveAsync(browser, device);
         _device = _device! with { Permission = "granted", Subscription = browser };
         await LoadSubscriptionsAsync();
-        await SendAsync(new PushMessage("Notifications are on", "Aperture will let you know when something needs doing.", "settings#notifications", "test"));
+        await SendAsync(new PushMessage(L["Notifications are on"], L["Aperture will let you know when something needs doing."], "settings#notifications", "test"));
         StateHasChanged();
     }
 
@@ -175,7 +170,7 @@
     [JSInvokable]
     public void Failed(string message)
     {
-        _problem = $"Couldn't turn notifications on: {message}";
+        _problem = L["Couldn't turn notifications on: {0}", message];
         StateHasChanged();
     }
 
@@ -184,7 +179,7 @@
         _testing = true;
         try
         {
-            await SendAsync(new PushMessage("Test from Aperture", "Notifications work on this device.", "settings#notifications", "test"));
+            await SendAsync(new PushMessage(L["Test from Aperture"], L["Notifications work on this device."], "settings#notifications", "test"));
         }
         finally
         {
@@ -201,12 +196,12 @@
 
         if (await Push.SendAsync(message, _thisDevice.Id) > 0)
         {
-            Notifications.Notify(NotificationSeverity.Success, "Notification sent", "It should appear in a few seconds.");
+            Notifications.Notify(NotificationSeverity.Success, L["Notification sent"], L["It should appear in a few seconds."]);
         }
         else
         {
-            Notifications.Notify(NotificationSeverity.Warning, "Couldn't send the notification",
-                $"The push service didn't take it. Is {Platform.ThisComputer} online? Details are in the log.");
+            Notifications.Notify(NotificationSeverity.Warning, L["Couldn't send the notification"],
+                L["The push service didn't take it. Is this {0} online? Details are in the log.", L[Platform.Computer]]);
         }
         await RefreshDeviceAsync();
     }
@@ -221,13 +216,13 @@
         await _module!.InvokeVoidAsync("unsubscribe");
         await Push.RemoveAsync(current.Id);
         await RefreshDeviceAsync();
-        Notifications.Notify(NotificationSeverity.Success, "Notifications turned off for this device");
+        Notifications.Notify(NotificationSeverity.Success, L["Notifications turned off for this device"]);
     }
 
     private async Task RemoveAsync(PushSubscription device)
     {
-        if (await Dialogs.Confirm($"{device.Device} stops getting notifications from Aperture.", "Remove this device?",
-                new ConfirmOptions { OkButtonText = "Remove", CancelButtonText = "Cancel" }) == true)
+        if (await Dialogs.Confirm(L["{0} stops getting notifications from Aperture.", device.Device], L["Remove this device?"],
+                new ConfirmOptions { OkButtonText = L["Remove"], CancelButtonText = L["Cancel"] }) == true)
         {
             await Push.RemoveAsync(device.Id);
             await LoadSubscriptionsAsync();

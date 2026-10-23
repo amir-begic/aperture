@@ -11,34 +11,34 @@
         <RadzenStack Gap="1rem">
             <RadzenRow>
                 <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenFormField Text="Amount (CHF)" class="w-full">
+                    <RadzenFormField Text="@L["Amount (CHF)"]" class="w-full">
                         <ChildContent><RadzenNumeric TValue="decimal?" Name="AmountChf" @bind-Value="_form.AmountChf" Format="#,##0.00" ShowUpDown="false" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="AmountChf" /></Helper>
+                        <Helper><FieldValidator Component="AmountChf" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenFormField Text="Received on" class="w-full">
+                    <RadzenFormField Text="@L["Received on"]" class="w-full">
                         <ChildContent><RadzenDatePicker TValue="DateOnly?" Name="Date" @bind-Value="_form.Date" DateFormat="dd.MM.yyyy" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Date" /></Helper>
+                        <Helper><FieldValidator Component="Date" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenFormField Text="Method" class="w-full">
+                    <RadzenFormField Text="@L["Method"]" class="w-full">
                         <RadzenDropDown TValue="PaymentMethod" Name="Method" @bind-Value="_form.Method"
                                         Data="Methods" TextProperty="Text" ValueProperty="Value" />
                     </RadzenFormField>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenFormField Text="Note (optional)" class="w-full">
-                        <ChildContent><RadzenTextBox Name="Note" @bind-Value="_form.Note" Placeholder="Deposit" /></ChildContent>
-                        <Helper><RadzenDataAnnotationValidator Component="Note" /></Helper>
+                    <RadzenFormField Text="@L["Note (optional)"]" class="w-full">
+                        <ChildContent><RadzenTextBox Name="Note" @bind-Value="_form.Note" Placeholder="@L["Deposit"]" /></ChildContent>
+                        <Helper><FieldValidator Component="Note" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
             </RadzenRow>
 
             <div>
-                <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-1">Payslip / proof of payment</RadzenText>
-                <FileField @ref="_proof" Current="_existingProof" ChooseText="Attach payslip" />
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-mb-1">@L["Payslip / proof of payment"]</RadzenText>
+                <FileField @ref="_proof" Current="_existingProof" ChooseText="@L["Attach payslip"]" />
             </div>
 
             @if (_error is not null)
@@ -47,11 +47,11 @@
             }
 
             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
-                <RadzenButton ButtonType="ButtonType.Submit" Text="Save" Icon="save" IsBusy="_busy" BusyText="Saving…" />
-                <RadzenButton Text="Cancel" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(false))" />
+                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" Icon="save" IsBusy="_busy" BusyText="@L["Saving…"]" />
+                <RadzenButton Text="@L["Cancel"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close(false))" />
                 @if (PaymentId is not null)
                 {
-                    <RadzenButton Text="Delete" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
+                    <RadzenButton Text="@L["Delete"]" Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text"
                                   Click="DeleteAsync" Disabled="_busy" class="rz-ms-auto" />
                 }
             </RadzenStack>
@@ -74,24 +74,15 @@
     [Parameter]
     public DateOnly DefaultDate { get; set; }
 
-    private static readonly IReadOnlyList<(string Text, PaymentMethod Value)> MethodItems =
-    [
-        ("Bank transfer", PaymentMethod.BankTransfer),
-        ("TWINT", PaymentMethod.Twint),
-        ("Cash", PaymentMethod.Cash),
-        ("Other", PaymentMethod.Other),
-    ];
+    private static readonly PaymentMethod[] MethodOrder = [PaymentMethod.BankTransfer, PaymentMethod.Twint, PaymentMethod.Cash, PaymentMethod.Other];
 
-    private static readonly List<Option> Methods = MethodItems.Select(m => new Option(m.Text, m.Value)).ToList();
+    private static List<Option> Methods => MethodOrder.Select(m => new Option(m.Text(), m)).ToList();
 
     private PaymentForm? _form;
     private Attachment? _existingProof;
     private FileField? _proof;
     private bool _busy;
     private string? _error;
-
-    public static string MethodText(PaymentMethod method) =>
-        MethodItems.First(m => m.Value == method).Text;
 
     protected override async Task OnInitializedAsync()
     {

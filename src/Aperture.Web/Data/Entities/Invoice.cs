@@ -1,4 +1,5 @@
 using Aperture.Web.Domain;
+using Aperture.Web.Localization;
 
 namespace Aperture.Web.Data.Entities;
 
@@ -33,6 +34,9 @@ public class Invoice
     public decimal? VatRatePercent { get; set; }
 
     public InvoiceAddress Client { get; set; } = new();
+
+    /// <summary>The client's invoice language.</summary>
+    public Language Language { get; set; }
 
     /// <summary>Payments received before the invoice was issued (e.g. a deposit).</summary>
     public Money AlreadyPaid { get; set; }

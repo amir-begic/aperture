@@ -34,5 +34,6 @@ public static class InvoiceSnapshot
             City = client.City,
             CountryCode = client.CountryCode,
         };
+        invoice.Language = client.InvoiceLanguage;
     }
 }

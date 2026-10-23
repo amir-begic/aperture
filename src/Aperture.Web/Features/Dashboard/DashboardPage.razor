@@ -8,40 +8,40 @@
 @inject IWebHostEnvironment Environment
 @inject Aperture.Web.Features.Updates.UpdateService Updates
 
-<PageTitle>Dashboard · Aperture</PageTitle>
+<PageTitle>@L["Dashboard"] · Aperture</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Dashboard</RadzenText>
-    <RadzenButton Text="New shoot" Icon="add" Click="@(() => Navigation.NavigateTo("shoots/new"))" />
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">@L["Dashboard"]</RadzenText>
+    <RadzenButton Text="@L["New shoot"]" Icon="add" Click="@(() => Navigation.NavigateTo("shoots/new"))" />
 </RadzenStack>
 
 @if (_settingsComplete == false)
 {
     <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false">
-        Your business details are incomplete. They're needed for invoices.
-        <RadzenLink Path="settings" Text="Complete settings" />
+        @L["Your business details are incomplete. They're needed for invoices."]
+        <RadzenLink Path="settings" Text="@L["Complete settings"]" />
     </RadzenAlert>
 }
 
 @if (_statement is not null)
 {
     <div class="kpi-row rz-mb-6">
-        <KpiTile Label="@($"Income {_statement.Year}")" Value="@_statement.TotalIncome.ToString()" Note="received so far" />
-        <KpiTile Label="@($"Costs {_statement.Year}")" Value="@((_statement.TotalCosts + _statement.TotalDepreciation).ToString())" Note="incl. depreciation" />
-        <KpiTile Label="@($"Result {_statement.Year}")" Value="@_statement.Result.ToString()" Note="@(_statement.Result < Money.Zero ? "loss" : null)" />
-        <KpiTile Label="Open invoices" Value="@_openInvoices.ToString()" Note="@(_overdueCount > 0 ? $"{_overdueCount} overdue" : null)" />
+        <KpiTile Label="@L["Income {0}", _statement.Year]" Value="@_statement.TotalIncome.ToString()" Note="@L["received so far"]" />
+        <KpiTile Label="@L["Costs {0}", _statement.Year]" Value="@((_statement.TotalCosts + _statement.TotalDepreciation).ToString())" Note="@L["incl. depreciation"]" />
+        <KpiTile Label="@L["Result {0}", _statement.Year]" Value="@_statement.Result.ToString()" Note="@(_statement.Result < Money.Zero ? L["loss"].Value : null)" />
+        <KpiTile Label="@L["Open invoices"]" Value="@_openInvoices.ToString()" Note="@(_overdueCount > 0 ? L["{0} overdue", _overdueCount].Value : null)" />
     </div>
 }
 
 <div class="rz-mb-6">
-        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Needs attention</RadzenText>
+        <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">@L["Needs attention"]</RadzenText>
         @if (_attention is null)
         {
             <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Small" />
         }
         else if (_attention.Count == 0)
         {
-            <RadzenText TextStyle="TextStyle.Body2">Nothing to do. All invoices sent and paid, prep on track.</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2">@L["Nothing to do. All invoices sent and paid, prep on track."]</RadzenText>
         }
         else
         {
@@ -60,8 +60,8 @@
         }
 </div>
 
-<RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">Next shoots</RadzenText>
-<ShootGrid Shoots="_upcoming" IsLoading="_upcoming is null" PageSize="null" EmptyText="No upcoming shoots." />
+<RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2">@L["Next shoots"]</RadzenText>
+<ShootGrid Shoots="_upcoming" IsLoading="_upcoming is null" PageSize="null" EmptyText="@L["No upcoming shoots."]" />
 
 @code {
     private const int UpcomingCount = 5;

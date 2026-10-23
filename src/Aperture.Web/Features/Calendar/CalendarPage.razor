@@ -6,41 +6,41 @@
 @inject TimeProvider Time
 @implements IDisposable
 
-<PageTitle>Calendar · Aperture</PageTitle>
+<PageTitle>@L["Calendar"] · Aperture</PageTitle>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Wrap="FlexWrap.Wrap" class="rz-mb-4">
-    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">Calendar</RadzenText>
-    <RadzenButton Text="New shoot" Icon="add" Click="@(() => Navigation.NavigateTo("shoots/new"))" />
+    <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1" class="rz-m-0">@L["Calendar"]</RadzenText>
+    <RadzenButton Text="@L["New shoot"]" Icon="add" Click="@(() => Navigation.NavigateTo("shoots/new"))" />
 </RadzenStack>
 
 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap" Gap="1rem" class="rz-mb-3">
-    <ul class="calendar-legend" aria-label="Legend">
+    <ul class="calendar-legend" aria-label="@L["Legend"]">
         @foreach (var status in LegendStatuses)
         {
-            <li><span class="@($"shoot-swatch shoot-{status.ToString().ToLowerInvariant()}")"></span>@status</li>
+            <li><span class="@($"shoot-swatch shoot-{status.ToString().ToLowerInvariant()}")"></span>@status.Text()</li>
         }
     </ul>
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" class="rz-ms-auto">
         <RadzenSwitch Name="ShowCancelled" @bind-Value="_showCancelled" @bind-Value:after="ReloadAsync" />
-        <RadzenLabel Component="ShowCancelled" Text="Show cancelled" />
+        <RadzenLabel Component="ShowCancelled" Text="@L["Show cancelled"]" />
     </RadzenStack>
 </RadzenStack>
 
-<RadzenText TextStyle="TextStyle.Caption" class="rz-mb-2">Hover a shoot for details, click it to open it, or click a free day to book a new shoot on that date.</RadzenText>
+<RadzenText TextStyle="TextStyle.Caption" class="rz-mb-2">@L["Hover a shoot for details, click it to open it, or click a free day to book a new shoot on that date."]</RadzenText>
 
 <RadzenScheduler @ref="_scheduler" TItem="CalendarItem" Data="_items" class="calendar"
                  StartProperty="@nameof(CalendarItem.Start)" EndProperty="@nameof(CalendarItem.End)" TextProperty="@nameof(CalendarItem.Title)"
                  LoadData="LoadAsync" SlotSelect="OnSlotSelect" AppointmentSelect="OnShootSelect" AppointmentRender="OnShootRender"
                  AppointmentMouseEnter="ShowCard" AppointmentMouseLeave="HideCard"
-                 TodayText="Today">
+                 TodayText="@L["Today"]">
     <Template Context="item">
         @item.Shoot.Start.ToString("HH:mm") @item.Shoot.Title
     </Template>
     <ChildContent>
-        <RadzenMonthView Text="Month" MaxAppointmentsInSlot="3" MoreText="+{0} more" />
+        <RadzenMonthView Text="@L["Month"]" MaxAppointmentsInSlot="3" MoreText="@L["+{0} more"]" />
         @* The whole day in hour rows: early starts and late wedding receptions stay visible without scrolling. *@
-        <RadzenWeekView Text="Week" TimeFormat="HH:mm" MinutesPerSlot="60" StartTime="TimeSpan.Zero" EndTime="@TimeSpan.FromHours(24)" />
-        <RadzenYearPlannerView Text="Year" />
+        <RadzenWeekView Text="@L["Week"]" TimeFormat="HH:mm" MinutesPerSlot="60" StartTime="TimeSpan.Zero" EndTime="@TimeSpan.FromHours(24)" />
+        <RadzenYearPlannerView Text="@L["Year"]" />
     </ChildContent>
 </RadzenScheduler>
 

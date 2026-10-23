@@ -10,6 +10,7 @@ using Aperture.Web.Features.Invoices;
 using Aperture.Web.Features.Notifications;
 using Aperture.Web.Features.Updates;
 using Aperture.Web.Installation;
+using Aperture.Web.Localization;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -90,6 +91,10 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddSingleton(TimeProvider.System);
 
+// Language: English or German, chosen in Settings (AppLanguage); texts in Localization/Texts.de.resx.
+builder.Services.AddLocalization();
+builder.Services.AddSingleton<AppLanguage>();
+
 // Cookie and antiforgery keys live in the data directory: stable across updates and part of the backup.
 builder.Services.AddDataProtection()
     .SetApplicationName("Aperture")
@@ -103,6 +108,7 @@ builder.Services.AddRadzenComponents();
 var app = builder.Build();
 
 await app.InitializeDatabaseAsync();
+await app.Services.GetRequiredService<AppLanguage>().LoadAsync();
 
 if (!app.Environment.IsDevelopment())
 {
@@ -111,8 +117,13 @@ if (!app.Environment.IsDevelopment())
 // No HTTPS redirection or HSTS: Aperture is plain HTTP on localhost, which browsers treat as secure.
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
-// English texts with Swiss formats: dates as 31.12.2026, Monday as first day of the week.
-app.UseRequestLocalization("en-CH");
+// The language from Settings, or the browser's until one is chosen; Swiss formats in either (see Languages).
+app.UseRequestLocalization(options =>
+{
+    options.SupportedCultures = options.SupportedUICultures = [.. Languages.Cultures];
+    options.SetDefaultCulture(Language.English.Culture().Name);
+    options.RequestCultureProviders = [new AppLanguageCultureProvider()];
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -5,8 +5,10 @@ using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
 using Aperture.Web.Features.Attachments;
 using Aperture.Web.Features.Invoices;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
+using Language = Aperture.Web.Localization.Language;
 
 namespace Aperture.Tests.Features;
 
@@ -46,12 +48,13 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     }
 
     /// <summary>A shoot quoted at 1800 with lights billed at 450 on top and a 500 deposit paid.</summary>
-    private async Task<Shoot> AddWeddingAsync(bool withAddress = true)
+    private async Task<Shoot> AddWeddingAsync(bool withAddress = true, Language invoiceLanguage = Language.English)
     {
         await using var db = _database.CreateContext();
         var client = new Client
         {
             Name = "Anna & Marco Rossi",
+            InvoiceLanguage = invoiceLanguage,
             Street = withAddress ? "Seestrasse 5" : null,
             PostalCode = withAddress ? "8800" : null,
             City = withAddress ? "Thalwil" : null,
@@ -234,6 +237,29 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         Assert.True(Payments.IsValidIso11649Reference(decoded.Reference));
         Assert.Equal("Invoice 2026-001", decoded.UnstructuredMessage);
         Assert.Equal("Anna & Marco Rossi", decoded.Debtor.Name);
+    }
+
+    [Fact]
+    public async Task Invoices_are_in_the_clients_language_whatever_the_app_is_in()
+    {
+        var shoot = await AddWeddingAsync(invoiceLanguage: Language.German);
+        var id = await _invoices.CreateDraftAsync(shoot.Id);
+
+        Assert.Empty(await _invoices.IssueAsync(id));
+
+        var (invoice, info) = await _invoices.LoadForDocumentAsync(id);
+        Assert.Equal(Language.German, invoice.Language);
+        Assert.Equal("Fotografie: Wedding Rossi", invoice.Lines.OrderBy(l => l.SortOrder).First().Description);
+        await using (var db = _database.CreateContext())
+        {
+            var pdf = await db.Attachments.SingleAsync(a => a.Id == invoice.PdfId);
+            Assert.Equal("Rechnung 2026-001.pdf", pdf.FileName);
+        }
+
+        var bill = InvoiceQrBill.Create(invoice);
+        Assert.Equal(Codecrete.SwissQRBill.Generator.Language.DE, bill.Format.Language);
+        Assert.Equal("Rechnung 2026-001", bill.UnstructuredMessage);
+        Assert.Equal("%PDF", System.Text.Encoding.ASCII.GetString(new InvoiceDocument(invoice, info).GeneratePdf(), 0, 4));
     }
 
     [Fact]

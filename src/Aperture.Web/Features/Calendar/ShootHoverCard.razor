@@ -18,11 +18,11 @@
                 @Shoot.Start.ToString("ddd dd.MM.yyyy") · @ShootSchedule.FormatTimes(Shoot.Start, Shoot.End)
                 @if (Shoot.End.Date > Shoot.Start.Date && Shoot.End.TimeOfDay > TimeSpan.Zero)
                 {
-                    <span class="shoot-card-muted"> (ends next day)</span>
+                    <span class="shoot-card-muted"> (@L["ends next day"])</span>
                 }
             </span>
         </li>
-        <li><RadzenIcon Icon="photo_camera" /><span>@Shoot.ShootType</span></li>
+        <li><RadzenIcon Icon="photo_camera" /><span>@Shoot.ShootType.Text()</span></li>
         <li>
             <RadzenIcon Icon="person" />
             <span>
@@ -45,7 +45,7 @@
                     @total
                     @if (Financials.Outstanding is { } outstanding && outstanding > Money.Zero && Shoot.Status != ShootStatus.Inquiry)
                     {
-                        <span class="shoot-card-muted"> · @outstanding outstanding</span>
+                        <span class="shoot-card-muted"> · @L["{0} outstanding", outstanding]</span>
                     }
                 </span>
             </li>
@@ -55,17 +55,17 @@
             <li>
                 <RadzenIcon Icon="photo_library" />
                 <span>
-                    Delivery due @due.ToString("ddd dd.MM.yyyy")
+                    @L["Delivery due {0:ddd dd.MM.yyyy}", due]
                     @if (Shoot.IsDeliveryOverdue(Today))
                     {
-                        <span class="delivery-overdue"> · overdue</span>
+                        <span class="delivery-overdue"> · @L["Delivery.overdue"]</span>
                     }
                 </span>
             </li>
         }
         @if (Prep is { Total: > 0 } prep)
         {
-            <li><RadzenIcon Icon="checklist" /><span>@prep.Done of @prep.Total prep tasks done</span></li>
+            <li><RadzenIcon Icon="checklist" /><span>@L["{0} of {1} prep tasks done", prep.Done, prep.Total]</span></li>
         }
     </ul>
 </div>

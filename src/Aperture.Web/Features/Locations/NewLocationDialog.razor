@@ -3,7 +3,7 @@
 
 <LocationForm Location="_location" Compact="true" Saved="@(location => Dialogs.Close(location))">
     <Buttons>
-        <RadzenButton Text="Cancel" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close())" />
+        <RadzenButton Text="@L["Cancel"]" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => Dialogs.Close())" />
     </Buttons>
 </LocationForm>
 
