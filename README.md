@@ -110,15 +110,16 @@ A test fails if the model changes without a migration.
 src/Aperture.Web/
   Auth/            single-user cookie login, created in the browser on first start
   Components/      app shell, layouts, routing
-  Configuration/   data paths, app version, file log
+  Configuration/   data paths, app version, file log, stopping when no window is open
   Installation/    install, update, backup, restore, uninstall: the program's own commands, and per system
                    how it starts at login (launchd, scheduled tasks, systemd)
   Data/            DbContext, entities, migrations, value converters
   Domain/          the rules, without UI or database: Money (CHF in Rappen), invoice totals,
                    depreciation, shoot financials, categories, IBAN and contact validation
   Features/        one folder per area, pages and their logic together:
-                   Shoots, Packages, Clients, Locations, Calendar, Attachments, Invoices, Finance, Dashboard,
-                   Backup, Notifications, Updates, Settings
+                   Shoots, Packages, Clients, Locations, Calendar, Attachments, Quotes, Invoices, Finance,
+                   Dashboard, Backup, Notifications, Updates, Settings
+  Localization/    English and German: the language setting, texts (Texts.de.resx) and labels
 tests/Aperture.Tests/  xUnit; database tests run against in-memory SQLite
 deploy/            release build (publish.sh), the macOS installer package (macos/pkg) and its scripts, the
                    Windows setup (windows/aperture.iss), Linux's install.sh
