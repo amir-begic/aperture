@@ -6,6 +6,7 @@ namespace Aperture.Web.Installation;
 /// <code>
 /// Aperture.Web install [--feed &lt;latest.json URL&gt;] [--port &lt;port&gt;] [--no-open] [--desktop-shortcut]
 /// Aperture.Web update [&lt;aperture-…-&lt;runtime&gt;.tar.gz&gt;]   (without one: the update Aperture downloaded)
+/// Aperture.Web open   (what the launcher runs: starts Aperture if it isn't running, then opens its window)
 /// Aperture.Web backup
 /// Aperture.Web restore &lt;backup ZIP, its folder, or a daily aperture-YYYY-MM-DD.db&gt;
 /// Aperture.Web uninstall [--remove-data]   (with it: also the data, files, login, backups and logs)
@@ -14,7 +15,7 @@ namespace Aperture.Web.Installation;
 /// </summary>
 public static class Commands
 {
-    public static readonly IReadOnlySet<string> Names = new HashSet<string> { "install", "update", "backup", "restore", "uninstall" };
+    public static readonly IReadOnlySet<string> Names = new HashSet<string> { "install", "update", "open", "backup", "restore", "uninstall" };
 
     /// <summary>The exit code, or null when <paramref name="args"/> isn't a command (then the web app starts).</summary>
     public static async Task<int?> TryRunAsync(string[] args)
@@ -39,6 +40,7 @@ public static class Commands
                     openApp: !args.Contains("--no-open") && Environment.GetEnvironmentVariable("APERTURE_NO_OPEN") != "1",
                     desktopShortcut: args.Contains("--desktop-shortcut")),
                 "update" => await new Updater(home, platform, TimeProvider.System, log).RunAsync(Positional(args)),
+                "open" => await installer.OpenAsync(),
                 "backup" => new BackupJob(home, TimeProvider.System, log).Run(),
                 "restore" => Positional(args) is { } source
                     ? await installer.RestoreAsync(source)

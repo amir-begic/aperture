@@ -7,25 +7,31 @@ public static class Health
 
     public static async Task<bool> WaitAsync(int port, TimeSpan? timeout = null)
     {
-        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
         var until = DateTime.UtcNow + (timeout ?? StartTimeout);
         while (DateTime.UtcNow < until)
         {
-            try
+            if (await IsUpAsync(port))
             {
-                if (await http.GetStringAsync($"http://127.0.0.1:{port}/health") == "ok")
-                {
-                    return true;
-                }
-            }
-            catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
-            {
-                // Not up yet.
+                return true;
             }
             await Task.Delay(TimeSpan.FromSeconds(1));
         }
 
         return false;
+    }
+
+    /// <summary>Asks once.</summary>
+    public static async Task<bool> IsUpAsync(int port)
+    {
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+        try
+        {
+            return await http.GetStringAsync($"http://127.0.0.1:{port}/health") == "ok";
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        {
+            return false; // not up (yet)
+        }
     }
 }
 

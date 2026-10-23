@@ -77,7 +77,8 @@ without one of those browsers, Aperture opens in Safari, and *File → Add to Do
    to the desktop, if ticked) and opens it.
 
 *Aperture* in the Start menu opens Aperture in its own window, without tabs or address bar: Edge's app mode, which
-every Windows 10 and 11 has. To remove Aperture: *Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
+every Windows 10 and 11 has. It runs `Aperture.Web open`, which first starts Aperture if it isn't running: Windows starts
+it at logon but, unlike macOS and Linux, not again after it was ended in the Task Manager or crashed. To remove Aperture: *Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
 keeps them.
 
 ### Linux
@@ -221,7 +222,7 @@ On Windows the program has no console window, so it writes what it does to `logs
 | Problem | What to do |
 |---|---|
 | The installer failed | macOS: *Console → Log Reports → install.log*, search for `Aperture`. Windows: `%LOCALAPPDATA%\Aperture\logs\install.log`. Linux: the terminal shows it. |
-| Aperture isn't reachable | `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
+| Aperture isn't reachable | On Windows, open it from the Start menu: that starts it if it isn't running (macOS and Linux restart it by themselves). Then `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
 | "Port … is in use by another program" | Another program listens on Aperture's port. Close it and install again, or install again with `--port <port>` to move Aperture: then log in again, turn notifications on again and add the calendar feed again. |
 | Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open Aperture and create a new login. All data stays. |
 | Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. Backups in other folders listed in `backup.conf` stay. |

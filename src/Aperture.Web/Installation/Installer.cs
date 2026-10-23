@@ -90,6 +90,35 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
     }
 
     /// <summary>
+    /// What the launcher runs: starts Aperture if it isn't answering (ended in the Task Manager, crashed), then opens its
+    /// window. Windows doesn't start a program again that was ended; launchd and systemd do, but asking costs nothing.
+    /// </summary>
+    public async Task<int> OpenAsync(TimeSpan? startTimeout = null)
+    {
+        var port = HomeSettings.Read(home)?.Port ?? ApertureHome.DefaultPort;
+        if (!await Health.IsUpAsync(port))
+        {
+            log.Write("Aperture isn't running: starting it");
+            try
+            {
+                await platform.StartWebAsync(home);
+                if (!await Health.WaitAsync(port, startTimeout))
+                {
+                    log.Write($"Aperture didn't start. See {home.Log("aperture")}.");
+                }
+            }
+            catch (InstallationException e)
+            {
+                log.Write(e.Message);
+            }
+        }
+
+        // Opened either way: if Aperture still isn't up, the window says so (wwwroot/offline.html) and can be reloaded.
+        await platform.OpenAppAsync(home, port);
+        return 0;
+    }
+
+    /// <summary>
     /// Stops Aperture and removes its services and program. Data, logs and backups stay, unless
     /// <paramref name="removeData"/>: then everything Aperture keeps in the install folder goes too (database, files,
     /// login, backups, logs, settings). Only what Aperture creates there is deleted, and only in a folder that is an

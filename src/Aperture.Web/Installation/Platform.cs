@@ -136,6 +136,9 @@ public abstract class Platform(ICommandRunner run)
     /// <summary>Opens Aperture in its own window, as the launcher does.</summary>
     public abstract Task OpenAppAsync(ApertureHome home, int port);
 
+    /// <summary>Brings a launcher made by an older version up to date; called when Aperture starts. Nothing to do by default.</summary>
+    public virtual Task RefreshLauncherAsync(ApertureHome home) => Task.CompletedTask;
+
     /// <summary>The argument that opens Aperture in a Chromium browser's app mode.</summary>
     public static string AppArgument(int port) => $"--app=http://localhost:{port}";
 
@@ -762,28 +765,43 @@ public sealed class WindowsPlatform(ICommandRunner run) : Platform(run)
             .FirstOrDefault(File.Exists);
     }
 
-    /// <summary>Start menu entry, and with <paramref name="desktopShortcut"/> one on the desktop, with Aperture's icon.</summary>
+    /// <summary>
+    /// Start menu entry, and with <paramref name="desktopShortcut"/> one on the desktop, with Aperture's icon. They run
+    /// "Aperture.Web open": Windows doesn't start Aperture again after it was ended (Task Manager, a crash) until the next
+    /// logon, so the shortcut does, then opens the window.
+    /// </summary>
     public override async Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut)
     {
         RemoveLaunchers();
-        var icon = Path.Combine(home.App, ExecutableName);
-        var folders = desktopShortcut ? new[] { StartMenuFolder, DesktopFolder } : [StartMenuFolder];
-        if (Browser() is not { } browser)
+        foreach (var folder in desktopShortcut ? new[] { StartMenuFolder, DesktopFolder } : [StartMenuFolder])
         {
-            foreach (var folder in folders)
-            {
-                File.WriteAllText(Path.Combine(folder, "Aperture.url"),
-                    $"[InternetShortcut]\r\nURL=http://localhost:{port}\r\nIconFile={icon}\r\nIconIndex=0\r\n");
-            }
-            return;
-        }
-
-        foreach (var folder in folders)
-        {
-            await RequireAsync("Creating the Aperture shortcut", "powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
-                ShortcutScript(Path.Combine(folder, "Aperture.lnk"), browser, AppArgument(port), icon));
+            await WriteShortcutAsync(Path.Combine(folder, "Aperture.lnk"), home);
         }
     }
+
+    /// <summary>Shortcuts made before "open" existed opened the browser directly: they're pointed at the program.</summary>
+    public override async Task RefreshLauncherAsync(ApertureHome home)
+    {
+        foreach (var folder in new[] { StartMenuFolder, DesktopFolder })
+        {
+            var url = Path.Combine(folder, "Aperture.url");
+            var shortcut = Path.Combine(folder, "Aperture.lnk");
+            if (File.Exists(url) || File.Exists(shortcut))
+            {
+                File.Delete(url);
+                await WriteShortcutAsync(shortcut, home);
+            }
+        }
+    }
+
+    private Task WriteShortcutAsync(string shortcut, ApertureHome home)
+    {
+        var program = Path.Combine(home.App, ExecutableName);
+        return RequireAsync("Creating the Aperture shortcut", "powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
+            ShortcutScript(shortcut, program, LauncherArguments(home), program));
+    }
+
+    public static string LauncherArguments(ApertureHome home) => $"open --home \"{home.Root}\"";
 
     public override Task OpenAppAsync(ApertureHome home, int port)
     {

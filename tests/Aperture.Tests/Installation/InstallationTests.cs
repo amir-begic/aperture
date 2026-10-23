@@ -213,14 +213,26 @@ public sealed class InstallationTests : IDisposable
     /// <summary>A platform with no services to start or stop, for testing what the installer does with files.</summary>
     private sealed class FilesOnlyPlatform() : Platform(new RecordingRunner())
     {
+        public int Started { get; private set; }
+        public int Opened { get; private set; }
+
         public override string Computer => "computer";
         public override Task RegisterAsync(ApertureHome home) => Task.CompletedTask;
         public override Task StartBackupsAsync(ApertureHome home) => Task.CompletedTask;
         public override Task UnregisterAsync(ApertureHome home) => Task.CompletedTask;
-        public override Task StartWebAsync(ApertureHome home) => Task.CompletedTask;
+        public override Task StartWebAsync(ApertureHome home)
+        {
+            Started++;
+            return Task.CompletedTask;
+        }
+
         protected override Task StopWebServiceAsync(ApertureHome home) => Task.CompletedTask;
         public override Task CreateLauncherAsync(ApertureHome home, int port, bool desktopShortcut) => Task.CompletedTask;
-        public override Task OpenAppAsync(ApertureHome home, int port) => Task.CompletedTask;
+        public override Task OpenAppAsync(ApertureHome home, int port)
+        {
+            Opened++;
+            return Task.CompletedTask;
+        }
     }
 
     /// <summary>An installation as the install command leaves it, with data, plus a file Aperture didn't make.</summary>
@@ -295,14 +307,61 @@ public sealed class InstallationTests : IDisposable
     }
 
     [Fact]
-    public void Windows_shortcut_script_quotes_paths_for_PowerShell()
+    public void Windows_shortcut_runs_the_program_to_open_Aperture_with_quoted_paths()
     {
+        var home = new ApertureHome(@"C:\Users\Anna O'Neil\AppData\Local\Aperture");
+        var program = @"C:\Users\Anna O'Neil\AppData\Local\Aperture\app\Aperture.Web.exe";
+
         var script = WindowsPlatform.ShortcutScript(@"C:\Users\Anna O'Neil\Start Menu\Aperture.lnk",
-            @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe", "--app=http://localhost:5090",
-            @"C:\Users\Anna O'Neil\AppData\Local\Aperture\app\Aperture.Web.exe");
+            program, WindowsPlatform.LauncherArguments(home), program);
 
         Assert.Contains(@"CreateShortcut('C:\Users\Anna O''Neil\Start Menu\Aperture.lnk')", script);
-        Assert.Contains("$s.Arguments = '--app=http://localhost:5090'", script);
+        Assert.Contains(@"$s.TargetPath = 'C:\Users\Anna O''Neil\AppData\Local\Aperture\app\Aperture.Web.exe'", script);
+        Assert.Contains(@"$s.Arguments = 'open --home ""C:\Users\Anna O''Neil\AppData\Local\Aperture""'", script);
         Assert.Contains(@"$s.IconLocation = 'C:\Users\Anna O''Neil\AppData\Local\Aperture\app\Aperture.Web.exe,0'", script);
+    }
+
+    [Fact]
+    public async Task Opening_starts_Aperture_when_it_isnt_running()
+    {
+        Installed();
+        new HomeSettings(FreePort(), null).Write(Home);
+        var platform = new FilesOnlyPlatform();
+
+        await new Installer(Home, platform, new CommandLog(null)).OpenAsync(startTimeout: TimeSpan.Zero);
+
+        Assert.Equal(1, platform.Started);
+        Assert.Equal(1, platform.Opened);
+    }
+
+    [Fact]
+    public async Task Opening_a_running_Aperture_only_opens_its_window()
+    {
+        Installed();
+        var port = FreePort();
+        new HomeSettings(port, null).Write(Home);
+        using var aperture = new System.Net.HttpListener { Prefixes = { $"http://127.0.0.1:{port}/" } };
+        aperture.Start();
+        _ = Task.Run(async () =>
+        {
+            var context = await aperture.GetContextAsync();
+            await context.Response.OutputStream.WriteAsync("ok"u8.ToArray());
+            context.Response.Close();
+        });
+        var platform = new FilesOnlyPlatform();
+
+        await new Installer(Home, platform, new CommandLog(null)).OpenAsync();
+
+        Assert.Equal(0, platform.Started);
+        Assert.Equal(1, platform.Opened);
+    }
+
+    private static int FreePort()
+    {
+        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
     }
 }

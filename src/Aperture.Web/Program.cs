@@ -162,5 +162,24 @@ app.MapPost("/logout", async (HttpContext context, IAntiforgery antiforgery) =>
     return Results.LocalRedirect("~/login");
 });
 
+// Launchers made by an older version are brought up to date (on Windows they opened the browser without starting
+// Aperture), in the background once Aperture is up.
+if (!app.Environment.IsDevelopment())
+{
+    app.Lifetime.ApplicationStarted.Register(() => _ = RefreshLauncherAsync(app.Services));
+}
+
 app.Run();
 return 0;
+
+static async Task RefreshLauncherAsync(IServiceProvider services)
+{
+    try
+    {
+        await services.GetRequiredService<Platform>().RefreshLauncherAsync(services.GetRequiredService<ApertureHome>());
+    }
+    catch (Exception e) when (e is InstallationException or IOException or UnauthorizedAccessException)
+    {
+        services.GetRequiredService<ILogger<Program>>().LogWarning(e, "Couldn't update the Aperture shortcut");
+    }
+}
