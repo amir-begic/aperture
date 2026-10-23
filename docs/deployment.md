@@ -80,8 +80,8 @@ only opens the page, so start it through *Aperture* when it says it can't connec
 
 *Aperture* in the Start menu opens Aperture in its own window, without tabs or address bar: Edge's app mode, which
 every Windows 10 and 11 has. It runs `Aperture.Web open`, which first starts Aperture if it isn't running (see
-*Running only while it's used* below), also after it was ended in the Task Manager or crashed. To remove Aperture: *Settings → Apps → Installed apps → Aperture → Uninstall*. It asks whether to remove your data and backups too; *No*
-keeps them.
+*Running only while it's used* below), also after it was ended in the Task Manager or crashed. To remove Aperture, see
+[Uninstalling](#uninstalling).
 
 ### Linux
 
@@ -112,6 +112,54 @@ Aperture opens on the first start, in two steps:
 2. **Your business:** name, address, contact and IBAN, which go on every invoice; the email is also what
    notifications need. *Skip for now* goes straight to Aperture; the Dashboard then reminds you until the details are
    complete. Everything else (VAT, usual delivery time, depreciation) is under *Settings*.
+
+## Uninstalling
+
+Uninstalling stops Aperture and removes the program, its background services (launchd agents, scheduled tasks or
+systemd units) and *Aperture* in Applications, the Start menu or the applications menu. Your data stays unless you ask
+for it to go too, so installing again later carries on where you left off. Before removing the data, you may want a
+copy of it: *Settings → Backups → Download a backup*.
+
+| | Keep the data | Remove everything |
+|---|---|---|
+| macOS, in Terminal | `~/Aperture/app/deploy/macos/uninstall.sh` | `~/Aperture/app/deploy/macos/uninstall.sh --remove-data` |
+| Windows | *Settings → Apps → Installed apps → Aperture → ⋯ → Uninstall*, then *No* when it asks about your data | the same, then *Yes* |
+| Linux, in a terminal | `~/.local/share/aperture/app/Aperture.Web uninstall` | `~/.local/share/aperture/app/Aperture.Web uninstall --remove-data` |
+
+*Remove everything* also deletes the database, all uploaded files (receipts, invoices, payslips), the login, the
+backups, the logs and the settings in the install folder. It can't be undone. Only what Aperture created there is
+deleted, and only in a folder that is an Aperture installation, so a file of your own in it stays.
+
+**What stays either way:**
+- **Backups you downloaded** (*Download a backup*) or that a backup of your user folder made: they're yours to delete.
+- **What the browser keeps for Aperture's address** (`http://localhost:<port>`): its cookie, the notification
+  permission and the offline page. To clear them, remove the site data for `localhost` in the browser's settings.
+- **On a Mac, the record that the installer ran.** It's harmless; `sudo pkgutil --forget ch.aperture.installer`
+  removes it.
+
+**If uninstalling fails**, e.g. because the installation is half removed already, remove the pieces by hand:
+
+```bash
+# macOS
+for agent in web updater backup; do launchctl bootout gui/$UID/ch.aperture.$agent 2>/dev/null; done
+rm -f ~/Library/LaunchAgents/ch.aperture.*.plist
+rm -rf ~/Applications/Aperture.app ~/Aperture          # ~/Aperture holds the data: leave it to keep that
+
+# Linux
+systemctl --user disable --now aperture.service aperture-updater.path aperture-backup.timer
+rm -f ~/.config/systemd/user/aperture* ~/.local/share/applications/aperture.desktop
+systemctl --user daemon-reload
+rm -rf ~/.local/share/aperture                         # holds the data: leave it to keep that
+```
+
+```powershell
+# Windows (PowerShell). If the entry in Settings → Apps fails, run its uninstaller directly first:
+#   & "$env:LOCALAPPDATA\Aperture\unins000.exe"
+Get-ScheduledTask -TaskName "Aperture*" | Unregister-ScheduledTask -Confirm:$false
+Stop-Process -Name Aperture.Web -ErrorAction SilentlyContinue
+Remove-Item "$([Environment]::GetFolderPath('Programs'))\Aperture.*", "$([Environment]::GetFolderPath('Desktop'))\Aperture.*"
+Remove-Item -Recurse "$env:LOCALAPPDATA\Aperture"       # holds the data: leave it to keep that
+```
 
 ## Calendar and notifications
 
@@ -232,7 +280,7 @@ On Windows the program has no console window, so it writes what it does to `logs
 | Aperture isn't reachable | Open it from the Start menu, Applications or the applications menu: that starts it if it isn't running (it stops when its window has been closed for a minute). Then `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
 | "Port … is in use by another program" | Another program listens on Aperture's port. Close it and install again, or install again with `--port <port>` to move Aperture: then log in again, turn notifications on again and add the calendar feed again. |
 | Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open Aperture and create a new login. All data stays. |
-| Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. |
+| Uninstalling | See [Uninstalling](#uninstalling). |
 | Restoring a backup | See [Restoring](#restoring). |
 
 ## Signing the installers (optional)

@@ -12,7 +12,8 @@ it's used: a minute after its window is closed it stops, and opening it starts i
 - **Windows** (10 or 11, 64-bit): [Aperture-Setup.exe](../../releases/latest/download/Aperture-Setup.exe)
 - **Linux** (x64, systemd): the `linux-x64` package from the [latest release](../../releases/latest), then `install.sh`
 
-Details in [docs/deployment.md](docs/deployment.md).
+Details in [docs/deployment.md](docs/deployment.md), and how to remove it again in
+[Uninstalling](docs/deployment.md#uninstalling).
 
 **Stack:** .NET 10 · Blazor Web App (Interactive Server) · Radzen.Blazor · EF Core + SQLite
 
