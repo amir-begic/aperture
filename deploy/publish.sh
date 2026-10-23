@@ -24,6 +24,9 @@ rm -rf "$out"
     -p:InformationalVersion="$version" -o "$out" --nologo -v quiet >&2
 # Releases are public (release.yml): never with the development data, login or keys.
 [[ ! -e $out/data ]] || { echo "The build contains a data folder; check the Content items in Aperture.Web.csproj." >&2; exit 1; }
+# Without Blazor's script no page is interactive: forms would only reload. (A WinExe build leaves it out.)
+[[ -f $out/wwwroot/_framework/blazor.web.js ]] \
+    || { echo "The build has no _framework/blazor.web.js; check OutputType in Aperture.Web.csproj." >&2; exit 1; }
 # Aperture's license, and the notices and license texts its third-party components require with the binaries.
 cp -R LICENSE THIRD-PARTY-NOTICES.md licenses "$out/"
 [[ -z ${APERTURE_FEED_URL:-} ]] || printf '%s\n' "$APERTURE_FEED_URL" > "$out/feed.url"

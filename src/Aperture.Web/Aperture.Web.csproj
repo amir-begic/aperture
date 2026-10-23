@@ -11,8 +11,11 @@
 
   <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win'))">
     <!-- No console window: scheduled tasks start Aperture at logon, and a window would stay open. It logs to a file
-         instead (Aperture:LogFile, set by the install command). -->
-    <OutputType>WinExe</OutputType>
+         instead (Aperture:LogFile, set by the install command). Not with OutputType WinExe: the Blazor script
+         (_framework/blazor.web.js) is only added to Exe builds, and without it no page is interactive. So it stays an
+         Exe, and only its program file is marked as a windowed one (the SDK's own switch for WinExe; publish.sh checks
+         that the script is there). -->
+    <_UseWindowsGraphicalUserInterface>true</_UseWindowsGraphicalUserInterface>
     <!-- Shown for the program, its shortcuts and in Settings → Apps. Made by deploy/icons/make_icons.py. -->
     <ApplicationIcon>..\..\deploy\icons\aperture.ico</ApplicationIcon>
   </PropertyGroup>
