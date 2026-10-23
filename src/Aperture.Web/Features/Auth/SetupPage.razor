@@ -35,7 +35,7 @@
         }
 
         @* Statically rendered form (no circuit), so it can set the auth cookie, like the login. *@
-        <EditForm Model="Input" method="post" FormName="setup" OnValidSubmit="SetUpAsync">
+        <EditForm Model="Input" method="post" FormName="setup" OnValidSubmit="SetUpAsync" data-autofill>
             <DataAnnotationsValidator />
             <RadzenStack Gap="1rem">
                 <label class="login-field">
