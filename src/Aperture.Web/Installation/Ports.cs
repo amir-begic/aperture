@@ -4,7 +4,8 @@ using System.Net.Sockets;
 namespace Aperture.Web.Installation;
 
 /// <summary>
-/// Which port Aperture listens on. A first installation takes the first free one from 5090; after that the port stays,
+/// Which port Aperture listens on. A first installation takes the first free one from <see cref="ApertureHome.DefaultPort"/>;
+/// after that the port stays,
 /// because the login, notifications, the app window, shortcuts and calendar feeds all belong to that address.
 /// </summary>
 public static class Ports

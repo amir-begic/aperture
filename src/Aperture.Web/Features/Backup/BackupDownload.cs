@@ -98,8 +98,8 @@ public sealed class BackupDownload(AperturePaths paths, TimeProvider time)
            Linux, in a terminal:
              ~/.local/share/aperture/app/Aperture.Web restore ~/Downloads/"{folder}.zip"
 
-        3. Open http://localhost:5090 and sign in with the login from step 1. Turn notifications on again under
-           Settings if you use them.
+        3. Open Aperture and sign in with the login from step 1. Turn notifications on again under Settings if you use
+           them.
 
         """;
 }

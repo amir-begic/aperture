@@ -79,7 +79,7 @@ See [docs/deployment.md](docs/deployment.md):
 | `Aperture:DataDirectory` | `data` (relative to `src/Aperture.Web`) | All business data. `~` is expanded. |
 | `Aperture:LogFile` | – | Also log to this file. Set on Windows, where Aperture has no console. |
 | `Updates:FeedUrl` | – | `https://github.com/<owner>/aperture/releases/latest/download/latest.json`. Enables Settings → Updates. |
-| `Urls` | `http://localhost:5090` | Where Aperture listens. |
+| `Urls` | `http://localhost:5090` | Where Aperture listens. An installation takes the first free port from 29873 instead, and keeps it. |
 
 An installed copy keeps them in `aperture.json` in its install folder, written by `Aperture.Web install` and read on
 start; environment variables (`Aperture__DataDirectory`, …) and arguments still win. A development copy uses

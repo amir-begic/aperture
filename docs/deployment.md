@@ -1,9 +1,10 @@
 # Installing Aperture
 
-Aperture runs on the photographer's own computer and opens in its own window there, at `http://localhost:5090`,
-reachable from that computer only. It runs while they're logged in, backs up daily and updates itself. You, whoever
-looks after Aperture, publish the releases it installs: a feed that you fill by hand, so computers only get versions
-you've tried.
+Aperture runs on the photographer's own computer and opens in its own window there, at an address on that computer
+(`http://localhost:<port>`), reachable from that computer only. Its launcher (Start menu, Applications, applications
+menu) knows the address, so nobody needs to remember it. It runs while they're logged in, backs up daily and updates
+itself. You, whoever looks after Aperture, publish the releases it installs: a feed that you fill by hand, so
+computers only get versions you've tried.
 
 | | macOS | Windows | Linux |
 |---|---|---|---|
@@ -216,7 +217,7 @@ e.g. to repair an installation or to restore a backup. The program is `app/Apert
 |---|---|---|
 | `--home <folder>` | all | The install folder, if it's not the usual one (see the table at the top). `APERTURE_HOME` does the same. |
 | `--feed <url>` | `install` | Where to look for updates: the `latest.json` of the latest release. Default: the installation's current one, else the one the release was built with. |
-| `--port <port>` | `install` | The port Aperture listens on, on this computer only. Default: the installation's current one, else the first free one from 5090. An installation never moves to another port by itself: its login, notifications, shortcuts and calendar feeds belong to that address. |
+| `--port <port>` | `install` | The port Aperture listens on, on this computer only. Default: the installation's current one, else the first free one from 29873. An installation never moves to another port by itself: its login, notifications, shortcuts and calendar feeds belong to that address. |
 | `--no-open` | `install` | Don't open Aperture afterwards. `APERTURE_NO_OPEN=1` does the same. |
 | `--desktop-shortcut` | `install` | On Windows, also put *Aperture* on the desktop (the setup asks). |
 | `--remove-data` | `uninstall` | Also delete the data, uploaded files, login, backups, logs and settings in the install folder. It can't be undone. Only what Aperture created there is deleted, and only in a folder that is an Aperture installation. On Windows, the uninstaller in *Settings → Apps* asks instead. |

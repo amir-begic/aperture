@@ -5,7 +5,7 @@
 #
 # Usually run by the installer package (deploy/macos/pkg). Unpacks the release into ~/Aperture, gets it ready to run
 # on a Mac, and hands over to "Aperture.Web install", which sets up the launchd agents (Aperture at login, the updater,
-# the daily backup) and opens http://localhost:5090. Safe to run again: existing data is kept.
+# the daily backup) and the Aperture app, and opens it. Safe to run again: existing data is kept.
 # Written for macOS's /bin/bash 3.2: no bash 4+ features.
 set -euo pipefail
 APERTURE_HOME="${APERTURE_HOME:-$HOME/Aperture}"

@@ -61,8 +61,9 @@ public sealed class InstallationTests : IDisposable
     [Fact]
     public void A_first_installation_takes_the_first_free_port()
     {
-        Assert.Equal(5090, Ports.Choose(null, null, new CommandLog(null), isFree: _ => true));
-        Assert.Equal(5092, Ports.Choose(null, null, new CommandLog(null), isFree: p => p > 5091));
+        const int start = ApertureHome.DefaultPort;
+        Assert.Equal(start, Ports.Choose(null, null, new CommandLog(null), isFree: _ => true));
+        Assert.Equal(start + 2, Ports.Choose(null, null, new CommandLog(null), isFree: p => p > start + 1));
         Assert.Throws<InstallationException>(() => Ports.Choose(null, null, new CommandLog(null), isFree: _ => false));
     }
 

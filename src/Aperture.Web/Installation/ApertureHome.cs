@@ -10,7 +10,12 @@ namespace Aperture.Web.Installation;
 /// </summary>
 public sealed record ApertureHome(string Root)
 {
-    public const int DefaultPort = 5090;
+    /// <summary>
+    /// Where a first installation starts looking for a free port (see Ports). Below the ports the systems hand out for
+    /// outgoing connections (from 32768 on Linux, 49152 on macOS and Windows), and away from well-known ones, including
+    /// the 5000s of .NET development servers: a development copy runs on 5090 (launchSettings.json).
+    /// </summary>
+    public const int DefaultPort = 29873;
 
     public string App => Path.Combine(Root, "app");
     public string Releases => Path.Combine(Root, "releases");
