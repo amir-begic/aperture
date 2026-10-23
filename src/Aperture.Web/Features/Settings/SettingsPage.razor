@@ -20,19 +20,19 @@ else
     <RadzenTemplateForm TItem="BusinessSettings" Data="_settings" Submit="SaveAsync">
         <RadzenStack Gap="1.5rem" class="settings-form">
             <RadzenFieldset Text="@L["Language"]">
-                <RadzenStack Gap="0.5rem">
-                    <RadzenSelectBar TValue="Language?" @bind-Value="_settings.Language" Size="ButtonSize.Small">
-                        <Items>
-                            @foreach (var language in Enum.GetValues<Language>())
-                            {
-                                <RadzenSelectBarItem Text="@language.Name()" Value="@((Language?)language)" />
-                            }
-                        </Items>
-                    </RadzenSelectBar>
-                    <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
-                        @L["Aperture's own language. Invoices are in each client's language, chosen on the client."]
-                    </RadzenText>
-                </RadzenStack>
+                <RadzenRow AlignItems="AlignItems.Center">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        <RadzenDropDown TValue="Language" Value="@(_settings.Language ?? Languages.Current)"
+                                        ValueChanged="@((Language language) => _settings.Language = language)"
+                                        Data="Labels.Choices<Language>(l => l.Name())" TextProperty="Text" ValueProperty="Value"
+                                        class="w-full" aria-label="@L["Language"]" />
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                            @L["Aperture's own language, and the one new invoices start in. Each invoice's language can be changed on its shoot."]
+                        </RadzenText>
+                    </RadzenColumn>
+                </RadzenRow>
             </RadzenFieldset>
 
             <BusinessDetailsFields Settings="_settings" />

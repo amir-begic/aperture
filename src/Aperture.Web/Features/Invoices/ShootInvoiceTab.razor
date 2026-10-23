@@ -17,7 +17,12 @@ else if (Active is null)
             <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
                 @L["The draft starts with the quote and every cost billed to the client. You can edit it before issuing."]
             </RadzenText>
-            <RadzenButton Text="@L["Create invoice"]" Icon="request_quote" Click="CreateDraftAsync" IsBusy="_busy" />
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="1rem" Wrap="FlexWrap.Wrap">
+                <RadzenFormField Text="@L["Invoice language"]">
+                    <RadzenDropDown TValue="Language" @bind-Value="_language" Data="LanguageChoices" TextProperty="Text" ValueProperty="Value" />
+                </RadzenFormField>
+                <RadzenButton Text="@L["Create invoice"]" Icon="request_quote" Click="CreateDraftAsync" IsBusy="_busy" />
+            </RadzenStack>
         </RadzenStack>
     </RadzenCard>
 }
@@ -47,10 +52,10 @@ else if (Active.Status == InvoiceStatus.Draft)
             <RadzenFormField Text="@L["Due date"]">
                 <RadzenDatePicker TValue="DateOnly" @bind-Value="_dueDate" @bind-Value:after="MarkDirty" DateFormat="dd.MM.yyyy" />
             </RadzenFormField>
-            <RadzenText TextStyle="TextStyle.Caption" class="rz-my-0 rz-mt-4">
-                @L["In {0}, the client's invoice language.", _clientLanguage.Name()]
-                <RadzenLink Path="@($"clients/{_clientId}")" Text="@L["Change"]" />
-            </RadzenText>
+            <RadzenFormField Text="@L["Invoice language"]">
+                <RadzenDropDown TValue="Language" @bind-Value="_language" @bind-Value:after="OnLanguageChanged"
+                                Data="LanguageChoices" TextProperty="Text" ValueProperty="Value" />
+            </RadzenFormField>
         </RadzenStack>
 
         <div class="invoice-lines">
@@ -173,7 +178,11 @@ else
     private int _paymentTermsDays;
     private Money _received;
     private int _clientId;
-    private Language _clientLanguage;
+    private string _shootTitle = "";
+
+    /// <summary>A new invoice starts in the language Aperture is in; a draft keeps its own.</summary>
+    private Language _language = Languages.Current;
+    private Language _previousLanguage;
     private bool _busy;
 
     private InvoiceTotals DraftTotals => InvoiceTotals.Calculate(
@@ -186,9 +195,9 @@ else
         await using var db = await DbFactory.CreateDbContextAsync();
         _invoices = await db.Invoices.AsNoTracking().Include(i => i.Lines)
             .Where(i => i.ShootId == ShootId).OrderByDescending(i => i.Id).ToListAsync();
-        var client = await db.Shoots.Where(s => s.Id == ShootId).Select(s => new { s.ClientId, s.Client.InvoiceLanguage }).SingleAsync();
-        _clientId = client.ClientId;
-        _clientLanguage = client.InvoiceLanguage;
+        var shoot = await db.Shoots.Where(s => s.Id == ShootId).Select(s => new { s.ClientId, s.Title }).SingleAsync();
+        _clientId = shoot.ClientId;
+        _shootTitle = shoot.Title;
 
         if (Active is { Status: InvoiceStatus.Draft } draft)
         {
@@ -198,6 +207,7 @@ else
             _received = (await db.Payments.Where(p => p.ShootId == ShootId).Select(p => p.Amount).ToListAsync()).Sum();
             _issueDate = draft.IssueDate;
             _dueDate = draft.DueDate;
+            _language = _previousLanguage = draft.Language;
             _lines = draft.Lines.OrderBy(l => l.SortOrder)
                 .Select(l => new LineEdit { Description = l.Description, Quantity = l.Quantity, PriceChf = l.UnitPrice.Chf })
                 .ToList();
@@ -212,6 +222,20 @@ else
     private void OnIssueDateChanged()
     {
         _dueDate = _issueDate.AddDays(_paymentTermsDays);
+        MarkDirty();
+    }
+
+    private static IReadOnlyList<Choice<Language>> LanguageChoices => Labels.Choices<Language>(l => l.Name());
+
+    /// <summary>The shoot's line as the draft started it follows the language; lines written by hand stay as they are.</summary>
+    private void OnLanguageChanged()
+    {
+        var before = InvoiceService.ShootLine(_shootTitle, _previousLanguage);
+        foreach (var line in _lines.Where(l => l.Description == before))
+        {
+            line.Description = InvoiceService.ShootLine(_shootTitle, _language);
+        }
+        _previousLanguage = _language;
         MarkDirty();
     }
 
@@ -232,7 +256,7 @@ else
         _busy = true;
         try
         {
-            await Invoices.CreateDraftAsync(ShootId);
+            await Invoices.CreateDraftAsync(ShootId, _language);
             await LoadAsync();
         }
         finally
@@ -246,7 +270,7 @@ else
         _busy = true;
         try
         {
-            await Invoices.SaveDraftAsync(Active!.Id, _issueDate, _dueDate, _lines.Select(l => l.ToDraftLine()).ToList());
+            await Invoices.SaveDraftAsync(Active!.Id, _issueDate, _dueDate, _language, _lines.Select(l => l.ToDraftLine()).ToList());
             await LoadAsync();
             Notifications.Notify(NotificationSeverity.Success, L["Draft saved"]);
         }
@@ -273,7 +297,7 @@ else
             var id = Active!.Id;
             if (_dirty)
             {
-                await Invoices.SaveDraftAsync(id, _issueDate, _dueDate, _lines.Select(l => l.ToDraftLine()).ToList());
+                await Invoices.SaveDraftAsync(id, _issueDate, _dueDate, _language, _lines.Select(l => l.ToDraftLine()).ToList());
             }
 
             var problems = await Invoices.IssueAsync(id);

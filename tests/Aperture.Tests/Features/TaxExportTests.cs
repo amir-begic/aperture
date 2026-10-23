@@ -8,6 +8,7 @@ using Aperture.Web.Domain;
 using Aperture.Web.Features.Attachments;
 using Aperture.Web.Features.Finance;
 using Aperture.Web.Features.Invoices;
+using Aperture.Web.Localization;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aperture.Tests.Features;
@@ -51,7 +52,7 @@ public sealed class TaxExportTests : IAsyncLifetime
         await db.SaveChangesAsync();
 
         var invoices = new InvoiceService(factory, _store, time);
-        var invoiceId = await invoices.CreateDraftAsync(shoot.Id);
+        var invoiceId = await invoices.CreateDraftAsync(shoot.Id, Language.English);
         Assert.Empty(await invoices.IssueAsync(invoiceId));
     }
 

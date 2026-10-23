@@ -139,8 +139,8 @@
   <data name="Aperture {0} tax export" xml:space="preserve">
     <value>Aperture {0} Steuerexport</value>
   </data>
-  <data name="Aperture's own language. Invoices are in each client's language, chosen on the client." xml:space="preserve">
-    <value>Die Sprache von Aperture. Rechnungen sind in der Sprache des jeweiligen Kunden, die du beim Kunden wählst.</value>
+  <data name="Aperture's own language, and the one new invoices start in. Each invoice's language can be changed on its shoot." xml:space="preserve">
+    <value>Die Sprache von Aperture und die, in der neue Rechnungen beginnen. Die Sprache jeder Rechnung kannst du beim Shooting ändern.</value>
   </data>
   <data name="At most {0} characters." xml:space="preserve">
     <value>Höchstens {0} Zeichen.</value>
@@ -249,9 +249,6 @@
   </data>
   <data name="Category" xml:space="preserve">
     <value>Kategorie</value>
-  </data>
-  <data name="Change" xml:space="preserve">
-    <value>Ändern</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>Diagramm</value>
@@ -660,9 +657,6 @@
   </data>
   <data name="in quote" xml:space="preserve">
     <value>in der Offerte</value>
-  </data>
-  <data name="In {0}, the client's invoice language." xml:space="preserve">
-    <value>Auf {0}, in der Rechnungssprache des Kunden.</value>
   </data>
   <data name="incl. depreciation" xml:space="preserve">
     <value>inkl. Abschreibungen</value>

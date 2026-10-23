@@ -35,7 +35,7 @@ public class Invoice
 
     public InvoiceAddress Client { get; set; } = new();
 
-    /// <summary>The client's invoice language.</summary>
+    /// <summary>What the invoice is written in: chosen on the draft, Aperture's language unless changed.</summary>
     public Language Language { get; set; }
 
     /// <summary>Payments received before the invoice was issued (e.g. a deposit).</summary>

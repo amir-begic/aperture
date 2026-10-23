@@ -48,13 +48,12 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     }
 
     /// <summary>A shoot quoted at 1800 with lights billed at 450 on top and a 500 deposit paid.</summary>
-    private async Task<Shoot> AddWeddingAsync(bool withAddress = true, Language invoiceLanguage = Language.English)
+    private async Task<Shoot> AddWeddingAsync(bool withAddress = true)
     {
         await using var db = _database.CreateContext();
         var client = new Client
         {
             Name = "Anna & Marco Rossi",
-            InvoiceLanguage = invoiceLanguage,
             Street = withAddress ? "Seestrasse 5" : null,
             PostalCode = withAddress ? "8800" : null,
             City = withAddress ? "Thalwil" : null,
@@ -82,7 +81,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     {
         var shoot = await AddWeddingAsync();
 
-        var id = await _invoices.CreateDraftAsync(shoot.Id);
+        var id = await _invoices.CreateDraftAsync(shoot.Id, Language.English);
 
         var (invoice, _) = await _invoices.LoadForDocumentAsync(id);
         Assert.Equal(InvoiceStatus.Draft, invoice.Status);
@@ -105,7 +104,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
             await db.Shoots.Where(s => s.Id == shoot.Id).ExecuteUpdateAsync(s => s.SetProperty(x => x.PackageId, package.Id));
         }
 
-        var (invoice, _) = await _invoices.LoadForDocumentAsync(await _invoices.CreateDraftAsync(shoot.Id));
+        var (invoice, _) = await _invoices.LoadForDocumentAsync(await _invoices.CreateDraftAsync(shoot.Id, Language.English));
 
         Assert.Equal("Wedding full day: Wedding Rossi", invoice.Lines.OrderBy(l => l.SortOrder).First().Description);
     }
@@ -114,18 +113,18 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     public async Task Only_one_active_invoice_per_shoot()
     {
         var shoot = await AddWeddingAsync();
-        await _invoices.CreateDraftAsync(shoot.Id);
+        await _invoices.CreateDraftAsync(shoot.Id, Language.English);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _invoices.CreateDraftAsync(shoot.Id));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _invoices.CreateDraftAsync(shoot.Id, Language.English));
     }
 
     [Fact]
     public async Task Draft_lines_can_be_edited()
     {
         var shoot = await AddWeddingAsync();
-        var id = await _invoices.CreateDraftAsync(shoot.Id);
+        var id = await _invoices.CreateDraftAsync(shoot.Id, Language.English);
 
-        await _invoices.SaveDraftAsync(id, new DateOnly(2026, 10, 6), new DateOnly(2026, 10, 20),
+        await _invoices.SaveDraftAsync(id, new DateOnly(2026, 10, 6), new DateOnly(2026, 10, 20), Language.German,
         [
             new("Photography, 14:00–22:00", 1, Money.FromChf(1800)),
             new("Lighting", 1, Money.FromChf(450)),
@@ -136,13 +135,14 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         Assert.Equal("Lighting", invoice.Lines.Single(l => l.SortOrder == 1).Description);
         Assert.Equal(Money.FromChf(2475), invoice.Totals.Total);
         Assert.Equal(new DateOnly(2026, 10, 20), invoice.DueDate);
+        Assert.Equal(Language.German, invoice.Language);
     }
 
     [Fact]
     public async Task Issuing_numbers_freezes_and_archives_the_invoice()
     {
         var shoot = await AddWeddingAsync();
-        var id = await _invoices.CreateDraftAsync(shoot.Id);
+        var id = await _invoices.CreateDraftAsync(shoot.Id, Language.English);
 
         Assert.Empty(await _invoices.IssueAsync(id));
 
@@ -167,7 +167,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         Assert.Equal("Thalwil", reloaded.Client.City);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _invoices.SaveDraftAsync(id, invoice.IssueDate, invoice.DueDate, [new("Changed", 1, Money.FromChf(1))]));
+            _invoices.SaveDraftAsync(id, invoice.IssueDate, invoice.DueDate, invoice.Language, [new("Changed", 1, Money.FromChf(1))]));
     }
 
     [Fact]
@@ -176,12 +176,12 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
         var first = await AddWeddingAsync();
         var second = await AddWeddingAsync();
 
-        var firstId = await _invoices.CreateDraftAsync(first.Id);
+        var firstId = await _invoices.CreateDraftAsync(first.Id, Language.English);
         await _invoices.IssueAsync(firstId);
         await _invoices.CancelAsync(firstId);
-        var replacementId = await _invoices.CreateDraftAsync(first.Id); // allowed after cancelling
+        var replacementId = await _invoices.CreateDraftAsync(first.Id, Language.English); // allowed after cancelling
         await _invoices.IssueAsync(replacementId);
-        var secondId = await _invoices.CreateDraftAsync(second.Id);
+        var secondId = await _invoices.CreateDraftAsync(second.Id, Language.English);
         await _invoices.IssueAsync(secondId);
 
         await using var db = _database.CreateContext();
@@ -194,7 +194,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     public async Task Missing_billing_address_blocks_issuing()
     {
         var shoot = await AddWeddingAsync(withAddress: false);
-        var id = await _invoices.CreateDraftAsync(shoot.Id);
+        var id = await _invoices.CreateDraftAsync(shoot.Id, Language.English);
 
         var problems = await _invoices.IssueAsync(id);
 
@@ -213,7 +213,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
             await db.SaveChangesAsync();
         }
 
-        var problems = await _invoices.CheckAsync(await _invoices.CreateDraftAsync(shoot.Id));
+        var problems = await _invoices.CheckAsync(await _invoices.CreateDraftAsync(shoot.Id, Language.English));
 
         Assert.Contains(problems, p => p.Contains("QR-IBAN"));
     }
@@ -222,7 +222,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     public async Task Qr_bill_carries_amount_due_iban_and_rf_reference()
     {
         var shoot = await AddWeddingAsync();
-        var id = await _invoices.CreateDraftAsync(shoot.Id);
+        var id = await _invoices.CreateDraftAsync(shoot.Id, Language.English);
         await _invoices.IssueAsync(id);
         var (invoice, _) = await _invoices.LoadForDocumentAsync(id);
 
@@ -240,10 +240,10 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Invoices_are_in_the_clients_language_whatever_the_app_is_in()
+    public async Task Invoices_are_in_the_language_chosen_for_them_whatever_the_app_is_in()
     {
-        var shoot = await AddWeddingAsync(invoiceLanguage: Language.German);
-        var id = await _invoices.CreateDraftAsync(shoot.Id);
+        var shoot = await AddWeddingAsync();
+        var id = await _invoices.CreateDraftAsync(shoot.Id, Language.German);
 
         Assert.Empty(await _invoices.IssueAsync(id));
 
@@ -267,7 +267,7 @@ public sealed class InvoiceServiceTests : IAsyncLifetime
     {
         var shoot = await AddWeddingAsync();
         await _database.AddPaymentAsync(shoot, 1750);
-        var id = await _invoices.CreateDraftAsync(shoot.Id);
+        var id = await _invoices.CreateDraftAsync(shoot.Id, Language.English);
         var (invoice, info) = await _invoices.LoadForDocumentAsync(id);
 
         Assert.Equal(Money.Zero, invoice.Totals.AmountDue);

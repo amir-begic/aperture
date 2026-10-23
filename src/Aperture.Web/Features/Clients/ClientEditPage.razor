@@ -62,7 +62,7 @@ else
     {
         if (IsNew)
         {
-            _client = new Client { InvoiceLanguage = Languages.Current };
+            _client = new Client();
             _shoots = [];
             return;
         }

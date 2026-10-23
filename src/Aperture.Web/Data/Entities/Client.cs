@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using Aperture.Web.Domain;
-using Aperture.Web.Localization;
 
 namespace Aperture.Web.Data.Entities;
 
@@ -32,9 +31,6 @@ public class Client
 
     [Required, RegularExpression("^[A-Z]{2}$", ErrorMessage = "Use a two-letter country code, e.g. CH.")]
     public string CountryCode { get; set; } = "CH";
-
-    /// <summary>What their invoices are written in.</summary>
-    public Language InvoiceLanguage { get; set; }
 
     [MaxLength(4000)]
     public string? Notes { get; set; }

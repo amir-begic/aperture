@@ -58,12 +58,6 @@
                         <Helper><FieldValidator Component="CountryCode" /></Helper>
                     </RadzenFormField>
                 </RadzenColumn>
-                <RadzenColumn Size="12" SizeMD="6">
-                    <RadzenFormField Text="@L["Invoice language"]" class="w-full">
-                        <RadzenDropDown TValue="Language" Name="InvoiceLanguage" @bind-Value="Client.InvoiceLanguage"
-                                        Data="Labels.Choices<Language>(l => l.Name())" TextProperty="Text" ValueProperty="Value" />
-                    </RadzenFormField>
-                </RadzenColumn>
             </RadzenRow>
 
             <RadzenFormField Text="@L["Notes"]" class="w-full">

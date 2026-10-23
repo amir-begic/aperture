@@ -16,8 +16,8 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
 {
     private DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
-    /// <summary>A draft pre-filled with the shoot at its quote and each cost billed to the client.</summary>
-    public async Task<int> CreateDraftAsync(int shootId)
+    /// <summary>A draft in <paramref name="language"/>, pre-filled with the shoot at its quote and each cost billed to the client.</summary>
+    public async Task<int> CreateDraftAsync(int shootId, Language language)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
         if (await db.Invoices.AnyAsync(i => i.ShootId == shootId && i.Status != InvoiceStatus.Cancelled))
@@ -25,8 +25,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
             throw new InvalidOperationException("This shoot already has an invoice. Cancel it first to create a new one.");
         }
 
-        var shoot = await db.Shoots.Include(s => s.Package).Include(s => s.Client).SingleAsync(s => s.Id == shootId);
-        var culture = shoot.Client.InvoiceLanguage.Culture();
+        var shoot = await db.Shoots.Include(s => s.Package).SingleAsync(s => s.Id == shootId);
         var billedCosts = await db.Expenses
             .Where(e => e.ShootId == shootId && e.BilledToClient != null)
             .OrderBy(e => e.Date).ThenBy(e => e.Id)
@@ -38,12 +37,11 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
             ShootId = shootId,
             IssueDate = Today,
             DueDate = Today.AddDays(settings.PaymentTermsDays),
+            Language = language,
         };
         invoice.Lines.Add(new InvoiceLine
         {
-            Description = shoot.Package is { } package
-                ? $"{package.Name}: {shoot.Title}"
-                : string.Format(culture, Texts.Get("Photography: {0}", culture), shoot.Title),
+            Description = shoot.Package is { } package ? $"{package.Name}: {shoot.Title}" : ShootLine(shoot.Title, language),
             UnitPrice = shoot.QuotedPrice ?? Money.Zero,
         });
         invoice.Lines.AddRange(billedCosts.Select(cost => new InvoiceLine
@@ -58,7 +56,12 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
         return invoice.Id;
     }
 
-    public async Task SaveDraftAsync(int invoiceId, DateOnly issueDate, DateOnly dueDate, IReadOnlyList<DraftLine> lines)
+    /// <summary>"Photography: Wedding Rossi", the first line of a draft for a shoot without a package.</summary>
+    public static string ShootLine(string shootTitle, Language language) =>
+        string.Format(language.Culture(), Texts.Get("Photography: {0}", language.Culture()), shootTitle);
+
+    public async Task SaveDraftAsync(
+        int invoiceId, DateOnly issueDate, DateOnly dueDate, Language language, IReadOnlyList<DraftLine> lines)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
         var invoice = await db.Invoices.Include(i => i.Lines).SingleAsync(i => i.Id == invoiceId);
@@ -66,6 +69,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
 
         invoice.IssueDate = issueDate;
         invoice.DueDate = dueDate;
+        invoice.Language = language;
         db.InvoiceLines.RemoveRange(invoice.Lines);
         invoice.Lines = lines.Select((line, index) => new InvoiceLine
         {
