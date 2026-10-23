@@ -160,8 +160,11 @@ public sealed class InstallationTests : IDisposable
         var updater = agents[MacPlatform.UpdaterLabel].ToString();
         Assert.Contains(Path.Combine(Home.App, "Aperture.Web"), updater);
         Assert.Contains(Path.Combine(Home.Data, "updates", "request"), updater);
-        // External drives need Full Disk Access, granted to /bin/bash once; the program's path changes with each release.
-        Assert.Contains("<string>/bin/bash</string>", agents[MacPlatform.BackupLabel].ToString());
+        // The backup runs the program itself, with no shell in between that would need Full Disk Access.
+        var backup = agents[MacPlatform.BackupLabel].ToString();
+        Assert.Contains($"<string>{Path.Combine(Home.App, "Aperture.Web")}</string>", backup);
+        Assert.Contains("<string>backup</string>", backup);
+        Assert.DoesNotContain("/bin/bash", backup);
     }
 
     [Fact]
@@ -246,7 +249,6 @@ public sealed class InstallationTests : IDisposable
         Directory.CreateDirectory(Path.Combine(Home.Backups, BackupJob.FolderName));
         Directory.CreateDirectory(Home.Logs);
         new HomeSettings(5090, null).Write(Home);
-        BackupJob.WriteDefaultConfig(Home);
         File.WriteAllText(Path.Combine(_root, "my-notes.txt"), "not Aperture's");
     }
 
@@ -259,7 +261,7 @@ public sealed class InstallationTests : IDisposable
 
         Assert.Equal(0, await Installer().UninstallAsync());
 
-        Assert.Equal(["backup.conf", "backups", "data", "logs", "my-notes.txt"],
+        Assert.Equal(["backups", "data", "logs", "my-notes.txt"],
             Directory.GetFileSystemEntries(_root).Select(Path.GetFileName).Order());
     }
 

@@ -19,9 +19,6 @@ public sealed record ApertureHome(string Root)
     public string Backups => Path.Combine(Root, "backups");
     public string BeforeUpdateBackups => Path.Combine(Backups, "before-update");
 
-    /// <summary>Where backups go, one folder per line (see BackupJob).</summary>
-    public string BackupConfig => Path.Combine(Root, "backup.conf");
-
     /// <summary>The installed copy's configuration: port, data folder, update feed.</summary>
     public string SettingsFile => Path.Combine(Root, "aperture.json");
 

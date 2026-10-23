@@ -23,7 +23,6 @@ data/               database, uploaded files, login, backup status   ← this is
 backups/            the daily backup, and database copies taken before each update and restore
 logs/               aperture.log, backup.log, update.log (and on Windows install.log, uninstall.log)
 aperture.json       port, data folder and update feed
-backup.conf         where backups go, one folder per line
 ```
 
 The program installs, updates and backs itself up (see [Commands](#commands)). The installers only unpack a release
@@ -145,14 +144,11 @@ Aperture compares the build number to tell whether a release is newer.
   writes to `backups/Aperture Backup` in the install folder: a copy of the database per day (kept for 90 days, the
   one from the 1st of each month forever; Swiss law requires business records to be kept for 10 years), all uploaded
   files and the login. Unlike the live database, these copies are always consistent. That copy is on the same disk:
-  it helps after a mistake or a damaged database, not after losing the computer. **Time Machine** on a Mac, **File
-  History** or any backup of the user folder on Windows, and the usual home backup on Linux take it along.
-- **On an external drive or a synced folder too:** add its path to `backup.conf`, e.g. `/Volumes/Backup`, `E:\` or a
-  OneDrive folder. A folder that isn't there is skipped and reported. On a Mac, external drives need Full Disk Access
-  for `/bin/bash` (*System Settings → Privacy & Security → Full Disk Access*); format the drive as *APFS (Encrypted)*.
-- **By hand:** *Settings → Backups → Download a backup* downloads everything as one ZIP: the database and all uploaded
-  files, with a note on how to restore it. For a copy somewhere else, or to move to a new computer, also from one
-  system to another.
+  it helps after a mistake or a damaged database, not after losing the computer.
+- **Somewhere else:** *Settings → Backups → Download a backup* downloads everything as one ZIP: the database and all
+  uploaded files, with a note on how to restore it. Keep it on an external drive or in the cloud, or use it to move to
+  a new computer, also from one system to another. A backup of the user folder, such as **Time Machine** on a Mac or
+  **File History** on Windows, takes the daily backup along by itself.
 - **Check:** *Settings → Backups* shows the last backup and any problems. The Dashboard warns when it's more than 36
   hours old.
 
@@ -223,7 +219,7 @@ e.g. to repair an installation or to restore a backup. The program is `app/Apert
 | `--port <port>` | `install` | The port Aperture listens on, on this computer only. Default: the installation's current one, else the first free one from 5090. An installation never moves to another port by itself: its login, notifications, shortcuts and calendar feeds belong to that address. |
 | `--no-open` | `install` | Don't open Aperture afterwards. `APERTURE_NO_OPEN=1` does the same. |
 | `--desktop-shortcut` | `install` | On Windows, also put *Aperture* on the desktop (the setup asks). |
-| `--remove-data` | `uninstall` | Also delete the data, uploaded files, login, backups, logs and settings in the install folder. It can't be undone. Only what Aperture created there is deleted, and only in a folder that is an Aperture installation; backups in other folders listed in `backup.conf` stay. On Windows, the uninstaller in *Settings → Apps* asks instead. |
+| `--remove-data` | `uninstall` | Also delete the data, uploaded files, login, backups, logs and settings in the install folder. It can't be undone. Only what Aperture created there is deleted, and only in a folder that is an Aperture installation. On Windows, the uninstaller in *Settings → Apps* asks instead. |
 
 On Windows the program has no console window, so it writes what it does to `logs/<command>.log` instead.
 
@@ -235,7 +231,7 @@ On Windows the program has no console window, so it writes what it does to `logs
 | Aperture isn't reachable | Open it from the Start menu, Applications or the applications menu: that starts it if it isn't running (it stops when its window has been closed for a minute). Then `logs/aperture.log` in the install folder. Is it running? macOS: `launchctl print gui/$UID/ch.aperture.web`; Windows: *Task Scheduler → Aperture*; Linux: `systemctl --user status aperture`. Installing again repairs the setup and keeps all data. |
 | "Port … is in use by another program" | Another program listens on Aperture's port. Close it and install again, or install again with `--port <port>` to move Aperture: then log in again, turn notifications on again and add the calendar feed again. |
 | Forgot the password | Delete `data/keys/login.json`, restart Aperture (or log out and in), open Aperture and create a new login. All data stays. |
-| Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. Backups in other folders listed in `backup.conf` stay. |
+| Uninstalling | macOS: `~/Aperture/app/deploy/macos/uninstall.sh`. Windows: *Settings → Apps*. Linux: `~/.local/share/aperture/app/Aperture.Web uninstall`. Data and backups stay; add `--remove-data` (on Windows, answer *Yes*) to remove them too: database, files, login, backups and logs. |
 | Restoring a backup | See [Restoring](#restoring). |
 
 ## Signing the installers (optional)

@@ -29,7 +29,6 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
             File.SetUnixFileMode(home.Data, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
             File.SetUnixFileMode(home.Backups, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
         }
-        BackupJob.WriteDefaultConfig(home);
 
         var existing = HomeSettings.Read(home);
         feed ??= existing?.FeedUrl ?? ReadFeedFile(release);
@@ -73,7 +72,7 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
         }
         log.Write($"Aperture is running: {settings.Url}");
         log.Write(feed is null ? "No update feed: Aperture won't look for new versions." : $"Updates from: {feed}");
-        log.Write($"Data: {home.Data}. Backups: {string.Join(", ", new BackupJob(home, TimeProvider.System, log).Folders())}");
+        log.Write($"Data: {home.Data}. Backups: {new BackupJob(home, TimeProvider.System, log).Target}");
         if (openApp)
         {
             try
@@ -122,7 +121,7 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
     /// Stops Aperture and removes its services and program. Data, logs and backups stay, unless
     /// <paramref name="removeData"/>: then everything Aperture keeps in the install folder goes too (database, files,
     /// login, backups, logs, settings). Only what Aperture creates there is deleted, and only in a folder that is an
-    /// Aperture installation; backups in other folders (backup.conf) stay.
+    /// Aperture installation.
     /// </summary>
     public async Task<int> UninstallAsync(bool removeData = false)
     {
@@ -130,11 +129,6 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
         {
             throw new InstallationException($"{home.Root} isn't an Aperture installation, so nothing was removed.");
         }
-
-        var otherBackups = removeData
-            ? new BackupJob(home, TimeProvider.System, log).Folders()
-                .Where(f => Path.GetFullPath(f) != Path.GetFullPath(home.Backups) && Directory.Exists(f)).ToList()
-            : [];
 
         log.Write("Stopping Aperture");
         await platform.StopWebAsync(home);
@@ -182,7 +176,6 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
                 Directory.Delete(folder, recursive: true);
             }
         }
-        File.Delete(home.BackupConfig);
         if (Directory.Exists(home.Root) && !Directory.EnumerateFileSystemEntries(home.Root).Any())
         {
             Directory.Delete(home.Root);
@@ -190,10 +183,6 @@ public sealed class Installer(ApertureHome home, Platform platform, CommandLog l
 
         // Written to the console only: the logs folder is gone.
         Console.WriteLine("Removed Aperture and all its data.");
-        foreach (var folder in otherBackups)
-        {
-            Console.WriteLine($"Backups in {Path.Combine(folder, BackupJob.FolderName)} stay; delete them yourself if you like.");
-        }
         return 0;
     }
 

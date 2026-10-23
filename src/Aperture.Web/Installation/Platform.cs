@@ -448,8 +448,8 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
         """;
 
     /// <summary>
-    /// The three agents. The backup runs through /bin/bash (deploy/macos/backup.sh): Full Disk Access for external
-    /// drives is granted to /bin/bash once, while the program's path changes with every release.
+    /// The three agents. The backup runs the program itself: it writes to the install folder, which needs no extra
+    /// permission.
     /// </summary>
     public static IEnumerable<(string Label, string Plist)> Agents(ApertureHome home)
     {
@@ -519,8 +519,8 @@ public sealed class MacPlatform(ICommandRunner run) : Platform(run)
         yield return (BackupLabel, Plist("The daily backup: at login and at 13:00, or on waking up if the Mac was asleep then.", BackupLabel, $"""
                 <key>ProgramArguments</key>
                 <array>
-                    <string>/bin/bash</string>
-                    <string>{Xml(Path.Combine(app, "deploy", "macos", "backup.sh"))}</string>
+                    <string>{Xml(Path.Combine(app, "Aperture.Web"))}</string>
+                    <string>backup</string>
                 </array>
             {environment}
                 <key>RunAtLoad</key>

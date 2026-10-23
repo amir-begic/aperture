@@ -43,13 +43,13 @@ public sealed class BackupJobTests : IAsyncLifetime
     private BackupStatus Status => BackupStatus.Read(new AperturePaths(Home.Data))!;
 
     [Fact]
-    public void Backs_up_database_files_and_keys_into_each_folder()
+    public void Backs_up_database_files_and_keys_into_the_install_folder()
     {
-        BackupJob.WriteDefaultConfig(Home);
 
         Assert.Equal(0, Job().Run());
 
-        var target = Path.Combine(Home.Backups, BackupJob.FolderName);
+        var target = Job().Target;
+        Assert.Equal(Path.Combine(Home.Backups, BackupJob.FolderName), target);
         var copy = Path.Combine(target, "database", "aperture-2026-10-23.db");
         Assert.Equal("ok", DatabaseCopy.IntegrityCheck(copy));
         Assert.Equal("a receipt", File.ReadAllText(Path.Combine(target, "attachments", "2026", "receipt.pdf")));
@@ -62,7 +62,6 @@ public sealed class BackupJobTests : IAsyncLifetime
     [Fact]
     public void Files_deleted_in_Aperture_stay_in_the_backup()
     {
-        BackupJob.WriteDefaultConfig(Home);
         Job().Run();
         File.Delete(Path.Combine(Home.Data, "attachments", "2026", "receipt.pdf"));
 
@@ -72,25 +71,13 @@ public sealed class BackupJobTests : IAsyncLifetime
     }
 
     [Fact]
-    public void A_missing_drive_is_a_problem_but_the_other_folders_still_get_their_backup()
-    {
-        var drive = Path.Combine(_root, "not-connected");
-        File.WriteAllLines(Home.BackupConfig, ["# my folders", Home.Backups + "   # on this computer", "", drive]);
-
-        Assert.Equal(0, Job().Run());
-
-        Assert.Equal([$"Not connected: {drive}"], Status.Problems);
-        Assert.Single(Status.Destinations);
-    }
-
-    [Fact]
     public void Without_any_backup_the_last_success_stays_as_it_was()
     {
-        BackupJob.WriteDefaultConfig(Home);
         Job().Run();
-        File.WriteAllText(Home.BackupConfig, Path.Combine(_root, "gone"));
+        File.Move(Path.Combine(Home.Data, "aperture.db"), Path.Combine(Home.Data, "moved.db"));
 
         Assert.Equal(1, Job(Today.AddDays(1)).Run());
+        Assert.Equal([$"No database found in {Home.Data}"], Status.Problems);
 
         Assert.Equal(new FixedTimeProvider(Today).GetUtcNow(), Status.LastSuccess);
         Assert.Equal(new FixedTimeProvider(Today.AddDays(1)).GetUtcNow(), Status.LastRun);
@@ -99,7 +86,6 @@ public sealed class BackupJobTests : IAsyncLifetime
     [Fact]
     public void Old_daily_copies_go_except_those_from_the_first_of_a_month()
     {
-        BackupJob.WriteDefaultConfig(Home);
         var databases = Path.Combine(Home.Backups, BackupJob.FolderName, "database");
         Directory.CreateDirectory(databases);
         foreach (var day in new[] { "2026-07-01", "2026-07-02", "2026-07-25", "2026-07-26" })
@@ -112,12 +98,5 @@ public sealed class BackupJobTests : IAsyncLifetime
         // 90 days before 23.10. is 25.07.: older daily copies go, the 1st of the month stays.
         Assert.Equal(["aperture-2026-07-01.db", "aperture-2026-07-25.db", "aperture-2026-07-26.db", "aperture-2026-10-23.db"],
             Directory.GetFiles(databases).Select(Path.GetFileName).Order());
-    }
-
-    [Fact]
-    public void Without_a_configuration_it_says_where_it_is_missing()
-    {
-        Assert.Equal(1, Job().Run());
-        Assert.Equal([$"No backup folders configured in {Home.BackupConfig}"], Status.Problems);
     }
 }

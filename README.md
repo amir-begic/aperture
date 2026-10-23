@@ -33,7 +33,7 @@ Details in [docs/deployment.md](docs/deployment.md).
 | **Dashboard** | Year figures and a to-do list: overdue invoices, deliveries due or overdue, inquiries waiting a week for an answer or whose date has passed, shoots without an invoice, open prep, backup problems. |
 | **Notifications** | In the browser on the computer, while Aperture runs (a few minutes after login, and while its window is open): overdue invoices, deliveries due within a week or overdue, inquiries waiting a week, open prep three days before a shoot, backup problems and new versions. |
 | **Language** | English or German (Swiss: *Rechnung*, *MWST*, *Offerte*), chosen in Settings; until then the browser's language. Invoices start in that language and can be switched per invoice on the shoot's Invoice tab, so a German-speaking photographer can still send an English invoice: the PDF and its QR-bill follow it. The tax export and notifications follow Aperture's language. |
-| **Backups** | Daily into the install folder's `backups` (and any external drive or synced folder you add), picked up by Time Machine or File History. *Download a backup* in Settings gets everything as one ZIP, e.g. to move to a new computer. |
+| **Backups** | Daily into the install folder's `backups`, picked up by Time Machine or File History. *Download a backup* in Settings gets everything as one ZIP, for a copy elsewhere or to move to a new computer. |
 
 How the numbers are calculated: [docs/accounting.md](docs/accounting.md).
 

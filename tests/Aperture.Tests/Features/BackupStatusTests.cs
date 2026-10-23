@@ -19,7 +19,7 @@ public sealed class BackupStatusTests : IAsyncLifetime
         Directory.Delete(_dataDirectory, recursive: true);
     }
 
-    // Exactly the format deploy/macos/backup.sh writes.
+    // Exactly the format "Aperture.Web backup" (BackupJob) writes.
     private void WriteStatus(string lastSuccess, params string[] problems) => File.WriteAllText(Paths.BackupStatusFile, $$"""
         {"lastRun":"2026-10-06T01:30:12Z","lastSuccess":{{lastSuccess}},"destinations":["/Volumes/Backup A/Aperture"],"problems":[{{string.Join(",", problems.Select(p => $"\"{p}\""))}}]}
         """);
@@ -33,13 +33,13 @@ public sealed class BackupStatusTests : IAsyncLifetime
     [Fact]
     public void Reads_the_script_output()
     {
-        WriteStatus("\"2026-10-06T01:30:40Z\"", "Not connected: /Volumes/Backup B");
+        WriteStatus("\"2026-10-06T01:30:40Z\"", "Backup failed: /Users/anna/Aperture/backups/Aperture Backup");
 
         var status = BackupStatus.Read(Paths)!;
 
         Assert.Equal(new DateTimeOffset(2026, 10, 6, 1, 30, 40, TimeSpan.Zero), status.LastSuccess);
         Assert.Equal(["/Volumes/Backup A/Aperture"], status.Destinations);
-        Assert.Equal(["Not connected: /Volumes/Backup B"], status.Problems);
+        Assert.Equal(["Backup failed: /Users/anna/Aperture/backups/Aperture Backup"], status.Problems);
     }
 
     [Fact]
@@ -68,13 +68,13 @@ public sealed class BackupStatusTests : IAsyncLifetime
     [Fact]
     public async Task Stale_backup_and_disconnected_drive_are_reported()
     {
-        WriteStatus("\"2026-10-03T01:30:40Z\"", "Not connected: /Volumes/Backup B");
+        WriteStatus("\"2026-10-03T01:30:40Z\"", "Backup failed: /Users/anna/Aperture/backups/Aperture Backup");
 
         var items = await ItemsAsync();
 
         Assert.Equal(AttentionLevel.Urgent, items[0].Level);
         Assert.StartsWith("Last backup: 03.10.2026", items[0].Text);
-        Assert.Equal(("Backup problem", "Not connected: /Volumes/Backup B"), (items[1].Text, items[1].Detail));
+        Assert.Equal(("Backup problem", "Backup failed: /Users/anna/Aperture/backups/Aperture Backup"), (items[1].Text, items[1].Detail));
     }
 
     [Fact]

@@ -5,8 +5,8 @@ using Aperture.Web.Features.Backup;
 namespace Aperture.Web.Installation;
 
 /// <summary>
-/// The daily backup ("Aperture.Web backup"; scheduled by the install command). For each folder listed in backup.conf
-/// that exists (the home's backups/ folder, and any external drive added there), writes to "&lt;folder&gt;/Aperture Backup":
+/// The daily backup ("Aperture.Web backup"; scheduled by the install command), into backups/Aperture Backup in the
+/// install folder (<see cref="Target"/>):
 /// <list type="bullet">
 /// <item>database/aperture-YYYY-MM-DD.db: a consistent copy, checked before it's copied anywhere. Kept for
 /// <see cref="KeepDays"/> days; the one from the 1st of each month forever.</item>
@@ -14,7 +14,8 @@ namespace Aperture.Web.Installation;
 /// <item>keys/: the login and the keys that sign cookies and notifications.</item>
 /// </list>
 /// The result goes to data/backup-status.json, which the app shows in Settings and on the Dashboard. It runs outside the
-/// app, so backups still happen when the app itself is broken.
+/// app, so backups still happen when the app itself is broken. For a copy elsewhere there's Settings → Backups →
+/// Download a backup, and a backup of the user's folder (Time Machine, File History, …) takes this one along.
 /// </summary>
 public sealed class BackupJob(ApertureHome home, TimeProvider time, CommandLog log)
 {
@@ -24,7 +25,10 @@ public sealed class BackupJob(ApertureHome home, TimeProvider time, CommandLog l
     private string Database => Path.Combine(home.Data, "aperture.db");
     private string StatusFile => Path.Combine(home.Data, "backup-status.json");
 
-    /// <summary>0 if at least one folder got a backup.</summary>
+    /// <summary>Where the backup goes.</summary>
+    public string Target => Path.Combine(home.Backups, FolderName);
+
+    /// <summary>0 if the backup was written.</summary>
     public int Run()
     {
         var started = time.GetUtcNow();
@@ -33,14 +37,9 @@ public sealed class BackupJob(ApertureHome home, TimeProvider time, CommandLog l
         var problems = new List<string>();
         log.Write("Backup started");
 
-        var folders = Folders();
         if (!File.Exists(Database))
         {
             problems.Add($"No database found in {home.Data}");
-        }
-        else if (folders.Count == 0)
-        {
-            problems.Add($"No backup folders configured in {home.BackupConfig}");
         }
         else
         {
@@ -55,10 +54,7 @@ public sealed class BackupJob(ApertureHome home, TimeProvider time, CommandLog l
                 }
                 else
                 {
-                    foreach (var folder in folders)
-                    {
-                        BackUpTo(folder, snapshot, today, destinations, problems);
-                    }
+                    BackUp(snapshot, today, destinations, problems);
                 }
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or Microsoft.Data.Sqlite.SqliteException)
@@ -73,73 +69,27 @@ public sealed class BackupJob(ApertureHome home, TimeProvider time, CommandLog l
 
         var lastSuccess = destinations.Count > 0 ? started : BackupStatus.Read(new(home.Data))?.LastSuccess;
         WriteStatus(new BackupStatus(started, lastSuccess, destinations, problems));
-        log.Write(destinations.Count > 0
-            ? $"Done: {destinations.Count} folder(s), {problems.Count} problem(s)"
-            : "FAILED: no backup written");
+        log.Write(destinations.Count > 0 ? $"Done: {Target}" : "FAILED: no backup written");
         return destinations.Count > 0 ? 0 : 1;
     }
 
-    /// <summary>The folders in backup.conf: one per line, # starts a comment.</summary>
-    public List<string> Folders()
+    private void BackUp(string snapshot, DateOnly today, List<string> destinations, List<string> problems)
     {
-        if (!File.Exists(home.BackupConfig))
-        {
-            return [];
-        }
-
-        return File.ReadAllLines(home.BackupConfig)
-            .Select(line => (line.IndexOf('#') is var hash and >= 0 ? line[..hash] : line).Trim())
-            .Where(line => line.Length > 0)
-            .ToList();
-    }
-
-    /// <summary>A new backup.conf, pointing at the home's own backups folder.</summary>
-    public static void WriteDefaultConfig(ApertureHome home)
-    {
-        if (File.Exists(home.BackupConfig))
-        {
-            return;
-        }
-
-        File.WriteAllLines(home.BackupConfig,
-        [
-            "# Aperture backup folders, one per line. Folders that aren't there (e.g. a drive that isn't connected) are skipped.",
-            "# Add an external drive or a synced folder for a copy off this computer.",
-            home.Backups,
-        ]);
-    }
-
-    private void BackUpTo(string folder, string snapshot, DateOnly today, List<string> destinations, List<string> problems)
-    {
-        // The home's own backups folder is Aperture's to create; any other missing folder is a drive that isn't there.
-        if (Path.GetFullPath(folder) == Path.GetFullPath(home.Backups))
-        {
-            Directory.CreateDirectory(folder);
-        }
-
-        if (!Directory.Exists(folder))
-        {
-            problems.Add($"Not connected: {folder}");
-            log.Write($"Skipped (not connected): {folder}");
-            return;
-        }
-
-        var target = Path.Combine(folder, FolderName);
         try
         {
-            var databases = Path.Combine(target, "database");
+            var databases = Path.Combine(Target, "database");
             Directory.CreateDirectory(databases);
             File.Copy(snapshot, Path.Combine(databases, $"aperture-{today:yyyy-MM-dd}.db"), overwrite: true);
-            CopyNew(Path.Combine(home.Data, "attachments"), Path.Combine(target, "attachments"), replaceChanged: false);
-            CopyNew(Path.Combine(home.Data, "keys"), Path.Combine(target, "keys"), replaceChanged: true);
+            CopyNew(Path.Combine(home.Data, "attachments"), Path.Combine(Target, "attachments"), replaceChanged: false);
+            CopyNew(Path.Combine(home.Data, "keys"), Path.Combine(Target, "keys"), replaceChanged: true);
             RemoveOldCopies(databases, today);
-            destinations.Add(target);
-            log.Write($"Backed up to {target}");
+            destinations.Add(Target);
+            log.Write($"Backed up to {Target}");
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            problems.Add($"Backup failed: {target}");
-            log.Write($"FAILED: {target}: {e.Message}");
+            problems.Add($"Backup failed: {Target}");
+            log.Write($"FAILED: {Target}: {e.Message}");
         }
     }
 
