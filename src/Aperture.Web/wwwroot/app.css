@@ -6,8 +6,9 @@ h1:focus {
     width: 100%;
 }
 
-.settings-form {
-    max-width: 48rem;
+/* Wide enough for the tab names on one line, also in German. */
+.settings-tabs {
+    max-width: 56rem;
 }
 
 .form-card {

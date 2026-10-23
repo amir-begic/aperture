@@ -8,7 +8,7 @@
 @inject NavigationManager Navigation
 @inject Aperture.Web.Installation.Platform Platform
 
-<RadzenFieldset Text="@L["Notifications"]" class="settings-form rz-mt-6" id="notifications">
+<div id="notifications">
     <RadzenStack Gap="1rem">
         <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
             @L["Aperture can let you know on this {0} when an invoice becomes overdue, when a delivery is due within a week or overdue, when an inquiry has waited {1} days for an answer, when prep is still open {2} days before a shoot, when a backup fails and when a new version is available. Each only once, between {3:HH:mm} and {4:HH:mm}, and only while Aperture runs: for a few minutes after you log in, and while its window is open. Aperture sends them itself.",
@@ -22,7 +22,7 @@
         else if (!HasEmail)
         {
             <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-m-0">
-                @L["Add your email under Contact above and save first. Push services (Apple's, Google's, …) only deliver notifications from senders with a contact address."]
+                @L["Add your email under Your business → Contact and save first. Push services (Apple's, Google's, …) only deliver notifications from senders with a contact address."]
             </RadzenAlert>
         }
         else if (!_device.Supported || !_device.Secure)
@@ -93,7 +93,7 @@
             </div>
         }
     </RadzenStack>
-</RadzenFieldset>
+</div>
 
 @code {
     /// <summary>Whether Settings has a saved email (see PushService.SubjectAsync).</summary>

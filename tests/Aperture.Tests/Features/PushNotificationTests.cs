@@ -266,7 +266,7 @@ public sealed class PushNotificationTests : IAsyncLifetime, IDisposable
         await Reminders().SendDueAsync(Now.AddDays(1), Run(new DateTimeOffset(2026, 10, 22, 3, 30, 0, TimeSpan.Zero)), expectBackups: true, update: null);
 
         Assert.Equal(2, _pushService.Received.Count);
-        Assert.Equal(new PushMessage("Backup problem", "/Volumes/Backup B is not connected", "settings",
+        Assert.Equal(new PushMessage("Backup problem", "/Volumes/Backup B is not connected", "settings#backups",
             "backup-problem:2026-10-21T03:30:00.0000000+00:00:0"), ReceivedMessage());
     }
 

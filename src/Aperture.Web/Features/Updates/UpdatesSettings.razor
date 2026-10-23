@@ -8,7 +8,7 @@
 @inject TimeProvider Time
 @inject Aperture.Web.Installation.Platform Platform
 
-<RadzenFieldset Text="@L["Updates"]" class="settings-form rz-mt-6" id="updates">
+<div id="updates">
     <RadzenStack Gap="1rem">
         <dl class="facts">
             <dt>@L["Running"]</dt>
@@ -100,7 +100,7 @@
 
         <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">@L["Data in {0}", Paths.DataDirectory]</RadzenText>
     </RadzenStack>
-</RadzenFieldset>
+</div>
 
 @code {
     private bool _checking;

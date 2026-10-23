@@ -53,18 +53,18 @@ public static class Attention
             if (backup?.LastSuccess is not { } lastSuccess)
             {
                 items.Add(new(AttentionLevel.Urgent, "backup", Texts.Get("No backup has run yet"),
-                    Texts.Get("The installer sets it up. Settings → Backups shows the details."), "settings", "backup-none"));
+                    Texts.Get("The installer sets it up. Settings → Backups shows the details."), "settings#backups", "backup-none"));
             }
             else if (backup.IsStale(new DateTimeOffset(now)))
             {
                 items.Add(new(AttentionLevel.Urgent, "backup", Texts.Format("Last backup: {0:dd.MM.yyyy HH:mm}", lastSuccess.LocalDateTime),
-                    Texts.Get("Settings → Backups shows where it goes and what went wrong."), "settings", $"backup-stale:{lastSuccess:O}"));
+                    Texts.Get("Settings → Backups shows where it goes and what went wrong."), "settings#backups", $"backup-stale:{lastSuccess:O}"));
             }
 
             // Per backup run: a drive that's still missing next time is news again.
             foreach (var (problem, i) in (backup?.Problems ?? []).Select((p, i) => (p, i)))
             {
-                items.Add(new(AttentionLevel.Warning, "usb_off", Texts.Get("Backup problem"), problem, "settings",
+                items.Add(new(AttentionLevel.Warning, "usb_off", Texts.Get("Backup problem"), problem, "settings#backups",
                     $"backup-problem:{backup!.LastRun:O}:{i}"));
             }
         }

@@ -1,4 +1,5 @@
 @page "/settings"
+@implements IDisposable
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NotificationService Notifications
 @inject Aperture.Web.Configuration.AperturePaths Paths
@@ -9,7 +10,6 @@
 <PageTitle>@L["Settings"] · Aperture</PageTitle>
 
 <RadzenText TextStyle="TextStyle.H4" TagName="TagName.H1">@L["Settings"]</RadzenText>
-<RadzenText class="rz-mb-6">@L["These details appear on your invoices."]</RadzenText>
 
 @if (_settings is null)
 {
@@ -17,175 +17,260 @@
 }
 else
 {
-    <RadzenTemplateForm TItem="BusinessSettings" Data="_settings" Submit="SaveAsync">
-        <RadzenStack Gap="1.5rem" class="settings-form">
-            <RadzenFieldset Text="@L["Language"]">
-                <RadzenRow AlignItems="AlignItems.Center">
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenDropDown TValue="Language" Value="@(_settings.Language ?? Languages.Current)"
-                                        ValueChanged="@((Language language) => _settings.Language = language)"
-                                        Data="Labels.Choices<Language>(l => l.Name())" TextProperty="Text" ValueProperty="Value"
-                                        class="w-full" aria-label="@L["Language"]" />
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="8">
-                        <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
-                            @L["Aperture's own language, and the one new invoices start in. Each invoice's language can be changed on its shoot."]
-                        </RadzenText>
-                    </RadzenColumn>
-                </RadzenRow>
-            </RadzenFieldset>
-
-            <BusinessDetailsFields Settings="_settings" />
-
-            <RadzenFieldset Text="@L["Delivery"]">
-                <RadzenRow>
-                    <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenFormField Text="@L["Usual delivery time (days)"]" class="w-full">
-                            <ChildContent><RadzenNumeric TValue="int" Name="DeliveryDays" @bind-Value="_settings.DeliveryDays" Min="0" Max="365" /></ChildContent>
-                            <Helper><FieldValidator Component="DeliveryDays" /></Helper>
-                        </RadzenFormField>
-                    </RadzenColumn>
-                    <RadzenColumn Size="12" SizeMD="8">
-                        <RadzenText TextStyle="TextStyle.Caption">
-                            @L["New shoots suggest a delivery date this many days after the shoot. You can change it per shoot."]
-                        </RadzenText>
-                    </RadzenColumn>
-                </RadzenRow>
-            </RadzenFieldset>
-
-            <RadzenFieldset Text="@L["VAT (MWST)"]">
-                <RadzenStack Gap="1rem">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenSwitch Name="IsVatRegistered" @bind-Value="_settings.IsVatRegistered" />
-                        <RadzenLabel Component="IsVatRegistered" Text="@L["I'm registered for VAT"]" />
+    @* Each settings tab saves only its own fields: a half-edited field on another tab isn't saved by accident. *@
+    <RadzenTabs @bind-SelectedIndex="_tabIndex" RenderMode="TabRenderMode.Server" class="settings-tabs">
+        <Tabs>
+            <RadzenTabsItem Text="@L["Your business"]" Icon="storefront">
+                <RadzenTemplateForm TItem="BusinessSettings" Data="_settings" Submit="SaveBusinessAsync">
+                    <RadzenStack Gap="1.5rem">
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@L["These details appear on your invoices."]</RadzenText>
+                        <BusinessDetailsFields Settings="_settings" />
+                        @SaveButton
                     </RadzenStack>
-                    <RadzenText TextStyle="TextStyle.Caption">
-                        @L["Registration is required from CHF 100'000 turnover per year. Until then, invoices show no VAT."]
-                    </RadzenText>
+                </RadzenTemplateForm>
+            </RadzenTabsItem>
 
-                    @if (_settings.IsVatRegistered)
+            <RadzenTabsItem Text="@L["General"]" Icon="tune">
+                <RadzenTemplateForm TItem="BusinessSettings" Data="_settings" Submit="SaveGeneralAsync">
+                    <RadzenStack Gap="1.5rem">
+                        <RadzenFieldset Text="@L["Language"]">
+                            <RadzenRow AlignItems="AlignItems.Center">
+                                <RadzenColumn Size="12" SizeMD="4">
+                                    <RadzenDropDown TValue="Language" Value="@(_settings.Language ?? Languages.Current)"
+                                                    ValueChanged="@((Language language) => _settings.Language = language)"
+                                                    Data="Labels.Choices<Language>(l => l.Name())" TextProperty="Text" ValueProperty="Value"
+                                                    class="w-full" aria-label="@L["Language"]" />
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="8">
+                                    <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                                        @L["Aperture's own language, and the one new invoices start in. Each invoice's language can be changed on its shoot."]
+                                    </RadzenText>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenFieldset>
+
+                        <RadzenFieldset Text="@L["Delivery"]">
+                            <RadzenRow>
+                                <RadzenColumn Size="12" SizeMD="4">
+                                    <RadzenFormField Text="@L["Usual delivery time (days)"]" class="w-full">
+                                        <ChildContent><RadzenNumeric TValue="int" Name="DeliveryDays" @bind-Value="_settings.DeliveryDays" Min="0" Max="365" /></ChildContent>
+                                        <Helper><FieldValidator Component="DeliveryDays" /></Helper>
+                                    </RadzenFormField>
+                                </RadzenColumn>
+                                <RadzenColumn Size="12" SizeMD="8">
+                                    <RadzenText TextStyle="TextStyle.Caption">
+                                        @L["New shoots suggest a delivery date this many days after the shoot. You can change it per shoot."]
+                                    </RadzenText>
+                                </RadzenColumn>
+                            </RadzenRow>
+                        </RadzenFieldset>
+
+                        @SaveButton
+
+                        <RadzenFieldset Text="@L["Calendar"]">
+                            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                                @L["To put a shoot in your calendar, open it, click"] <em>@L["Add to calendar"]</em>
+                                @L["and open the downloaded file. It goes into your calendar app (Calendar on a Mac, Outlook on Windows, …), and with a synced calendar such as iCloud, Google or Outlook onto your phone too. If the date or time changes later, change it in the calendar as well."]
+                            </RadzenText>
+                        </RadzenFieldset>
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="@L["Tax"]" Icon="account_balance">
+                <RadzenTemplateForm TItem="BusinessSettings" Data="_settings" Submit="SaveTaxAsync">
+                    <RadzenStack Gap="1.5rem">
+                        <RadzenFieldset Text="@L["VAT (MWST)"]">
+                            <RadzenStack Gap="1rem">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                    <RadzenSwitch Name="IsVatRegistered" @bind-Value="_settings.IsVatRegistered" />
+                                    <RadzenLabel Component="IsVatRegistered" Text="@L["I'm registered for VAT"]" />
+                                </RadzenStack>
+                                <RadzenText TextStyle="TextStyle.Caption">
+                                    @L["Registration is required from CHF 100'000 turnover per year. Until then, invoices show no VAT."]
+                                </RadzenText>
+
+                                @if (_settings.IsVatRegistered)
+                                {
+                                    <RadzenRow>
+                                        <RadzenColumn Size="12" SizeMD="8">
+                                            <RadzenFormField Text="@L["VAT number"]" class="w-full">
+                                                <ChildContent><RadzenTextBox Name="VatNumber" @bind-Value="_settings.VatNumber" Placeholder="CHE-123.456.789 MWST" /></ChildContent>
+                                                <Helper>
+                                                    <FieldValidator Component="VatNumber" />
+                                                    <RadzenCustomValidator Component="VatNumber" Text="@L["Required when registered for VAT."]"
+                                                                           Validator="@(() => !string.IsNullOrWhiteSpace(_settings.VatNumber))" />
+                                                </Helper>
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                        <RadzenColumn Size="12" SizeMD="4">
+                                            <RadzenFormField Text="@L["VAT rate (%)"]" class="w-full">
+                                                <ChildContent><RadzenNumeric TValue="decimal" Name="VatRatePercent" @bind-Value="_settings.VatRatePercent" Min="0" Max="100" Step="0.1" Format="0.0#" /></ChildContent>
+                                                <Helper><FieldValidator Component="VatRatePercent" /></Helper>
+                                            </RadzenFormField>
+                                        </RadzenColumn>
+                                    </RadzenRow>
+                                }
+                            </RadzenStack>
+                        </RadzenFieldset>
+
+                        <RadzenFieldset Text="@L["Depreciation of equipment"]">
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                    <RadzenSwitch Name="FullFirstYear" Value="@(!_settings.ProRataFirstYear)" ValueChanged="@((bool full) => _settings.ProRataFirstYear = !full)" />
+                                    <RadzenLabel Component="FullFirstYear" Text="@L["Full annual depreciation in the year of purchase"]" />
+                                </RadzenStack>
+                                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                                    @L["St. Gallen allows the full rate even for equipment bought late in the year (StB 41 Nr. 1). Switch off to depreciate by month instead, e.g. if your canton requires it."]
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenFieldset>
+
+                        @SaveButton
+                    </RadzenStack>
+                </RadzenTemplateForm>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="@L["Notifications"]" Icon="notifications">
+                <Aperture.Web.Features.Notifications.NotificationSettings HasEmail="_hasSavedEmail" />
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="@L["Backups"]" Icon="backup">
+                @if (_backup is null)
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                        @L["No backup has run on this computer yet. The installer sets it up, and the first one runs right away."]
+                    </RadzenText>
+                }
+                else
+                {
+                    <dl class="facts">
+                        <dt>@L["Last backup"]</dt>
+                        <dd>@(_backup.LastSuccess?.LocalDateTime.ToString("dd.MM.yyyy HH:mm") ?? L["never succeeded"])</dd>
+                        <dt>@L["Last run"]</dt>
+                        <dd>@_backup.LastRun?.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</dd>
+                        <dt>@L["Saved to"]</dt>
+                        <dd>@(_backup.Destinations.Count == 0 ? "–" : string.Join(", ", _backup.Destinations))</dd>
+                    </dl>
+                    @foreach (var problem in _backup.Problems)
                     {
-                        <RadzenRow>
-                            <RadzenColumn Size="12" SizeMD="8">
-                                <RadzenFormField Text="@L["VAT number"]" class="w-full">
-                                    <ChildContent><RadzenTextBox Name="VatNumber" @bind-Value="_settings.VatNumber" Placeholder="CHE-123.456.789 MWST" /></ChildContent>
-                                    <Helper>
-                                        <FieldValidator Component="VatNumber" />
-                                        <RadzenCustomValidator Component="VatNumber" Text="@L["Required when registered for VAT."]"
-                                                               Validator="@(() => !string.IsNullOrWhiteSpace(_settings.VatNumber))" />
-                                    </Helper>
-                                </RadzenFormField>
-                            </RadzenColumn>
-                            <RadzenColumn Size="12" SizeMD="4">
-                                <RadzenFormField Text="@L["VAT rate (%)"]" class="w-full">
-                                    <ChildContent><RadzenNumeric TValue="decimal" Name="VatRatePercent" @bind-Value="_settings.VatRatePercent" Min="0" Max="100" Step="0.1" Format="0.0#" /></ChildContent>
-                                    <Helper><FieldValidator Component="VatRatePercent" /></Helper>
-                                </RadzenFormField>
-                            </RadzenColumn>
-                        </RadzenRow>
+                        <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-mt-2 rz-mb-0">@problem</RadzenAlert>
                     }
-                </RadzenStack>
-            </RadzenFieldset>
-
-            <RadzenFieldset Text="@L["Depreciation of equipment"]">
-                <RadzenStack Gap="0.5rem">
-                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenSwitch Name="FullFirstYear" Value="@(!_settings.ProRataFirstYear)" ValueChanged="@((bool full) => _settings.ProRataFirstYear = !full)" />
-                        <RadzenLabel Component="FullFirstYear" Text="@L["Full annual depreciation in the year of purchase"]" />
-                    </RadzenStack>
+                }
+                <RadzenStack Gap="0.5rem" class="rz-mt-4">
+                    <div>
+                        @* "download" keeps Blazor from treating it as page navigation. *@
+                        <a href="backup.zip" download class="rz-button rz-button-md rz-variant-outlined rz-primary export-button">
+                            <RadzenIcon Icon="download" /> @L["Download a backup"]
+                        </a>
+                    </div>
                     <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
-                        @L["St. Gallen allows the full rate even for equipment bought late in the year (StB 41 Nr. 1). Switch off to depreciate by month instead, e.g. if your canton requires it."]
+                        @L["Everything in one ZIP: the database and all uploaded files, with a note on how to restore it. For a copy somewhere else, or to move Aperture to a new {0}. Your login isn't in it.", L[Platform.Computer]]
                     </RadzenText>
                 </RadzenStack>
-            </RadzenFieldset>
+            </RadzenTabsItem>
 
-            <div>
-                <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" Icon="save" IsBusy="_saving" BusyText="@L["Saving…"]" />
-            </div>
-        </RadzenStack>
-    </RadzenTemplateForm>
-
-    <RadzenFieldset Text="@L["Calendar"]" class="settings-form rz-mt-6">
-        <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-            @L["To put a shoot in your calendar, open it, click"] <em>@L["Add to calendar"]</em>
-            @L["and open the downloaded file. It goes into your calendar app (Calendar on a Mac, Outlook on Windows, …), and with a synced calendar such as iCloud, Google or Outlook onto your phone too. If the date or time changes later, change it in the calendar as well."]
-        </RadzenText>
-    </RadzenFieldset>
-
-    <Aperture.Web.Features.Notifications.NotificationSettings HasEmail="_hasSavedEmail" />
-
-    <RadzenFieldset Text="@L["Backups"]" class="settings-form rz-mt-6" id="backups">
-        @if (_backup is null)
-        {
-            <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
-                @L["No backup has run on this computer yet. The installer sets it up, and the first one runs right away."]
-            </RadzenText>
-        }
-        else
-        {
-            <dl class="facts">
-                <dt>@L["Last backup"]</dt>
-                <dd>@(_backup.LastSuccess?.LocalDateTime.ToString("dd.MM.yyyy HH:mm") ?? L["never succeeded"])</dd>
-                <dt>@L["Last run"]</dt>
-                <dd>@_backup.LastRun?.LocalDateTime.ToString("dd.MM.yyyy HH:mm")</dd>
-                <dt>@L["Saved to"]</dt>
-                <dd>@(_backup.Destinations.Count == 0 ? "–" : string.Join(", ", _backup.Destinations))</dd>
-            </dl>
-            @foreach (var problem in _backup.Problems)
-            {
-                <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" class="rz-mt-2 rz-mb-0">@problem</RadzenAlert>
-            }
-        }
-        <RadzenStack Gap="0.5rem" class="rz-mt-4">
-            <div>
-                @* "download" keeps Blazor from treating it as page navigation. *@
-                <a href="backup.zip" download class="rz-button rz-button-md rz-variant-outlined rz-primary export-button">
-                    <RadzenIcon Icon="download" /> @L["Download a backup"]
-                </a>
-            </div>
-            <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
-                @L["Everything in one ZIP: the database and all uploaded files, with a note on how to restore it. For a copy somewhere else, or to move Aperture to a new {0}. Your login isn't in it.", L[Platform.Computer]]
-            </RadzenText>
-        </RadzenStack>
-    </RadzenFieldset>
-
-    <Aperture.Web.Features.Updates.UpdatesSettings />
+            <RadzenTabsItem Text="@L["Updates"]" Icon="system_update_alt">
+                <Aperture.Web.Features.Updates.UpdatesSettings />
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 }
 
 @code {
+    /// <summary>Opened by settings#tax, settings#backups, …: links from the dashboard and notifications.</summary>
+    private static readonly string[] TabNames = ["business", "general", "tax", "notifications", "backups", "updates"];
+
     private BusinessSettings? _settings;
     private Aperture.Web.Features.Backup.BackupStatus? _backup;
+    private int _tabIndex;
     private bool _saving;
     private bool _hasSavedEmail;
 
+    private RenderFragment SaveButton => @<div>
+        <RadzenButton ButtonType="ButtonType.Submit" Text="@L["Save"]" Icon="save" IsBusy="_saving" BusyText="@L["Saving…"]" />
+    </div>;
+
     protected override async Task OnInitializedAsync()
     {
+        _tabIndex = TabIndex(Navigation.Uri) ?? 0;
+        Navigation.LocationChanged += OnLocationChanged;
+
         await using var db = await DbFactory.CreateDbContextAsync();
         _settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
-        _settings.Language ??= Languages.Current; // saved with the rest: from then on, it no longer follows the browser
         _hasSavedEmail = !string.IsNullOrWhiteSpace(_settings.Email);
         _backup = Aperture.Web.Features.Backup.BackupStatus.Read(Paths);
     }
 
-    private async Task SaveAsync(BusinessSettings settings)
+    private static int? TabIndex(string uri) =>
+        Array.IndexOf(TabNames, new Uri(uri).Fragment.TrimStart('#').ToLowerInvariant()) is >= 0 and var index ? index : null;
+
+    // Also a link to another tab while Settings is open, e.g. a notification clicked in this window.
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (TabIndex(e.Location) is { } index && index != _tabIndex)
+        {
+            _tabIndex = index;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+
+    private Task SaveBusinessAsync(BusinessSettings form) => SaveAsync(saved =>
+    {
+        saved.BusinessName = form.BusinessName;
+        saved.OwnerName = form.OwnerName;
+        saved.Street = form.Street;
+        saved.PostalCode = form.PostalCode;
+        saved.City = form.City;
+        saved.CountryCode = form.CountryCode;
+        saved.Email = form.Email;
+        saved.Phone = form.Phone;
+        saved.Website = form.Website;
+        saved.Iban = form.Iban = Iban.Normalize(form.Iban);
+        saved.PaymentTermsDays = form.PaymentTermsDays;
+    });
+
+    private async Task SaveGeneralAsync(BusinessSettings form)
+    {
+        // Saved even if it wasn't changed: from then on, it no longer follows the browser.
+        var language = form.Language ?? Languages.Current;
+        await SaveAsync(saved =>
+        {
+            saved.Language = form.Language = language;
+            saved.DeliveryDays = form.DeliveryDays;
+        });
+
+        AppLanguage.Set(language);
+        if (language != Languages.Current)
+        {
+            // The page keeps the language it was opened in; a reload shows the new one, on this tab. (Loading
+            // settings#general wouldn't reload when only the part after # differs.)
+            Navigation.NavigateTo("settings#general", replace: true);
+            Navigation.Refresh(forceReload: true);
+        }
+    }
+
+    private Task SaveTaxAsync(BusinessSettings form) => SaveAsync(saved =>
+    {
+        saved.IsVatRegistered = form.IsVatRegistered;
+        saved.VatNumber = form.VatNumber;
+        saved.VatRatePercent = form.VatRatePercent;
+        saved.ProRataFirstYear = form.ProRataFirstYear;
+    });
+
+    /// <summary>Saves what <paramref name="apply"/> copies from the form; other tabs' unsaved changes stay unsaved.</summary>
+    private async Task SaveAsync(Action<BusinessSettings> apply)
     {
         _saving = true;
         try
         {
-            settings.Iban = Iban.Normalize(settings.Iban);
-
             await using var db = await DbFactory.CreateDbContextAsync();
-            db.BusinessSettings.Update(settings);
+            var saved = await db.BusinessSettings.SingleAsync();
+            apply(saved);
             await db.SaveChangesAsync();
-            _hasSavedEmail = !string.IsNullOrWhiteSpace(settings.Email);
-
-            AppLanguage.Set(settings.Language);
-            if (settings.Language != Languages.Current)
-            {
-                // The page keeps the language it was opened in; a reload shows the new one.
-                Navigation.Refresh(forceReload: true);
-                return;
-            }
+            _hasSavedEmail = !string.IsNullOrWhiteSpace(saved.Email);
             Notifications.Notify(NotificationSeverity.Success, L["Settings saved"]);
         }
         finally

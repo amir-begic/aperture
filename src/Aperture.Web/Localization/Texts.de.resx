@@ -79,8 +79,8 @@
   <data name="Add train trip" xml:space="preserve">
     <value>Zugfahrt erfassen</value>
   </data>
-  <data name="Add your email under Contact above and save first. Push services (Apple's, Google's, …) only deliver notifications from senders with a contact address." xml:space="preserve">
-    <value>Trage zuerst oben unter Kontakt deine E-Mail-Adresse ein und speichere. Push-Dienste (von Apple, Google, …) stellen nur Benachrichtigungen von Absendern mit Kontaktadresse zu.</value>
+  <data name="Add your email under Your business → Contact and save first. Push services (Apple's, Google's, …) only deliver notifications from senders with a contact address." xml:space="preserve">
+    <value>Trage zuerst unter «Dein Geschäft» → Kontakt deine E-Mail-Adresse ein und speichere. Push-Dienste (von Apple, Google, …) stellen nur Benachrichtigungen von Absendern mit Kontaktadresse zu.</value>
   </data>
   <data name="Address" xml:space="preserve">
     <value>Adresse</value>
@@ -678,6 +678,9 @@
   </data>
   <data name="Gear you use for several years. Its price is spread over the years as depreciation instead of counting as a cost when you buy it. Cheap items are often booked directly as a cost; ask your fiduciary where the line is. How the year of purchase is depreciated is set in" xml:space="preserve">
     <value>Ausrüstung, die du mehrere Jahre nutzt. Ihr Preis wird über die Jahre abgeschrieben, statt beim Kauf als Kosten zu zählen. Günstiges wird oft direkt als Kosten verbucht; frag deine Treuhand, wo die Grenze liegt. Wie im Anschaffungsjahr abgeschrieben wird, legst du fest unter</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>Allgemein</value>
   </data>
   <data name="Getting-ready locations and times known" xml:space="preserve">
     <value>Orte und Zeiten fürs Getting Ready bekannt</value>
@@ -1563,6 +1566,9 @@
   </data>
   <data name="Table" xml:space="preserve">
     <value>Tabelle</value>
+  </data>
+  <data name="Tax" xml:space="preserve">
+    <value>Steuern</value>
   </data>
   <data name="Tax export {0}" xml:space="preserve">
     <value>Steuerexport {0}</value>
