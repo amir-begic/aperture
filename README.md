@@ -4,6 +4,8 @@ A small ERP for running a photography business: shoots, clients, deliveries, cos
 Single user, CHF, English or German. It runs on the photographer's own computer (macOS, Windows or Linux), installed with a
 double-click; it opens in its own window there, a browser's app mode without tabs or address bar.
 
+![The dashboard: year figures, what needs attention and the next shoots (example data)](docs/images/dashboard.png)
+
 **Install:**
 - **macOS** (Apple silicon, macOS 15 or newer): [Aperture-Installer.pkg](../../releases/latest/download/Aperture-Installer.pkg)
 - **Windows** (10 or 11, 64-bit): [Aperture-Setup.exe](../../releases/latest/download/Aperture-Setup.exe)
