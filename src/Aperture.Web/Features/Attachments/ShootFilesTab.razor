@@ -1,4 +1,4 @@
-@* All files of a shoot: contracts, riders and timelines uploaded here, plus receipts, payslips and invoice PDFs. *@
+@* All files of a shoot: contracts, riders and timelines uploaded here, plus receipts, payslips, quote and invoice PDFs. *@
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject AttachmentStore Store
 @inject DialogService Dialogs
@@ -65,6 +65,9 @@
         var invoicePdfs = await db.Invoices.Where(i => i.ShootId == ShootId && i.PdfId != null)
             .Select(i => new { Id = i.PdfId!.Value, i.Number }).ToListAsync();
         invoicePdfs.ForEach(pdf => usedBy[pdf.Id] = L["Invoice {0}", pdf.Number!]);
+        var quotePdfs = await db.Quotes.Where(q => q.ShootId == ShootId && q.PdfId != null)
+            .Select(q => new { Id = q.PdfId!.Value, q.Number }).ToListAsync();
+        quotePdfs.ForEach(pdf => usedBy[pdf.Id] = L["Quote {0}", pdf.Number!]);
 
         _files = attachments.Select(a => new FileRow(a, usedBy.GetValueOrDefault(a.Id))).ToList();
     }

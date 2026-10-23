@@ -1,16 +1,18 @@
-using System.Globalization;
 using Codecrete.SwissQRBill.Generator;
 using Aperture.Web.Data.Entities;
 using Aperture.Web.Domain;
-using Aperture.Web.Localization;
 using QuestPDF.Fluent;
-using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 namespace Aperture.Web.Features.Invoices;
 
-/// <summary>What the invoice says about the shoot it bills.</summary>
-public sealed record InvoiceShootInfo(string Title, DateTime Start, DateTime End, string? Location);
+/// <summary>What a quote or an invoice says about the shoot it's for.</summary>
+public sealed record InvoiceShootInfo(string Title, DateTime Start, DateTime End, string? Location)
+{
+    /// <summary>From a shoot loaded with its location: "Schloss Laufen, Laufen-Uhwiesen".</summary>
+    public static InvoiceShootInfo From(Shoot shoot) => new(shoot.Title, shoot.Start, shoot.End,
+        shoot.Location is null ? null : shoot.Location.City is null ? shoot.Location.Name : $"{shoot.Location.Name}, {shoot.Location.City}");
+}
 
 /// <summary>
 /// The invoice PDF: sender, recipient in the window position of a Swiss envelope (right),
@@ -18,21 +20,13 @@ public sealed record InvoiceShootInfo(string Title, DateTime Start, DateTime End
 /// </summary>
 public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : IDocument
 {
-    private const float PagePadding = 20; // mm, everywhere except the QR-bill, which spans the full width
-
-    static InvoiceDocument() => InvoiceFonts.EnsureRegistered();
-
-    private readonly CultureInfo _culture = invoice.Language.Culture();
+    private readonly DocumentLayout _layout = new(invoice);
 
     private bool IsDraft => invoice.Status == InvoiceStatus.Draft;
 
-    private string Title => IsDraft ? T("Invoice (draft)") : TF("Invoice {0}", invoice.Number);
+    private string Title => IsDraft ? _layout.T("Invoice (draft)") : _layout.TF("Invoice {0}", invoice.Number);
 
-    public DocumentMetadata GetMetadata() => new()
-    {
-        Title = Title,
-        Author = invoice.Seller.Company ?? invoice.Seller.Name,
-    };
+    public DocumentMetadata GetMetadata() => _layout.Metadata(Title);
 
     public void Compose(IDocumentContainer container)
     {
@@ -41,29 +35,26 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
 
         container.Page(page =>
         {
-            page.Size(PageSizes.A4);
-            page.Margin(0);
-            page.DefaultTextStyle(text => text.FontSize(10).FontFamily(InvoiceFonts.Family).FontColor(Colors.Grey.Darken4));
-
-            if (IsDraft)
-            {
-                page.Background().AlignCenter().AlignMiddle().Rotate(-30)
-                    .Text(T("Draft").ToUpper(_culture)).FontSize(120).Bold().FontColor(Colors.Grey.Lighten3);
-            }
+            _layout.Page(page, IsDraft);
 
             page.Content().Column(column =>
             {
                 column.Item()
-                    .PaddingHorizontal(PagePadding, Unit.Millimetre)
+                    .PaddingHorizontal(DocumentLayout.PagePadding, Unit.Millimetre)
                     .PaddingTop(15, Unit.Millimetre)
                     .PaddingBottom(10, Unit.Millimetre)
                     .Column(body =>
                     {
                         body.Spacing(6, Unit.Millimetre);
-                        body.Item().Element(ComposeAddresses);
-                        body.Item().Element(ComposeHeading);
-                        body.Item().Element(ComposeLines);
-                        body.Item().Element(c => ComposeTotals(c, totals));
+                        body.Item().Element(_layout.Addresses);
+                        body.Item().Element(c => _layout.Heading(c, Title,
+                        [
+                            (_layout.T("Invoice date"), invoice.IssueDate.ToString("dd.MM.yyyy")),
+                            (_layout.T("Due date"), invoice.DueDate.ToString("dd.MM.yyyy")),
+                        ], shoot));
+                        body.Item().Element(c => _layout.Lines(c, invoice.Lines.OrderBy(l => l.SortOrder)
+                            .Select(l => new DocumentLine(l.Description, l.Quantity, l.UnitPrice, l.Total))));
+                        body.Item().Element(c => _layout.Totals(c, totals));
                         body.Item().Element(c => ComposePaymentNote(c, totals));
                     });
 
@@ -78,160 +69,24 @@ public sealed class InvoiceDocument(Invoice invoice, InvoiceShootInfo shoot) : I
         });
     }
 
-    private void ComposeAddresses(IContainer container) => container.Row(row =>
-    {
-        row.RelativeItem().Column(seller =>
-        {
-            seller.Item().Text(invoice.Seller.Company ?? invoice.Seller.Name).Bold().FontSize(12);
-            if (invoice.Seller.Company is not null)
-            {
-                seller.Item().Text(invoice.Seller.Name);
-            }
-            seller.Item().Text(invoice.Seller.Street);
-            seller.Item().Text($"{invoice.Seller.PostalCode} {invoice.Seller.City}");
-            if (invoice.SellerEmail is not null) seller.Item().PaddingTop(4).Text(invoice.SellerEmail);
-            if (invoice.SellerPhone is not null) seller.Item().Text(invoice.SellerPhone);
-        });
-
-        // Recipient where a right-hand window envelope shows it (Swiss standard).
-        row.ConstantItem(85, Unit.Millimetre).PaddingTop(30, Unit.Millimetre).Column(client =>
-        {
-            if (invoice.Client.Company is not null) client.Item().Text(invoice.Client.Company);
-            client.Item().Text(invoice.Client.Name);
-            if (invoice.Client.Street is not null) client.Item().Text(invoice.Client.Street);
-            if (invoice.Client.PostalCode is not null || invoice.Client.City is not null)
-            {
-                client.Item().Text($"{invoice.Client.PostalCode} {invoice.Client.City}".Trim());
-            }
-            if (invoice.Client.CountryCode != "CH") client.Item().Text(invoice.Client.CountryCode);
-        });
-    });
-
-    private void ComposeHeading(IContainer container) => container.Column(column =>
-    {
-        column.Spacing(3, Unit.Millimetre);
-        column.Item().Text(Title).FontSize(18).Bold();
-        column.Item().Table(table =>
-        {
-            table.ColumnsDefinition(columns =>
-            {
-                columns.ConstantColumn(30, Unit.Millimetre);
-                columns.RelativeColumn();
-            });
-
-            void Fact(string label, string value)
-            {
-                table.Cell().Text(label).FontColor(Colors.Grey.Darken1);
-                table.Cell().Text(value);
-            }
-
-            Fact(T("Invoice date"), invoice.IssueDate.ToString("dd.MM.yyyy"));
-            Fact(T("Due date"), invoice.DueDate.ToString("dd.MM.yyyy"));
-            Fact(T("Invoice.Event"), shoot.Title);
-            Fact(T("Event date"), string.Format(_culture, "{0:ddd dd.MM.yyyy}, {1}", shoot.Start, ShootSchedule.FormatTimes(shoot.Start, shoot.End)));
-            if (shoot.Location is not null) Fact(T("Location"), shoot.Location);
-        });
-    });
-
-    private void ComposeLines(IContainer container) => container.Table(table =>
-    {
-        table.ColumnsDefinition(columns =>
-        {
-            columns.RelativeColumn();
-            columns.ConstantColumn(16, Unit.Millimetre);
-            columns.ConstantColumn(28, Unit.Millimetre);
-            columns.ConstantColumn(28, Unit.Millimetre);
-        });
-
-        table.Header(header =>
-        {
-            static IContainer HeaderCell(IContainer cell) =>
-                cell.BorderBottom(1).BorderColor(Colors.Grey.Darken2).PaddingVertical(4);
-
-            header.Cell().Element(HeaderCell).Text(T("Description")).Bold();
-            header.Cell().Element(HeaderCell).AlignRight().Text(T("Qty")).Bold();
-            header.Cell().Element(HeaderCell).AlignRight().Text(T("Price CHF")).Bold();
-            header.Cell().Element(HeaderCell).AlignRight().Text(T("Amount CHF")).Bold();
-        });
-
-        foreach (var line in invoice.Lines.OrderBy(l => l.SortOrder))
-        {
-            static IContainer Cell(IContainer cell) =>
-                cell.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).PaddingVertical(4);
-
-            table.Cell().Element(Cell).Text(line.Description);
-            table.Cell().Element(Cell).AlignRight().Text(line.Quantity.ToString("0.##"));
-            table.Cell().Element(Cell).AlignRight().Text(line.UnitPrice.ToAmountString());
-            table.Cell().Element(Cell).AlignRight().Text(line.Total.ToAmountString());
-        }
-    });
-
-    private void ComposeTotals(IContainer container, InvoiceTotals totals) =>
-        container.AlignRight().Width(85, Unit.Millimetre).Table(table =>
-        {
-            table.ColumnsDefinition(columns =>
-            {
-                columns.RelativeColumn();
-                columns.ConstantColumn(28, Unit.Millimetre);
-            });
-
-            void Row(string label, Money amount, bool bold = false, bool line = false)
-            {
-                var labelCell = table.Cell().PaddingVertical(2);
-                var amountCell = table.Cell().PaddingVertical(2);
-                if (line)
-                {
-                    labelCell = labelCell.BorderTop(1).BorderColor(Colors.Grey.Darken2);
-                    amountCell = amountCell.BorderTop(1).BorderColor(Colors.Grey.Darken2);
-                }
-
-                var labelText = labelCell.Text(label);
-                var amountText = amountCell.AlignRight().Text(amount.ToAmountString());
-                if (bold)
-                {
-                    labelText.Bold();
-                    amountText.Bold();
-                }
-            }
-
-            var hasAdjustments = totals.VatRatePercent is not null || totals.Rounding != Money.Zero;
-            if (hasAdjustments) Row(T("Subtotal"), totals.Subtotal);
-            if (totals.VatRatePercent is { } rate) Row(TF("VAT {0:0.0#} %", rate), totals.Vat);
-            if (totals.Rounding != Money.Zero) Row(T("Rounding"), totals.Rounding);
-            Row(T("Total CHF"), totals.Total, bold: true, line: hasAdjustments);
-
-            if (totals.AlreadyPaid > Money.Zero)
-            {
-                Row(T("Already paid"), -totals.AlreadyPaid);
-                Row(T("Amount due CHF"), totals.AmountDue, bold: true, line: true);
-            }
-        });
-
     private void ComposePaymentNote(IContainer container, InvoiceTotals totals) => container.Column(column =>
     {
         column.Spacing(2, Unit.Millimetre);
         if (totals.AmountDue == Money.Zero)
         {
-            column.Item().Text(T("Paid in full. Thank you!")).Bold();
+            column.Item().Text(_layout.T("Paid in full. Thank you!")).Bold();
         }
         else
         {
             column.Item().Text(text =>
             {
-                text.Span(TF("Please pay {0} by {1:dd.MM.yyyy} using the QR-bill below or by bank transfer to", totals.AmountDue, invoice.DueDate) + " ");
+                text.Span(_layout.TF("Please pay {0} by {1:dd.MM.yyyy} using the QR-bill below or by bank transfer to", totals.AmountDue, invoice.DueDate) + " ");
                 text.Span(invoice.SellerIban is null ? "" : Payments.FormatIban(invoice.SellerIban)).Bold();
                 text.Span($" ({invoice.Seller.Name}).");
             });
-            column.Item().Text(T("Thank you for the booking!"));
+            column.Item().Text(_layout.T("Thank you for the booking!"));
         }
 
-        if (invoice.SellerVatNumber is not null)
-        {
-            column.Item().PaddingTop(2, Unit.Millimetre).Text(TF("VAT no. {0}", invoice.SellerVatNumber)).FontSize(8).FontColor(Colors.Grey.Darken1);
-        }
+        _layout.VatNumber(column);
     });
-
-    private string T(string key) => Texts.Get(key, _culture);
-
-    private string TF(string key, params object?[] args) => string.Format(_culture, T(key), args);
 }

@@ -21,6 +21,14 @@ public static class Labels
         _ => Texts.Get("InvoiceStatus.Cancelled"),
     };
 
+    public static string Text(this QuoteStatus status) => status switch
+    {
+        QuoteStatus.Draft => Texts.Get("Draft"),
+        QuoteStatus.Sent => Texts.Get("Sent"),
+        QuoteStatus.Accepted => Texts.Get("Accepted"),
+        _ => Texts.Get("Declined"),
+    };
+
     public static string Text(this ShootType type) => type switch
     {
         ShootType.Wedding => Texts.Get("Wedding"),

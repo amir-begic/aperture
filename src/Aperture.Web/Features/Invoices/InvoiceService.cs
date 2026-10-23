@@ -16,7 +16,10 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
 {
     private DateOnly Today => DateOnly.FromDateTime(time.GetLocalNow().DateTime);
 
-    /// <summary>A draft in <paramref name="language"/>, pre-filled with the shoot at its quote and each cost billed to the client.</summary>
+    /// <summary>
+    /// A draft in <paramref name="language"/>, pre-filled with the shoot at its quote and each cost billed to the client.
+    /// After an accepted quote, the shoot's part is that quote's lines, as long as the shoot's price is still what it says.
+    /// </summary>
     public async Task<int> CreateDraftAsync(int shootId, Language language)
     {
         await using var db = await dbFactory.CreateDbContextAsync();
@@ -31,6 +34,10 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
             .OrderBy(e => e.Date).ThenBy(e => e.Id)
             .ToListAsync();
         var settings = await db.BusinessSettings.SingleAsync();
+        var accepted = await db.Quotes.Include(q => q.Lines)
+            .Where(q => q.ShootId == shootId && q.Status == QuoteStatus.Accepted)
+            .OrderByDescending(q => q.Id)
+            .FirstOrDefaultAsync();
 
         var invoice = new Invoice
         {
@@ -39,11 +46,23 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
             DueDate = Today.AddDays(settings.PaymentTermsDays),
             Language = language,
         };
-        invoice.Lines.Add(new InvoiceLine
+        if (accepted is not null && accepted.Totals.Subtotal == (shoot.QuotedPrice ?? Money.Zero))
         {
-            Description = shoot.Package is { } package ? $"{package.Name}: {shoot.Title}" : ShootLine(shoot.Title, language),
-            UnitPrice = shoot.QuotedPrice ?? Money.Zero,
-        });
+            invoice.Lines.AddRange(accepted.Lines.OrderBy(l => l.SortOrder).Select(line => new InvoiceLine
+            {
+                Description = line.Description,
+                Quantity = line.Quantity,
+                UnitPrice = line.UnitPrice,
+            }));
+        }
+        else
+        {
+            invoice.Lines.Add(new InvoiceLine
+            {
+                Description = shoot.Package is { } package ? $"{package.Name}: {shoot.Title}" : ShootLine(shoot.Title, language),
+                UnitPrice = shoot.QuotedPrice ?? Money.Zero,
+            });
+        }
         invoice.Lines.AddRange(billedCosts.Select(cost => new InvoiceLine
         {
             Description = cost.Description,
@@ -101,9 +120,7 @@ public sealed class InvoiceService(IDbContextFactory<ApertureDbContext> dbFactor
             invoice.AlreadyPaid = await ReceivedAsync(db, invoice.ShootId);
         }
 
-        var shoot = invoice.Shoot;
-        var location = shoot.Location is null ? null : shoot.Location.City is null ? shoot.Location.Name : $"{shoot.Location.Name}, {shoot.Location.City}";
-        return (invoice, new InvoiceShootInfo(shoot.Title, shoot.Start, shoot.End, location));
+        return (invoice, InvoiceShootInfo.From(invoice.Shoot));
     }
 
     /// <summary>What has to be fixed before the invoice can be issued, in the current language; empty when it's ready.</summary>

@@ -1,9 +1,8 @@
 using Aperture.Web.Domain;
-using Aperture.Web.Localization;
 
 namespace Aperture.Web.Data.Entities;
 
-public class Invoice
+public class Invoice : ClientDocument
 {
     public int Id { get; set; }
 
@@ -21,22 +20,9 @@ public class Invoice
 
     public List<InvoiceLine> Lines { get; set; } = [];
 
-    // ---- Frozen when issued ----
-
-    public InvoiceAddress Seller { get; set; } = new();
+    // ---- Frozen when issued, with the seller and client (see ClientDocument) ----
 
     public string? SellerIban { get; set; }
-    public string? SellerEmail { get; set; }
-    public string? SellerPhone { get; set; }
-    public string? SellerVatNumber { get; set; }
-
-    /// <summary>Null when not registered for VAT.</summary>
-    public decimal? VatRatePercent { get; set; }
-
-    public InvoiceAddress Client { get; set; } = new();
-
-    /// <summary>What the invoice is written in: chosen on the draft, Aperture's language unless changed.</summary>
-    public Language Language { get; set; }
 
     /// <summary>Payments received before the invoice was issued (e.g. a deposit).</summary>
     public Money AlreadyPaid { get; set; }

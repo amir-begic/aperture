@@ -1,0 +1,361 @@
+@* The shoot's quotes: the draft being written, the one sent and waiting for an answer, and earlier ones. *@
+@using Aperture.Web.Features.Invoices
+@inject IDbContextFactory<ApertureDbContext> DbFactory
+@inject QuoteService Quotes
+@inject DialogService Dialogs
+@inject NotificationService Notifications
+@inject TimeProvider Time
+
+@if (_quotes is null)
+{
+    <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+}
+else if (Draft is { } draft)
+{
+    <RadzenStack Gap="1rem">
+        @if (_problems.Count > 0)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Warning" Variant="Variant.Flat" Shade="Shade.Lighter" AllowClose="false" Title="@L["Before you can finish this quote"]">
+                <ul class="rz-my-0">
+                    @foreach (var problem in _problems)
+                    {
+                        <li>@problem</li>
+                    }
+                </ul>
+                <RadzenLink Path="settings" Text="@L["Open settings"]" class="rz-mt-2" />
+            </RadzenAlert>
+        }
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap">
+            <RadzenFormField Text="@L["Quote date"]">
+                <RadzenDatePicker TValue="DateOnly" @bind-Value="_quoteDate" @bind-Value:after="OnQuoteDateChanged" DateFormat="dd.MM.yyyy" />
+            </RadzenFormField>
+            <RadzenFormField Text="@L["Valid until"]">
+                <RadzenDatePicker TValue="DateOnly" @bind-Value="_validUntil" @bind-Value:after="MarkDirty" DateFormat="dd.MM.yyyy" />
+            </RadzenFormField>
+            <RadzenFormField Text="@L["Language"]">
+                <RadzenDropDown TValue="Language" @bind-Value="_language" @bind-Value:after="OnLanguageChanged"
+                                Data="LanguageChoices" TextProperty="Text" ValueProperty="Value" />
+            </RadzenFormField>
+        </RadzenStack>
+
+        <DraftLinesEditor Lines="_lines" Changed="MarkDirty" />
+
+        <InvoiceTotalsView Totals="DraftLineEdit.Totals(_lines, _vatRatePercent, Money.Zero)" />
+
+        <RadzenFormField Text="@L["What's included (optional)"]" class="w-full">
+            <ChildContent>
+                <RadzenTextArea @bind-Value="_included" @bind-Value:after="MarkDirty" Rows="3" MaxLength="1000"
+                                Placeholder="@L["10 hours, second shooter, 400 edited images, online gallery"]" />
+            </ChildContent>
+            <Helper><RadzenText TextStyle="TextStyle.Caption">@L["Printed under the price."]</RadzenText></Helper>
+        </RadzenFormField>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" AlignItems="AlignItems.Center">
+            <RadzenButton Text="@L["Save draft"]" Icon="save" Click="SaveAsync" IsBusy="_busy" Disabled="!_dirty" Variant="Variant.Outlined" />
+            @if (_dirty)
+            {
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">@L["Unsaved changes"]</RadzenText>
+            }
+            else
+            {
+                <RadzenLink Path="@($"quotes/{draft.Id}/pdf")" Target="_blank" Icon="preview" Text="@L["Preview PDF"]" class="rz-mx-2" />
+            }
+            <RadzenButton Text="@L["Finish quote"]" Icon="send" Click="SendAsync" IsBusy="_busy" Disabled="@(_problems.Count > 0 && !_dirty)" />
+            <RadzenButton Text="@L["Delete draft"]" Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Danger" Click="DeleteDraftAsync" Disabled="_busy" />
+        </RadzenStack>
+    </RadzenStack>
+}
+else
+{
+    @if (Latest is { } quote)
+    {
+        <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.75rem" Wrap="FlexWrap.Wrap">
+                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2" class="rz-m-0">@L["Quote {0}", quote.Number!]</RadzenText>
+                    <RadzenBadge BadgeStyle="@BadgeStyleOf(quote.Status)" Variant="Variant.Flat" Shade="Shade.Lighter" IsPill="true" Text="@quote.Status.Text()" />
+                </RadzenStack>
+                <dl class="facts">
+                    <dt>@L["Quote date"]</dt><dd>@quote.QuoteDate.ToString("dd.MM.yyyy")</dd>
+                    <dt>@L["Valid until"]</dt>
+                    <dd>
+                        @quote.ValidUntil.ToString("dd.MM.yyyy")
+                        @if (quote.Status == QuoteStatus.Sent && quote.ValidUntil < Today)
+                        {
+                            <span class="delivery-overdue"> · @L["expired"]</span>
+                        }
+                    </dd>
+                    <dt>@L["For"]</dt><dd>@(quote.Client.Company ?? quote.Client.Name)</dd>
+                    <dt>@L["Total"]</dt><dd>@quote.Totals.Total</dd>
+                    <dt>@L["Language"]</dt><dd>@quote.Language.Name()</dd>
+                </dl>
+                <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                    @(quote.Status switch
+                    {
+                        QuoteStatus.Sent => L["Send the PDF to the client. When they answer, note it here: accepting books the shoot at this price."],
+                        QuoteStatus.Accepted => L["Accepted: the shoot is booked at this price, and its invoice starts from these lines."],
+                        _ => L["Declined. A new version starts as a copy of this one."],
+                    })
+                </RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <a href="@($"quotes/{quote.Id}/pdf")" target="_blank" rel="noopener" class="rz-button rz-button-md rz-variant-filled rz-primary">
+                        <RadzenIcon Icon="picture_as_pdf" /> @L["Open PDF"]
+                    </a>
+                    @if (quote.Status == QuoteStatus.Sent)
+                    {
+                        <RadzenButton Text="@L["Accepted"]" Icon="thumb_up" Variant="Variant.Outlined" Click="@(() => AcceptAsync(quote))" IsBusy="_busy" />
+                        <RadzenButton Text="@L["Declined"]" Icon="thumb_down" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Click="@(() => DeclineAsync(quote))" Disabled="_busy" />
+                    }
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+
+    <RadzenCard Variant="Variant.Outlined" class="rz-mb-4">
+        <RadzenStack Gap="0.75rem" AlignItems="AlignItems.Start">
+            @if (Latest is null)
+            {
+                <RadzenText TextStyle="TextStyle.Body1" class="rz-m-0">@L["No quote yet."]</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">
+                    @L["The draft starts with the shoot's package and price, and what the package includes. You can edit it before finishing it."]
+                </RadzenText>
+            }
+            else
+            {
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-m-0">@L["Changed plans or prices? A new version starts as a copy of the last quote."]</RadzenText>
+            }
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.End" Gap="1rem" Wrap="FlexWrap.Wrap">
+                <RadzenFormField Text="@L["Language"]">
+                    <RadzenDropDown TValue="Language" @bind-Value="_language" Data="LanguageChoices" TextProperty="Text" ValueProperty="Value" />
+                </RadzenFormField>
+                <RadzenButton Text="@(Latest is null ? L["Create quote"] : L["New version"])" Icon="request_page" Click="CreateDraftAsync" IsBusy="_busy"
+                              Variant="@(Latest is null ? Variant.Filled : Variant.Outlined)" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    @if (Earlier.Any())
+    {
+        <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-mt-4">@L["Earlier quotes"]</RadzenText>
+        <ul class="plain-list">
+            @foreach (var earlier in Earlier)
+            {
+                <li class="list-row">
+                    <a href="@($"quotes/{earlier.Id}/pdf")" target="_blank" rel="noopener" class="list-row-text">@L["Quote {0}", earlier.Number!]</a>
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-m-0">
+                        @earlier.QuoteDate.ToString("dd.MM.yyyy") · @earlier.Status.Text() · @earlier.Totals.Total
+                    </RadzenText>
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public int ShootId { get; set; }
+
+    /// <summary>Raised when a quote is accepted or declined: the shoot's status and price may have changed.</summary>
+    [Parameter]
+    public EventCallback Changed { get; set; }
+
+    private List<Quote>? _quotes;
+    private Quote? Draft => _quotes?.FirstOrDefault(q => q.Status == QuoteStatus.Draft);
+    private Quote? Latest => _quotes?.FirstOrDefault(q => q.Status != QuoteStatus.Draft);
+    private IEnumerable<Quote> Earlier => _quotes?.Where(q => q.Status != QuoteStatus.Draft).Skip(1) ?? [];
+
+    // Draft editing state
+    private List<DraftLineEdit> _lines = [];
+    private DateOnly _quoteDate;
+    private DateOnly _validUntil;
+    private string? _included;
+    private bool _dirty;
+    private IReadOnlyList<string> _problems = [];
+    private decimal? _vatRatePercent;
+    private string _shootTitle = "";
+    private bool _busy;
+
+    /// <summary>A new quote starts in the language Aperture is in; a draft keeps its own.</summary>
+    private Language _language = Languages.Current;
+    private Language _previousLanguage;
+
+    private DateOnly Today => DateOnly.FromDateTime(Time.GetLocalNow().DateTime);
+
+    private static IReadOnlyList<Choice<Language>> LanguageChoices => Labels.Choices<Language>(l => l.Name());
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        _quotes = await db.Quotes.AsNoTracking().Include(q => q.Lines)
+            .Where(q => q.ShootId == ShootId).OrderByDescending(q => q.Id).ToListAsync();
+        _shootTitle = await db.Shoots.Where(s => s.Id == ShootId).Select(s => s.Title).SingleAsync();
+
+        if (Draft is { } draft)
+        {
+            var settings = await db.BusinessSettings.AsNoTracking().SingleAsync();
+            _vatRatePercent = settings.IsVatRegistered ? settings.VatRatePercent : null;
+            _quoteDate = draft.QuoteDate;
+            _validUntil = draft.ValidUntil;
+            _included = draft.Included;
+            _language = _previousLanguage = draft.Language;
+            _lines = draft.Lines.OrderBy(l => l.SortOrder).Select(l => DraftLineEdit.From(l.Description, l.Quantity, l.UnitPrice)).ToList();
+            _dirty = false;
+            _problems = await Quotes.CheckAsync(draft.Id);
+        }
+    }
+
+    private void MarkDirty() => _dirty = true;
+
+    // Keeps how long the quote holds when its date moves.
+    private void OnQuoteDateChanged()
+    {
+        _validUntil = _quoteDate.AddDays(QuoteService.ValidityDays);
+        MarkDirty();
+    }
+
+    /// <summary>The shoot's line as the draft started it follows the language; lines written by hand stay as they are.</summary>
+    private void OnLanguageChanged()
+    {
+        var before = InvoiceService.ShootLine(_shootTitle, _previousLanguage);
+        foreach (var line in _lines.Where(l => l.Description == before))
+        {
+            line.Description = InvoiceService.ShootLine(_shootTitle, _language);
+        }
+        _previousLanguage = _language;
+        MarkDirty();
+    }
+
+    private static BadgeStyle BadgeStyleOf(QuoteStatus status) => status switch
+    {
+        QuoteStatus.Accepted => BadgeStyle.Success,
+        QuoteStatus.Sent => BadgeStyle.Info,
+        _ => BadgeStyle.Base,
+    };
+
+    private async Task CreateDraftAsync()
+    {
+        _busy = true;
+        try
+        {
+            await Quotes.CreateDraftAsync(ShootId, _language);
+            await LoadAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private Task SaveDraftAsync(int id) =>
+        Quotes.SaveDraftAsync(id, _quoteDate, _validUntil, _language, _included, _lines.Select(l => l.ToDraftLine()).ToList());
+
+    private async Task SaveAsync()
+    {
+        _busy = true;
+        try
+        {
+            await SaveDraftAsync(Draft!.Id);
+            await LoadAsync();
+            Notifications.Notify(NotificationSeverity.Success, L["Draft saved"]);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task SendAsync()
+    {
+        var confirmed = await Dialogs.Confirm(
+            L["The quote gets the next number and can't be changed afterwards. Its PDF is saved in the shoot's files, ready to send to the client."],
+            L["Finish quote?"],
+            new ConfirmOptions { OkButtonText = L["Finish"], CancelButtonText = L["Not yet"] });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var id = Draft!.Id;
+            if (_dirty)
+            {
+                await SaveDraftAsync(id);
+            }
+
+            var problems = await Quotes.SendAsync(id);
+            await LoadAsync();
+            if (problems.Count > 0)
+            {
+                _problems = problems;
+                return;
+            }
+
+            Notifications.Notify(NotificationSeverity.Success, L["Quote {0} is ready", Latest?.Number ?? ""], L["Open the PDF to send it to the client."]);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task AcceptAsync(Quote quote)
+    {
+        var confirmed = await Dialogs.Confirm(
+            L["The shoot is booked at {0} (before VAT).", quote.Totals.Subtotal],
+            L["Quote {0} accepted?", quote.Number!],
+            new ConfirmOptions { OkButtonText = L["Accepted"], CancelButtonText = L["Cancel"] });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await AnswerAsync(() => Quotes.AcceptAsync(quote.Id));
+    }
+
+    private async Task DeclineAsync(Quote quote)
+    {
+        var confirmed = await Dialogs.Confirm(
+            L["If the shoot is still an inquiry, it's set to Cancelled."],
+            L["Quote {0} declined?", quote.Number!],
+            new ConfirmOptions { OkButtonText = L["Declined"], CancelButtonText = L["Cancel"] });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await AnswerAsync(() => Quotes.DeclineAsync(quote.Id));
+    }
+
+    private async Task AnswerAsync(Func<Task> answer)
+    {
+        _busy = true;
+        try
+        {
+            await answer();
+            await LoadAsync();
+            await Changed.InvokeAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteDraftAsync()
+    {
+        var confirmed = await Dialogs.Confirm(L["Delete this draft?"], L["Delete draft"],
+            new ConfirmOptions { OkButtonText = L["Delete"], CancelButtonText = L["Keep"] });
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        await Quotes.DeleteDraftAsync(Draft!.Id);
+        await LoadAsync();
+    }
+}

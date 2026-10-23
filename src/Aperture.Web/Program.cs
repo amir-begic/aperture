@@ -8,6 +8,7 @@ using Aperture.Web.Features.Calendar;
 using Aperture.Web.Features.Finance;
 using Aperture.Web.Features.Invoices;
 using Aperture.Web.Features.Notifications;
+using Aperture.Web.Features.Quotes;
 using Aperture.Web.Features.Updates;
 using Aperture.Web.Installation;
 using Aperture.Web.Localization;
@@ -52,6 +53,7 @@ builder.Services.AddSingleton(paths);
 // browser tab, so pages create a short-lived context per operation instead.
 builder.Services.AddDbContextFactory<ApertureDbContext>(options => options.UseSqlite(paths.ConnectionString));
 builder.Services.AddSingleton<AttachmentStore>();
+builder.Services.AddSingleton<QuoteService>();
 builder.Services.AddSingleton<InvoiceService>();
 builder.Services.AddSingleton<TaxExport>();
 builder.Services.AddSingleton<BackupDownload>();
@@ -142,6 +144,7 @@ app.MapGet("/health", async (IDbContextFactory<ApertureDbContext> dbFactory) =>
     .AllowAnonymous();
 
 app.MapAttachmentEndpoints();
+app.MapQuoteEndpoints();
 app.MapInvoiceEndpoints();
 app.MapTaxExportEndpoints();
 app.MapShootCalendarEndpoints();

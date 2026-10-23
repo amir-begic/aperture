@@ -37,6 +37,12 @@
   <data name="10 hours, second shooter, 400 edited images, online gallery" xml:space="preserve">
     <value>10 Stunden, Zweitfotograf, 400 bearbeitete Bilder, Online-Galerie</value>
   </data>
+  <data name="Accepted" xml:space="preserve">
+    <value>Angenommen</value>
+  </data>
+  <data name="Accepted: the shoot is booked at this price, and its invoice starts from these lines." xml:space="preserve">
+    <value>Angenommen: Das Shooting ist zu diesem Preis gebucht, und seine Rechnung beginnt mit diesen Zeilen.</value>
+  </data>
   <data name="Access, dress code and photo rules checked (stage, flash, guests who don't want photos)" xml:space="preserve">
     <value>Zugang, Dresscode und Fotoregeln geklärt (Bühne, Blitz, Gäste ohne Fotos)</value>
   </data>
@@ -169,6 +175,9 @@
   <data name="Batteries charged, cards formatted, backup body packed" xml:space="preserve">
     <value>Akkus geladen, Karten formatiert, Ersatzkamera eingepackt</value>
   </data>
+  <data name="Before you can finish this quote" xml:space="preserve">
+    <value>Bevor du diese Offerte abschliessen kannst</value>
+  </data>
   <data name="Before you can issue this invoice" xml:space="preserve">
     <value>Bevor du diese Rechnung ausstellen kannst</value>
   </data>
@@ -249,6 +258,9 @@
   </data>
   <data name="Category" xml:space="preserve">
     <value>Kategorie</value>
+  </data>
+  <data name="Changed plans or prices? A new version starts as a copy of the last quote." xml:space="preserve">
+    <value>Pläne oder Preise geändert? Eine neue Version beginnt als Kopie der letzten Offerte.</value>
   </data>
   <data name="Chart" xml:space="preserve">
     <value>Diagramm</value>
@@ -367,6 +379,9 @@
   <data name="Create login" xml:space="preserve">
     <value>Login erstellen</value>
   </data>
+  <data name="Create quote" xml:space="preserve">
+    <value>Offerte erstellen</value>
+  </data>
   <data name="Create your login" xml:space="preserve">
     <value>Login erstellen</value>
   </data>
@@ -378,6 +393,12 @@
   </data>
   <data name="Date" xml:space="preserve">
     <value>Datum</value>
+  </data>
+  <data name="Declined" xml:space="preserve">
+    <value>Abgelehnt</value>
+  </data>
+  <data name="Declined. A new version starts as a copy of this one." xml:space="preserve">
+    <value>Abgelehnt. Eine neue Version beginnt als Kopie dieser Offerte.</value>
   </data>
   <data name="Declining balance on the book value, pro rata by month in the year of purchase and sale." xml:space="preserve">
     <value>Degressiv auf dem Buchwert, im Anschaffungs- und Verkaufsjahr monatsgenau anteilig.</value>
@@ -508,6 +529,9 @@
   <data name="Due {0:ddd dd.MM.yyyy} · {1}" xml:space="preserve">
     <value>Fällig {0:ddd dd.MM.yyyy} · {1}</value>
   </data>
+  <data name="Earlier quotes" xml:space="preserve">
+    <value>Frühere Offerten</value>
+  </data>
   <data name="Edit cost" xml:space="preserve">
     <value>Kosten bearbeiten</value>
   </data>
@@ -580,11 +604,17 @@
   <data name="Every invoice line needs a description." xml:space="preserve">
     <value>Jede Rechnungszeile braucht eine Beschreibung.</value>
   </data>
+  <data name="Every line needs a description." xml:space="preserve">
+    <value>Jede Zeile braucht eine Beschreibung.</value>
+  </data>
   <data name="Everything (ZIP)" xml:space="preserve">
     <value>Alles (ZIP)</value>
   </data>
   <data name="Everything in one ZIP: the database and all uploaded files, with a note on how to restore it. For a copy somewhere else, or to move Aperture to a new {0}. Your login isn't in it." xml:space="preserve">
     <value>Alles in einer ZIP-Datei: die Datenbank und alle hochgeladenen Dateien, mit einer Anleitung zur Wiederherstellung. Für eine Kopie anderswo oder um Aperture auf einen neuen {0} zu übertragen. Dein Login ist nicht dabei.</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>abgelaufen</value>
   </data>
   <data name="Failed to rejoin." xml:space="preserve">
     <value>Verbindung konnte nicht wiederhergestellt werden.</value>
@@ -612,6 +642,15 @@
   </data>
   <data name="Finances" xml:space="preserve">
     <value>Finanzen</value>
+  </data>
+  <data name="Finish" xml:space="preserve">
+    <value>Abschliessen</value>
+  </data>
+  <data name="Finish quote" xml:space="preserve">
+    <value>Offerte abschliessen</value>
+  </data>
+  <data name="Finish quote?" xml:space="preserve">
+    <value>Offerte abschliessen?</value>
   </data>
   <data name="Follow up on {0}" xml:space="preserve">
     <value>Bei {0} nachfassen</value>
@@ -652,8 +691,14 @@
   <data name="Hover a shoot for details, click it to open it, or click a free day to book a new shoot on that date." xml:space="preserve">
     <value>Fahre über ein Shooting für Details, klicke darauf, um es zu öffnen, oder klicke auf einen freien Tag, um dort ein neues Shooting einzutragen.</value>
   </data>
+  <data name="I look forward to hearing from you!" xml:space="preserve">
+    <value>Ich freue mich auf Ihre Rückmeldung!</value>
+  </data>
   <data name="I'm registered for VAT" xml:space="preserve">
     <value>Ich bin MWST-pflichtig</value>
+  </data>
+  <data name="If the shoot is still an inquiry, it's set to Cancelled." xml:space="preserve">
+    <value>Ist das Shooting noch eine Anfrage, wird es auf «Abgesagt» gesetzt.</value>
   </data>
   <data name="in quote" xml:space="preserve">
     <value>in der Offerte</value>
@@ -663,6 +708,9 @@
   </data>
   <data name="incl. equipment sold: {0}" xml:space="preserve">
     <value>inkl. verkaufter Ausrüstung: {0}</value>
+  </data>
+  <data name="Included" xml:space="preserve">
+    <value>Inbegriffen</value>
   </data>
   <data name="Income" xml:space="preserve">
     <value>Einnahmen</value>
@@ -910,6 +958,9 @@
   <data name="New task" xml:space="preserve">
     <value>Neue Aufgabe</value>
   </data>
+  <data name="New version" xml:space="preserve">
+    <value>Neue Version</value>
+  </data>
   <data name="Next shoots" xml:space="preserve">
     <value>Nächste Shootings</value>
   </data>
@@ -951,6 +1002,9 @@
   </data>
   <data name="No payments yet." xml:space="preserve">
     <value>Noch keine Zahlungen.</value>
+  </data>
+  <data name="No quote yet." xml:space="preserve">
+    <value>Noch keine Offerte.</value>
   </data>
   <data name="No shoots at this location yet." xml:space="preserve">
     <value>Noch keine Shootings an diesem Ort.</value>
@@ -1062,6 +1116,9 @@
   </data>
   <data name="Open settings" xml:space="preserve">
     <value>Einstellungen öffnen</value>
+  </data>
+  <data name="Open the PDF to send it to the client." xml:space="preserve">
+    <value>Öffne das PDF, um es dem Kunden zu schicken.</value>
   </data>
   <data name="Other" xml:space="preserve">
     <value>Andere</value>
@@ -1183,6 +1240,9 @@
   <data name="Price for the client (CHF)" xml:space="preserve">
     <value>Preis für den Kunden (CHF)</value>
   </data>
+  <data name="Printed under the price." xml:space="preserve">
+    <value>Steht unter dem Preis.</value>
+  </data>
   <data name="Prints, albums &amp; lab" xml:space="preserve">
     <value>Prints, Alben &amp; Labor</value>
   </data>
@@ -1207,8 +1267,26 @@
   <data name="Quote (CHF)" xml:space="preserve">
     <value>Offerte (CHF)</value>
   </data>
+  <data name="Quote (draft)" xml:space="preserve">
+    <value>Offerte (Entwurf)</value>
+  </data>
+  <data name="Quote date" xml:space="preserve">
+    <value>Offertdatum</value>
+  </data>
+  <data name="Quote {0}" xml:space="preserve">
+    <value>Offerte {0}</value>
+  </data>
   <data name="Quote {0} + billed costs {1}" xml:space="preserve">
     <value>Offerte {0} + verrechnete Kosten {1}</value>
+  </data>
+  <data name="Quote {0} accepted?" xml:space="preserve">
+    <value>Offerte {0} angenommen?</value>
+  </data>
+  <data name="Quote {0} declined?" xml:space="preserve">
+    <value>Offerte {0} abgelehnt?</value>
+  </data>
+  <data name="Quote {0} is ready" xml:space="preserve">
+    <value>Offerte {0} ist bereit</value>
   </data>
   <data name="Rate" xml:space="preserve">
     <value>Satz</value>
@@ -1351,8 +1429,14 @@
   <data name="Send a test" xml:space="preserve">
     <value>Test senden</value>
   </data>
+  <data name="Send the PDF to the client. When they answer, note it here: accepting books the shoot at this price." xml:space="preserve">
+    <value>Schick das PDF dem Kunden. Wenn er antwortet, halte es hier fest: Eine Annahme bucht das Shooting zu diesem Preis.</value>
+  </data>
   <data name="Sending…" xml:space="preserve">
     <value>Wird gesendet …</value>
+  </data>
+  <data name="Sent" xml:space="preserve">
+    <value>Verschickt</value>
   </data>
   <data name="Settings" xml:space="preserve">
     <value>Einstellungen</value>
@@ -1501,6 +1585,9 @@
   <data name="The draft starts with the quote and every cost billed to the client. You can edit it before issuing." xml:space="preserve">
     <value>Der Entwurf beginnt mit der Offerte und allen Kosten, die dem Kunden verrechnet werden. Du kannst ihn vor dem Ausstellen bearbeiten.</value>
   </data>
+  <data name="The draft starts with the shoot's package and price, and what the package includes. You can edit it before finishing it." xml:space="preserve">
+    <value>Der Entwurf beginnt mit dem Paket und Preis des Shootings und dem, was im Paket inbegriffen ist. Du kannst ihn vor dem Abschliessen bearbeiten.</value>
+  </data>
   <data name="The due date is before the invoice date." xml:space="preserve">
     <value>Das Fälligkeitsdatum liegt vor dem Rechnungsdatum.</value>
   </data>
@@ -1525,8 +1612,20 @@
   <data name="The push service didn't take it. Is this {0} online? Details are in the log." xml:space="preserve">
     <value>Der Push-Dienst hat sie nicht angenommen. Ist dieser {0} online? Details stehen im Log.</value>
   </data>
+  <data name="The quote gets the next number and can't be changed afterwards. Its PDF is saved in the shoot's files, ready to send to the client." xml:space="preserve">
+    <value>Die Offerte erhält die nächste Nummer und kann danach nicht mehr geändert werden. Ihr PDF wird in den Dateien des Shootings gespeichert, bereit zum Verschicken.</value>
+  </data>
+  <data name="The quote is valid until a date before the quote date." xml:space="preserve">
+    <value>Die Offerte ist nur bis zu einem Datum vor dem Offertdatum gültig.</value>
+  </data>
+  <data name="The quote total must be above zero." xml:space="preserve">
+    <value>Das Offerttotal muss über null liegen.</value>
+  </data>
   <data name="The session has been paused by the server." xml:space="preserve">
     <value>Die Sitzung wurde vom Server pausiert.</value>
+  </data>
+  <data name="The shoot is booked at {0} (before VAT)." xml:space="preserve">
+    <value>Das Shooting wird zu {0} gebucht (ohne MWST).</value>
   </data>
   <data name="The update to {0} didn't work:" xml:space="preserve">
     <value>Das Update auf {0} hat nicht funktioniert:</value>
@@ -1548,6 +1647,9 @@
   </data>
   <data name="This browser can't show notifications from Aperture." xml:space="preserve">
     <value>Dieser Browser kann keine Benachrichtigungen von Aperture anzeigen.</value>
+  </data>
+  <data name="This quote is valid until {0:dd.MM.yyyy}. To book, simply confirm it by email or phone." xml:space="preserve">
+    <value>Diese Offerte ist gültig bis {0:dd.MM.yyyy}. Für eine Buchung bestätigen Sie sie einfach per E-Mail oder Telefon.</value>
   </data>
   <data name="Timeline from couple / wedding planner received" xml:space="preserve">
     <value>Ablauf vom Brautpaar / von der Hochzeitsplanerin erhalten</value>
@@ -1647,6 +1749,9 @@
   </data>
   <data name="Usual delivery time (days)" xml:space="preserve">
     <value>Übliche Lieferzeit (Tage)</value>
+  </data>
+  <data name="Valid until" xml:space="preserve">
+    <value>Gültig bis</value>
   </data>
   <data name="Value end of {0}" xml:space="preserve">
     <value>Wert Ende {0}</value>

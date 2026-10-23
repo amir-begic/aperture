@@ -25,6 +25,7 @@ Details in [docs/deployment.md](docs/deployment.md).
 | **Delivery** | A delivery date per shoot, suggested from your usual delivery time (Settings), and a link to the client gallery. |
 | **Prep** | Moodboard and reference links (Pinterest, Google Drive, …), notes, a checklist (wedding, portrait, event and commercial templates, the one for the shoot type offered first), files. |
 | **Calendar** | Month, week and year view. Hovering over a shoot shows a card with the details. *Add to calendar* on a shoot puts it in the computer's calendar app (and with a synced calendar on the phone). |
+| **Quotes** | A PDF offer for a shoot: package and price, extra lines, what's included, valid for 30 days. Numbered `Q-2026-001` once finished and archived with the shoot's files. Marking it accepted books the shoot at the quoted price; declined cancels the inquiry. Changes go into a new version. |
 | **Invoices** | Created from a shoot: quote plus billed costs, optional VAT, rounded to 5 Rappen, Swiss QR-bill. Numbered `2026-001` once issued, then frozen and archived as PDF. |
 | **Finance** | Income statement per year on a cash basis, business costs that don't belong to a shoot, equipment with depreciation. |
 | **Tax export** | Per year, one ZIP: the statement as PDF, every line as Excel, and all receipts, payslips and invoices, numbered to match. |

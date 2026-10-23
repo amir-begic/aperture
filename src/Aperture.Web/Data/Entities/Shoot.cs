@@ -52,5 +52,6 @@ public class Shoot
     public List<ReferenceLink> ReferenceLinks { get; set; } = [];
     public List<ChecklistItem> ChecklistItems { get; set; } = [];
     public List<Attachment> Attachments { get; set; } = [];
+    public List<Quote> Quotes { get; set; } = [];
     public List<Invoice> Invoices { get; set; } = [];
 }

@@ -6,6 +6,7 @@
 @using Aperture.Web.Features.Shoots.Finances
 @using Aperture.Web.Features.Shoots.Prep
 @using Aperture.Web.Features.Invoices
+@using Aperture.Web.Features.Quotes
 @inject IDbContextFactory<ApertureDbContext> DbFactory
 @inject NavigationManager Navigation
 @inject NotificationService Notifications
@@ -67,6 +68,9 @@ else
             <Tabs>
                 <RadzenTabsItem Text="@L["Details"]" Icon="edit_note">
                     @DetailsCard
+                </RadzenTabsItem>
+                <RadzenTabsItem Text="@L["Quote"]" Icon="request_page">
+                    <ShootQuoteTab ShootId="Id!.Value" Changed="ReloadAsync" />
                 </RadzenTabsItem>
                 <RadzenTabsItem Text="@L["Finances"]" Icon="payments">
                     <ShootFinancesTab ShootId="Id!.Value" Quote="_summary?.QuotedPrice" ShootDate="ShootDate" Changed="LoadSummaryAsync" />
@@ -265,7 +269,7 @@ else
     [SupplyParameterFromQuery(Name = "tab")]
     private string? InitialTab { get; set; }
 
-    private static readonly string[] TabNames = ["details", "finances", "invoice", "prep", "files"];
+    private static readonly string[] TabNames = ["details", "quote", "finances", "invoice", "prep", "files"];
 
     private bool IsNew => Id is null;
 
@@ -317,6 +321,18 @@ else
         }
 
         await CheckOverlapsAsync();
+    }
+
+    /// <summary>After a quote was answered: status and price may have changed, so the form shows them anew too.</summary>
+    private async Task ReloadAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        if (await db.Shoots.AsNoTracking().SingleOrDefaultAsync(s => s.Id == Id) is { } shoot)
+        {
+            _form = ShootForm.From(shoot);
+            _lastDate = _form.Date;
+        }
+        await LoadSummaryAsync();
     }
 
     private async Task LoadSummaryAsync()

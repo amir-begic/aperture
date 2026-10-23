@@ -1,0 +1,58 @@
+@* The lines of a draft quote or invoice: description, quantity, price, with lines to add and remove. *@
+<div class="invoice-lines">
+    <table>
+        <thead>
+            <tr>
+                <th>@L["Description"]</th>
+                <th class="num">@L["Qty"]</th>
+                <th class="num">@L["Price CHF"]</th>
+                <th class="num">@L["Amount CHF"]</th>
+                <th aria-label="@L["Remove"]"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var line in Lines)
+            {
+                <tr>
+                    <td>
+                        <RadzenTextBox @bind-Value="line.Description" @bind-Value:after="Changed.InvokeAsync" class="w-full" aria-label="@L["Description"]" />
+                    </td>
+                    <td class="num qty">
+                        <RadzenNumeric TValue="decimal" @bind-Value="line.Quantity" @bind-Value:after="Changed.InvokeAsync" Min="0" Format="0.##" ShowUpDown="false" AriaLabel="@L["Quantity"]" />
+                    </td>
+                    <td class="num price">
+                        <RadzenNumeric TValue="decimal" @bind-Value="line.PriceChf" @bind-Value:after="Changed.InvokeAsync" Format="#,##0.00" ShowUpDown="false" AriaLabel="@L["Price"]" />
+                    </td>
+                    <td class="num">@line.Total.ToAmountString()</td>
+                    <td>
+                        <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
+                                      Click="@(() => RemoveAsync(line))" title="@L["Remove line"]" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <RadzenButton Text="@L["Add line"]" Icon="add" Variant="Variant.Text" Size="ButtonSize.Small" Click="AddAsync" class="rz-mt-2" />
+</div>
+
+@code {
+    /// <summary>Edited in place.</summary>
+    [Parameter, EditorRequired]
+    public List<DraftLineEdit> Lines { get; set; } = default!;
+
+    /// <summary>Raised after any change, to mark the draft as unsaved.</summary>
+    [Parameter]
+    public EventCallback Changed { get; set; }
+
+    private Task AddAsync()
+    {
+        Lines.Add(new DraftLineEdit());
+        return Changed.InvokeAsync();
+    }
+
+    private Task RemoveAsync(DraftLineEdit line)
+    {
+        Lines.Remove(line);
+        return Changed.InvokeAsync();
+    }
+}

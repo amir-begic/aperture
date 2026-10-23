@@ -19,6 +19,8 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
     public DbSet<ReferenceLink> ReferenceLinks => Set<ReferenceLink>();
     public DbSet<ChecklistItem> ChecklistItems => Set<ChecklistItem>();
     public DbSet<Attachment> Attachments => Set<Attachment>();
+    public DbSet<Quote> Quotes => Set<Quote>();
+    public DbSet<QuoteLine> QuoteLines => Set<QuoteLine>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceLine> InvoiceLines => Set<InvoiceLine>();
     public DbSet<Asset> Assets => Set<Asset>();
@@ -66,6 +68,7 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
         configurationBuilder.Properties<ExpenseCategory>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<PaymentMethod>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<InvoiceStatus>().HaveConversion<string>().HaveMaxLength(20);
+        configurationBuilder.Properties<QuoteStatus>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<AssetCategory>().HaveConversion<string>().HaveMaxLength(20);
         configurationBuilder.Properties<Language>().HaveConversion<string>().HaveMaxLength(20);
     }
@@ -94,6 +97,8 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
             shoot.HasMany(s => s.Expenses).WithOne(e => e.Shoot).OnDelete(DeleteBehavior.Restrict);
             shoot.HasMany(s => s.Payments).WithOne(p => p.Shoot).OnDelete(DeleteBehavior.Restrict);
             shoot.HasMany(s => s.Invoices).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Restrict);
+            // Quotes aren't financial records: they go with the shoot, like its files.
+            shoot.HasMany(s => s.Quotes).WithOne(q => q.Shoot).OnDelete(DeleteBehavior.Cascade);
             shoot.HasMany(s => s.ReferenceLinks).WithOne(l => l.Shoot).OnDelete(DeleteBehavior.Cascade);
             shoot.HasMany(s => s.ChecklistItems).WithOne(i => i.Shoot).OnDelete(DeleteBehavior.Cascade);
             shoot.HasMany(s => s.Attachments).WithOne(a => a.Shoot).OnDelete(DeleteBehavior.Cascade);
@@ -118,6 +123,20 @@ public class ApertureDbContext(DbContextOptions<ApertureDbContext> options) : Db
             invoice.Property(i => i.SellerVatNumber).HasMaxLength(32);
             invoice.HasMany(i => i.Lines).WithOne(l => l.Invoice).OnDelete(DeleteBehavior.Cascade);
             invoice.HasOne(i => i.Pdf).WithMany().OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Quote>(quote =>
+        {
+            quote.HasIndex(q => q.Number).IsUnique();
+            quote.Property(q => q.Number).HasMaxLength(20);
+            quote.ComplexProperty(q => q.Seller, ConfigureAddress);
+            quote.ComplexProperty(q => q.Client, ConfigureAddress);
+            quote.Property(q => q.SellerEmail).HasMaxLength(200);
+            quote.Property(q => q.SellerPhone).HasMaxLength(50);
+            quote.Property(q => q.SellerVatNumber).HasMaxLength(32);
+            quote.HasMany(q => q.Lines).WithOne(l => l.Quote).OnDelete(DeleteBehavior.Cascade);
+            // The PDF is one of the shoot's files and goes with it; the quote just forgets it.
+            quote.HasOne(q => q.Pdf).WithMany().OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Asset>(asset =>

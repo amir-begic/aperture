@@ -18,7 +18,8 @@ All amounts are in CHF, calculated to the Rappen.
 
 ### Money per shoot
 
-- **Quote:** the agreed fee.
+- **Quote:** the agreed fee. Set by hand or from a package, or by accepting a quote (below): then it's the quote's
+  total before VAT.
 - **Costs:** what the shoot cost you, e.g. renting lights. Each cost is either
   - **covered by the quote:** it reduces your margin and doesn't appear on the invoice, or
   - **billed to the client:** it appears as its own line on the invoice, at what you paid or at a higher price
@@ -30,9 +31,22 @@ All amounts are in CHF, calculated to the Rappen.
 
 The payment state follows from this: *unpaid*, *partly paid*, *paid*, or *no quote* while there's nothing to bill yet.
 
+## Quotes
+
+1. **Draft:** created from the shoot: its package (or *Photography*) at the shoot's price, and what the package
+   includes. A later quote for the same shoot starts as a copy of the last one. You can add lines (a second shooter,
+   an album) and change dates, language and the text of what's included.
+2. **Finished:** gets the next number of its year (`Q-2026-001`, …), is frozen like an issued invoice, and its PDF is
+   archived with the shoot's files, ready to send. It holds 30 days unless you change the date.
+3. **Accepted** or **declined**, as the client answers. Accepting books an inquiry and sets the shoot's quote to the
+   quote's total before VAT; declining cancels an inquiry.
+
+Quotes aren't bookkeeping: they don't count as income and go with the shoot if it's deleted.
+
 ## Invoices
 
-1. **Draft:** created from the shoot with the quote and the billed costs as lines. You can change lines, dates
+1. **Draft:** created from the shoot with the quote and the billed costs as lines. After an accepted quote, the
+   shoot's part is that quote's lines (as long as the shoot's quote is still what the quote said). You can change lines, dates
    and amounts. A draft has no number yet and can be deleted.
 2. **Issued:** gets the next number of its year (`2026-001`, `2026-002`, …). From then on it can't change:
    your and the client's addresses are copied into it, and the PDF is archived with the shoot's files.

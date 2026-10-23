@@ -639,6 +639,167 @@ namespace Aperture.Web.Data.Migrations
                     b.ToTable("PushSubscriptions");
                 });
 
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Quote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("AnsweredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Included")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PdfId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("QuoteDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SellerEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SellerPhone")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SellerVatNumber")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ShootId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ValidUntil")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("VatRatePercent")
+                        .HasColumnType("TEXT");
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Client", "Aperture.Web.Data.Entities.Quote.Client#InvoiceAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Company")
+                                .HasMaxLength(150)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("PostalCode")
+                                .HasMaxLength(16)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Street")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT");
+                        });
+
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Seller", "Aperture.Web.Data.Entities.Quote.Seller#InvoiceAddress", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Company")
+                                .HasMaxLength(150)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("CountryCode")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("PostalCode")
+                                .HasMaxLength(16)
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Street")
+                                .HasMaxLength(100)
+                                .HasColumnType("TEXT");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("PdfId");
+
+                    b.HasIndex("ShootId");
+
+                    b.ToTable("Quotes");
+                });
+
+            modelBuilder.Entity("Aperture.Web.Data.Entities.QuoteLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QuoteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("UnitPrice")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteId");
+
+                    b.ToTable("QuoteLines");
+                });
+
             modelBuilder.Entity("Aperture.Web.Data.Entities.ReferenceLink", b =>
                 {
                     b.Property<int>("Id")
@@ -839,6 +1000,35 @@ namespace Aperture.Web.Data.Migrations
                     b.Navigation("Shoot");
                 });
 
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Quote", b =>
+                {
+                    b.HasOne("Aperture.Web.Data.Entities.Attachment", "Pdf")
+                        .WithMany()
+                        .HasForeignKey("PdfId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
+                        .WithMany("Quotes")
+                        .HasForeignKey("ShootId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Pdf");
+
+                    b.Navigation("Shoot");
+                });
+
+            modelBuilder.Entity("Aperture.Web.Data.Entities.QuoteLine", b =>
+                {
+                    b.HasOne("Aperture.Web.Data.Entities.Quote", "Quote")
+                        .WithMany("Lines")
+                        .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
+                });
+
             modelBuilder.Entity("Aperture.Web.Data.Entities.ReferenceLink", b =>
                 {
                     b.HasOne("Aperture.Web.Data.Entities.Shoot", "Shoot")
@@ -895,6 +1085,11 @@ namespace Aperture.Web.Data.Migrations
                     b.Navigation("Shoots");
                 });
 
+            modelBuilder.Entity("Aperture.Web.Data.Entities.Quote", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Aperture.Web.Data.Entities.Shoot", b =>
                 {
                     b.Navigation("Attachments");
@@ -906,6 +1101,8 @@ namespace Aperture.Web.Data.Migrations
                     b.Navigation("Invoices");
 
                     b.Navigation("Payments");
+
+                    b.Navigation("Quotes");
 
                     b.Navigation("ReferenceLinks");
                 });

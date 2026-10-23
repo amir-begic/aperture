@@ -58,41 +58,7 @@ else if (Active.Status == InvoiceStatus.Draft)
             </RadzenFormField>
         </RadzenStack>
 
-        <div class="invoice-lines">
-            <table>
-                <thead>
-                    <tr>
-                        <th>@L["Description"]</th>
-                        <th class="num">@L["Qty"]</th>
-                        <th class="num">@L["Price CHF"]</th>
-                        <th class="num">@L["Amount CHF"]</th>
-                        <th aria-label="@L["Remove"]"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var line in _lines)
-                    {
-                        <tr>
-                            <td>
-                                <RadzenTextBox @bind-Value="line.Description" @bind-Value:after="MarkDirty" class="w-full" aria-label="@L["Description"]" />
-                            </td>
-                            <td class="num qty">
-                                <RadzenNumeric TValue="decimal" @bind-Value="line.Quantity" @bind-Value:after="MarkDirty" Min="0" Format="0.##" ShowUpDown="false" AriaLabel="@L["Quantity"]" />
-                            </td>
-                            <td class="num price">
-                                <RadzenNumeric TValue="decimal" @bind-Value="line.PriceChf" @bind-Value:after="MarkDirty" Format="#,##0.00" ShowUpDown="false" AriaLabel="@L["Price"]" />
-                            </td>
-                            <td class="num">@(new InvoiceLineAmount(line.Quantity, Money.FromChf(line.PriceChf)).Total.ToAmountString())</td>
-                            <td>
-                                <RadzenButton Icon="delete" Variant="Variant.Text" ButtonStyle="ButtonStyle.Base" Size="ButtonSize.ExtraSmall"
-                                              Click="@(() => RemoveLine(line))" title="@L["Remove line"]" />
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-            <RadzenButton Text="@L["Add line"]" Icon="add" Variant="Variant.Text" Size="ButtonSize.Small" Click="AddLine" class="rz-mt-2" />
-        </div>
+        <DraftLinesEditor Lines="_lines" Changed="MarkDirty" />
 
         <InvoiceTotalsView Totals="DraftTotals" />
 
@@ -169,7 +135,7 @@ else
     private Invoice? Active => _invoices?.FirstOrDefault(i => i.Status != InvoiceStatus.Cancelled);
 
     // Draft editing state
-    private List<LineEdit> _lines = [];
+    private List<DraftLineEdit> _lines = [];
     private DateOnly _issueDate;
     private DateOnly _dueDate;
     private bool _dirty;
@@ -185,8 +151,7 @@ else
     private Language _previousLanguage;
     private bool _busy;
 
-    private InvoiceTotals DraftTotals => InvoiceTotals.Calculate(
-        _lines.Select(l => new InvoiceLineAmount(l.Quantity, Money.FromChf(l.PriceChf))), _vatRatePercent, _received);
+    private InvoiceTotals DraftTotals => DraftLineEdit.Totals(_lines, _vatRatePercent, _received);
 
     protected override Task OnInitializedAsync() => LoadAsync();
 
@@ -198,6 +163,12 @@ else
         var shoot = await db.Shoots.Where(s => s.Id == ShootId).Select(s => new { s.ClientId, s.Title }).SingleAsync();
         _clientId = shoot.ClientId;
         _shootTitle = shoot.Title;
+        // A new invoice speaks the language of the accepted quote, if there is one.
+        if (Active is null && await db.Quotes.Where(q => q.ShootId == ShootId && q.Status == QuoteStatus.Accepted)
+                .OrderByDescending(q => q.Id).Select(q => (Language?)q.Language).FirstOrDefaultAsync() is { } quoteLanguage)
+        {
+            _language = quoteLanguage;
+        }
 
         if (Active is { Status: InvoiceStatus.Draft } draft)
         {
@@ -209,7 +180,7 @@ else
             _dueDate = draft.DueDate;
             _language = _previousLanguage = draft.Language;
             _lines = draft.Lines.OrderBy(l => l.SortOrder)
-                .Select(l => new LineEdit { Description = l.Description, Quantity = l.Quantity, PriceChf = l.UnitPrice.Chf })
+                .Select(l => DraftLineEdit.From(l.Description, l.Quantity, l.UnitPrice))
                 .ToList();
             _dirty = false;
             _problems = await Invoices.CheckAsync(draft.Id);
@@ -236,18 +207,6 @@ else
             line.Description = InvoiceService.ShootLine(_shootTitle, _language);
         }
         _previousLanguage = _language;
-        MarkDirty();
-    }
-
-    private void AddLine()
-    {
-        _lines.Add(new LineEdit());
-        MarkDirty();
-    }
-
-    private void RemoveLine(LineEdit line)
-    {
-        _lines.Remove(line);
         MarkDirty();
     }
 
@@ -354,14 +313,5 @@ else
 
         await Invoices.DeleteDraftAsync(Active!.Id);
         await LoadAsync();
-    }
-
-    private sealed class LineEdit
-    {
-        public string Description { get; set; } = "";
-        public decimal Quantity { get; set; } = 1;
-        public decimal PriceChf { get; set; }
-
-        public DraftLine ToDraftLine() => new(Description, Quantity, Money.FromChf(PriceChf));
     }
 }

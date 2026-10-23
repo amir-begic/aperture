@@ -10,7 +10,14 @@ public static class InvoiceSnapshot
     /// </summary>
     public static void Apply(Invoice invoice, BusinessSettings settings, Client client)
     {
-        invoice.Seller = new InvoiceAddress
+        Apply((ClientDocument)invoice, settings, client);
+        invoice.SellerIban = settings.Iban;
+    }
+
+    /// <summary>The same for a quote, or anything else that goes to a client: sender, recipient, VAT.</summary>
+    public static void Apply(ClientDocument document, BusinessSettings settings, Client client)
+    {
+        document.Seller = new InvoiceAddress
         {
             Name = settings.OwnerName,
             Company = string.IsNullOrWhiteSpace(settings.BusinessName) ? null : settings.BusinessName,
@@ -19,13 +26,12 @@ public static class InvoiceSnapshot
             City = settings.City,
             CountryCode = settings.CountryCode,
         };
-        invoice.SellerIban = settings.Iban;
-        invoice.SellerEmail = settings.Email;
-        invoice.SellerPhone = settings.Phone;
-        invoice.SellerVatNumber = settings.IsVatRegistered ? settings.VatNumber : null;
-        invoice.VatRatePercent = settings.IsVatRegistered ? settings.VatRatePercent : null;
+        document.SellerEmail = settings.Email;
+        document.SellerPhone = settings.Phone;
+        document.SellerVatNumber = settings.IsVatRegistered ? settings.VatNumber : null;
+        document.VatRatePercent = settings.IsVatRegistered ? settings.VatRatePercent : null;
 
-        invoice.Client = new InvoiceAddress
+        document.Client = new InvoiceAddress
         {
             Name = client.Name,
             Company = client.Company,
